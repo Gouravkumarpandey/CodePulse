@@ -1,3 +1,6 @@
+
+<img width="1901" height="908" alt="image" src="https://github.com/user-attachments/assets/6e7dfdcc-e89e-4a61-8ce2-9c13d4e9bb06" />
+
 # CodePulse - GitHub Commit Consistency & Insight Platform
 
 ![CodePulse Banner](https://img.shields.io/badge/CodePulse-Commit%20Consistency-blue?style=for-the-badge&logo=github)
