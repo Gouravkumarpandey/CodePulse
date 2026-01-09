@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-200 dark:border-github-border;
+  }
+  
+  body {
+    @apply antialiased;
+    @apply bg-gray-50 text-gray-900;
+    @apply dark:text-github-text;
+  }
+
+  .dark body {
+    background: #0d1117;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(46, 160, 67, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(31, 111, 235, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(46, 160, 67, 0.1) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-gray-900 dark:text-github-text;
+  }
+
+  a {
+    @apply text-indigo-600 hover:underline dark:text-github-text-link;
+  }
+
+  input, textarea, select {
+    @apply bg-white border-gray-300 text-gray-900;
+    @apply dark:bg-github-canvas-inset dark:border-github-border dark:text-github-text;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    @apply ring-2 ring-indigo-500 border-transparent outline-none;
+    @apply dark:ring-github-accent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-github-canvas-subtle;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-github-border rounded-lg;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-github-border-muted;
+  }
+}
+
+@layer utilities {
+  .github-card {
+    @apply bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg;
+  }
+
+  .github-button {
+    @apply px-4 py-2 rounded-md font-medium transition-all duration-200;
+  }
+
+  .github-button-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 dark:bg-github-success dark:hover:bg-github-success/90 text-white;
+  }
+
+  .github-button-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 dark:bg-github-canvas-subtle dark:hover:bg-github-border-muted text-gray-900 dark:text-github-text border border-gray-300 dark:border-github-border;
+  }
+
+  .gradient-mesh {
+    background: linear-gradient(135deg, rgba(46, 160, 67, 0.05) 0%, rgba(31, 111, 235, 0.05) 100%);
+  }
+
+  .hero-glow {
+    position: relative;
+  }
+
+  .hero-glow::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(46, 160, 67, 0.15) 0%, transparent 70%);
+    animation: pulse-glow 8s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.1);
+    }
+  }
+}
+
+@layer base {
+  :root {
+    --tooltip-bg: #ffffff;
+    --tooltip-border: #e5e7eb;
+    --tooltip-text: #111827;
+    --chart-grid: #e5e7eb;
+    --chart-axis: #6b7280;
+  }
+
+  .dark {
+    --tooltip-bg: #161b22;
+    --tooltip-border: #30363d;
+    --tooltip-text: #c9d1d9;
+    --chart-grid: #30363d;
+    --chart-axis: #7d8590;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  }
+}
