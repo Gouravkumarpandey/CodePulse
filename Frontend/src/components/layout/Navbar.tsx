@@ -12,7 +12,7 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-indigo-600 dark:text-github-accent">CodePulse</span>
+              <img src="/codepulse_logo.jpg" alt="Codepulse Logo" className="h-10 w-auto" style={{ maxHeight: '40px' }} />
             </Link>
           </div>
 

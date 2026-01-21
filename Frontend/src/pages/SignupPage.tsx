@@ -2,10 +2,10 @@ import { useState, useContext, useEffect, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowLeft, User, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { initiateGoogleOAuth } from '../utils/google-auth';
+import { signInWithGoogle } from '../utils/google-auth';
 import { authService } from '../services/auth.service';
 import { AuthContext } from '../context/AuthContext';
-import { api } from '../services/api';
+
 
 /* ---------------- TYPES ---------------- */
 type Role = 'USER' | 'ADMIN' | '';
@@ -39,41 +39,9 @@ export default function SignupPage() {
 
   /* ---------------- HANDLERS ---------------- */
   const handleGoogleSignup = async () => {
-    try {
-      setError('');
-      const result = await initiateGoogleOAuth();
-      
-      if (result.success && result.idToken) {
-        // Send Firebase ID token to backend for verification
-        const response = await api.post('/auth/google/firebase', {
-          idToken: result.idToken,
-          email: result.user.email,
-          displayName: result.user.displayName,
-          photoURL: result.user.photoURL,
-          uid: result.user.uid,
-        });
-        
-        if (response.data.data) {
-          login(response.data.data.user, response.data.data.token);
-          
-          // Redirect based on role
-          if (response.data.data.user.role === 'ADMIN') {
-            navigate('/admin');
-          } else {
-            navigate('/user');
-          }
-        }
-      } else {
-        setError(result.error || 'Google authentication failed');
-      }
-    } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        setError(axiosError.response?.data?.message || 'Google authentication failed');
-      } else {
-        setError('Google authentication failed');
-      }
-    }
+    setError('');
+    await signInWithGoogle();
+    // The redirect will happen, and the result will be handled in GoogleCallbackPage
   };
 
   const handleEmailSignup = async (e: FormEvent) => {
@@ -145,7 +113,7 @@ export default function SignupPage() {
             transition={{ delay: 0.3 }}
             className="flex-1 flex flex-col justify-center"
           >
-            <h2 className="text-4xl font-bold mb-4">Welcome to CodePulse</h2>
+            <img src="/codepulse-logo.png" alt="Codepulse Logo" className="h-16 w-auto mb-4 mx-auto" style={{ maxHeight: '64px' }} />
             <p className="text-xl text-gray-200 max-w-md">
               Join our community and start tracking your GitHub activity
             </p>

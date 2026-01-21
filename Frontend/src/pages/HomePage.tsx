@@ -13,10 +13,7 @@ const CodePulseHomePage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <div className="flex items-center">
-                <svg className="w-8 h-8 text-black dark:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="ml-2 text-xl font-bold text-black dark:text-white">CodePulse</span>
+                <img src="/codepulse-logo.png" alt="Codepulse Logo" className="h-10 w-auto" style={{ maxHeight: '40px' }} />
               </div>
               <div className="hidden md:flex space-x-6">
                 <a href="#features" className="text-black dark:text-white hover:underline transition-colors">Features</a>

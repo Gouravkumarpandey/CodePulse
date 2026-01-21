@@ -35,15 +35,11 @@ export default function Sidebar({ role, isCollapsed = false }: SidebarProps) {
       <div className="p-6 border-b border-gray-200 dark:border-github-border">
         <Link to={role === 'admin' ? '/admin' : '/user'} className="flex items-center gap-3">
           <img 
-            src="https://avatars.githubusercontent.com/u/18133?s=280&v=4" 
-            alt="GitInfo Logo" 
-            className="w-9 h-9 rounded-lg shadow-md"
+            src="/codepulse-logo.png" 
+            alt="Codepulse Logo" 
+            className="w-28 h-auto"
+            style={{ maxWidth: '140px' }}
           />
-          {!isCollapsed && (
-            <div>
-              <span className="font-bold text-lg text-gray-900 dark:text-github-text block">GitInfo</span>
-            </div>
-          )}
         </Link>
       </div>
 

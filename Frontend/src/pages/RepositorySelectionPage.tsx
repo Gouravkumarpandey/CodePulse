@@ -5,15 +5,17 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
 import Sidebar from '@/components/layout/Sidebar';
 
+import { useAuth } from '@/hooks/useAuth';
+
 interface ApiError {
   response?: {
+    status?: number;
     data?: {
       message?: string;
     };
   };
   message?: string;
 }
-
 interface Repository {
   id: number;
   name: string;
@@ -31,53 +33,60 @@ interface Repository {
   html_url: string;
 }
 
-export default function RepositorySelectionPage() {
+
+function RepositorySelectionPage() {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [selectedPlatform, setSelectedPlatform] = useState<'github' | 'gitlab' | 'bitbucket'>('github');
   const [selectedMode, setSelectedMode] = useState<'auto' | 'manual'>('auto');
   const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [repoLoading, setRepoLoading] = useState(true); // Start as true for initial load
   const [showRepoList, setShowRepoList] = useState(false);
   const [connecting, setConnecting] = useState<number | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   const fetchRepositories = useCallback(async () => {
-    setLoading(true);
+    setRepoLoading(true);
     try {
       const response = await api.get('/github/repositories');
       if (response.data.success) {
         const repos = response.data.data.repositories || [];
         if (repos.length === 0) {
-          alert('No repositories found in your GitHub account. Please create a repository first.');
-          navigate('/user');
+          setNeedsAuth(true); // Show connect button if no repos
+          setRepoLoading(false);
           return;
         }
         setRepositories(repos);
         setShowRepoList(true);
+        setNeedsAuth(false);
+        setRepoLoading(false);
       }
     } catch (error: unknown) {
-      console.error('Failed to fetch repositories:', error);
       const apiError = error as ApiError;
       const errorMsg = apiError.response?.data?.message || apiError.message || 'Failed to fetch repositories';
-      alert(`${errorMsg}. Please try authenticating again.`);
-      navigate('/login');
-    } finally {
-      setLoading(false);
+      const statusCode = apiError.response?.status;
+      // If unauthorized or token invalid, show auth button instead of redirecting
+      if (statusCode === 401 || errorMsg.includes('token') || errorMsg.includes('authentication') || errorMsg.includes('GitHub account not connected')) {
+        setNeedsAuth(true);
+        setShowRepoList(false);
+      } else {
+        setNeedsAuth(true);
+      }
+      setRepoLoading(false);
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
-    const justAuthenticated = sessionStorage.getItem('github_authenticated');
-    if (justAuthenticated === 'true') {
+    // Only fetch after Firebase auth is ready and user is logged in
+    if (!loading && user) {
       fetchRepositories();
-      sessionStorage.removeItem('github_authenticated');
     }
-  }, [fetchRepositories]);
+  }, [user, loading, fetchRepositories]);
 
   const handleConnect = () => {
     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'your-github-client-id';
     const redirectUri = encodeURIComponent(window.location.origin + '/github-callback');
     const scope = encodeURIComponent('repo user');
-    
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
   };
 
@@ -93,21 +102,14 @@ export default function RepositorySelectionPage() {
         language: repo.language,
         description: repo.description,
       });
-
       if (response.data.success) {
-        // Clear the authentication flag
         sessionStorage.removeItem('github_authenticated');
-        
-        // Show success message
         alert('Repository connected successfully! Redirecting to dashboard...');
-        
-        // Navigate to user dashboard
         setTimeout(() => navigate('/user'), 500);
       } else {
         throw new Error(response.data.message || 'Failed to connect repository');
       }
     } catch (error: unknown) {
-      console.error('Failed to connect repository:', error);
       const apiError = error as ApiError;
       alert(apiError.response?.data?.message || apiError.message || 'Failed to connect repository. Please try again.');
     } finally {
@@ -118,14 +120,12 @@ export default function RepositorySelectionPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-github-bg">
       <Sidebar role="user" />
-      
       <main className="ml-64 min-h-screen">
         <header className="bg-white dark:bg-github-canvas-subtle border-b border-gray-200 dark:border-github-border">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-github-text">Integrations</h1>
           </div>
         </header>
-
         <div className="max-w-5xl mx-auto px-6 py-12">
           {showRepoList && repositories.length > 0 ? (
             <motion.div
@@ -133,6 +133,7 @@ export default function RepositorySelectionPage() {
               animate={{ opacity: 1, y: 0 }}
               className="max-w-3xl mx-auto"
             >
+              {/* ...existing code... */}
               <div className="bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg overflow-hidden">
                 {/* Modal Header */}
                 <div className="px-6 py-5 border-b border-gray-200 dark:border-github-border">
@@ -143,8 +144,7 @@ export default function RepositorySelectionPage() {
                     Choose a repository to connect. We'll automatically set up webhooks and start tracking activity.
                   </p>
                 </div>
-
-                {/* Repository List */}
+                {/* ...existing code... */}
                 <div className="max-h-[500px] overflow-y-auto">
                   {repositories.map((repo, index) => (
                     <div
@@ -153,6 +153,7 @@ export default function RepositorySelectionPage() {
                         index !== repositories.length - 1 ? 'border-b border-gray-100 dark:border-github-border' : ''
                       }`}
                     >
+                      {/* ...existing code... */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="text-base font-medium text-gray-900 dark:text-github-text">
@@ -184,7 +185,6 @@ export default function RepositorySelectionPage() {
                           </span>
                         </div>
                       </div>
-                      
                       <button
                         onClick={() => handleSelectRepository(repo)}
                         disabled={connecting === repo.id}
@@ -202,7 +202,6 @@ export default function RepositorySelectionPage() {
                     </div>
                   ))}
                 </div>
-
                 {/* Modal Footer */}
                 <div className="px-6 py-4 bg-gray-50 dark:bg-github-canvas-inset border-t border-gray-200 dark:border-github-border flex items-center justify-between">
                   <button
@@ -220,6 +219,7 @@ export default function RepositorySelectionPage() {
             </motion.div>
           ) : (
             <>
+              {/* ...existing code... */}
               <div className="mb-8">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-github-text mb-2">
                   Repository Integrations
@@ -228,8 +228,9 @@ export default function RepositorySelectionPage() {
                   Connect your Github, Gitlab and Bitbucket repositories to track activity and automate workflows.
                 </p>
               </div>
-
+              {/* ...existing code... */}
               <div className="flex gap-3 mb-8">
+                {/* ...existing code for platform buttons... */}
                 <button
                   onClick={() => setSelectedPlatform('github')}
                   className={`px-6 py-2.5 rounded-lg border font-medium transition-all ${
@@ -247,7 +248,7 @@ export default function RepositorySelectionPage() {
                     Github
                   </div>
                 </button>
-                
+                {/* ...existing code for Bitbucket and GitLab buttons... */}
                 <button
                   onClick={() => setSelectedPlatform('bitbucket')}
                   className={`px-6 py-2.5 rounded-lg border font-medium transition-all ${
@@ -261,7 +262,6 @@ export default function RepositorySelectionPage() {
                     Bitbucket
                   </div>
                 </button>
-                
                 <button
                   onClick={() => setSelectedPlatform('gitlab')}
                   className={`px-6 py-2.5 rounded-lg border font-medium transition-all ${
@@ -276,7 +276,7 @@ export default function RepositorySelectionPage() {
                   </div>
                 </button>
               </div>
-
+              {/* ...existing code for mode buttons... */}
               <div className="flex border-b border-gray-200 dark:border-github-border mb-12">
                 <button
                   onClick={() => setSelectedMode('auto')}
@@ -294,7 +294,6 @@ export default function RepositorySelectionPage() {
                     </span>
                   </div>
                 </button>
-                
                 <button
                   onClick={() => setSelectedMode('manual')}
                   className={`px-6 py-3 border-b-2 font-medium transition-colors ${
@@ -312,27 +311,26 @@ export default function RepositorySelectionPage() {
                   </div>
                 </button>
               </div>
-
+              {/* ...existing code for auto/manual integration... */}
               {selectedMode === 'auto' && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-center"
                 >
-                  {loading ? (
+                  {repoLoading ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <Loader2 className="w-12 h-12 text-github-accent animate-spin mb-4" />
                       <p className="text-gray-600 dark:text-github-text-secondary">
                         Loading repositories...
                       </p>
                     </div>
-                  ) : (
+                  ) : needsAuth ? (
                     <>
                       <div className="flex items-center justify-center gap-8 mb-12">
                         <div className="w-24 h-24 rounded-full bg-amber-600 flex items-center justify-center">
                           <GitBranch className="w-12 h-12 text-white" />
                         </div>
-                        
                         <div className="flex items-center gap-3">
                           <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
                           <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
@@ -342,7 +340,6 @@ export default function RepositorySelectionPage() {
                           <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
                           <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
                         </div>
-                        
                         <div className="w-24 h-24 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center border-2 border-gray-200 dark:border-gray-700">
                           <img 
                             src="https://cdn.worldvectorlogo.com/logos/github-icon-2.svg" 
@@ -351,38 +348,41 @@ export default function RepositorySelectionPage() {
                           />
                         </div>
                       </div>
-
                       <div className="max-w-md mx-auto mb-8">
                         <h3 className="text-2xl font-semibold text-gray-900 dark:text-github-text mb-3">
-                          Quick Connect with Github
+                          Connect with GitHub
                         </h3>
                         <p className="text-gray-600 dark:text-github-text-secondary">
-                          Authorize GitInfo to access your repositories. We'll automatically set up webhooks and handle all the configuration.
+                          Authorize CodePulse to access your repositories. We'll automatically set up webhooks and handle all the configuration.
                         </p>
                       </div>
-
                       <button
                         onClick={handleConnect}
                         className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
                       >
-                        Connect with Github
+                        Connect with GitHub
                       </button>
-
                       <div className="flex items-center justify-center gap-2 mt-6 text-sm text-gray-500 dark:text-github-text-secondary">
                         <CheckCircle className="w-4 h-4" />
                         <span>Secure OAuth authentication</span>
                       </div>
                     </>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600 dark:text-github-text-secondary">
+                        Checking for GitHub connection...
+                      </p>
+                    </div>
                   )}
                 </motion.div>
               )}
-
               {selectedMode === 'manual' && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="max-w-2xl mx-auto"
                 >
+                  {/* ...existing code for manual integration... */}
                   <div className="bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg p-8">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-github-text mb-4">
                       Manual Repository Configuration
@@ -390,7 +390,6 @@ export default function RepositorySelectionPage() {
                     <p className="text-gray-600 dark:text-github-text-secondary mb-6">
                       Manually configure webhook settings and provide repository access.
                     </p>
-                    
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-github-text mb-2">
@@ -402,7 +401,6 @@ export default function RepositorySelectionPage() {
                           className="w-full px-4 py-2 border border-gray-300 dark:border-github-border rounded-lg bg-white dark:bg-github-canvas-inset text-gray-900 dark:text-github-text focus:ring-2 focus:ring-blue-500 dark:focus:ring-github-accent-emphasis focus:border-transparent"
                         />
                       </div>
-                      
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-github-text mb-2">
                           Access Token
@@ -413,7 +411,6 @@ export default function RepositorySelectionPage() {
                           className="w-full px-4 py-2 border border-gray-300 dark:border-github-border rounded-lg bg-white dark:bg-github-canvas-inset text-gray-900 dark:text-github-text focus:ring-2 focus:ring-blue-500 dark:focus:ring-github-accent-emphasis focus:border-transparent"
                         />
                       </div>
-                      
                       <button className="w-full px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors">
                         Connect Repository
                       </button>
@@ -421,7 +418,6 @@ export default function RepositorySelectionPage() {
                   </div>
                 </motion.div>
               )}
-
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -447,3 +443,5 @@ export default function RepositorySelectionPage() {
     </div>
   );
 }
+
+export default RepositorySelectionPage;

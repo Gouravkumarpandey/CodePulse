@@ -1,34 +1,35 @@
-import { signInWithPopup, UserCredential } from 'firebase/auth';
-import { auth, googleProvider } from '../config/firebase';
+/**
+ * Initiate Google OAuth 2.0 flow (standard, not Firebase)
+ * Redirects user to Google OAuth consent screen
+ */
+export const signInWithGoogle = () => {
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
+  const scope = 'openid email profile';
+  const responseType = 'code';
+  const state = Math.random().toString(36).substring(2); // Optional: for CSRF protection
+  const url =
+    `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${encodeURIComponent(clientId)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=${responseType}` +
+    `&scope=${encodeURIComponent(scope)}` +
+    `&state=${state}`;
+  window.location.href = url;
+};
 
 /**
- * Initiate Google OAuth using Firebase Authentication
- * This opens a popup for Google sign-in
+ * Handle Google OAuth 2.0 callback (extract code from URL)
+ * Returns { code, state } if present, else error
  */
-export const initiateGoogleOAuth = async () => {
-  try {
-    const result: UserCredential = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    
-    // Get the ID token from Firebase
-    const idToken = await user.getIdToken();
-    
-    return {
-      success: true,
-      user: {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-      },
-      idToken,
-    };
-  } catch (error: any) {
-    console.error('Google OAuth error:', error);
-    return {
-      success: false,
-      error: error.message || 'Google authentication failed',
-    };
+export const handleGoogleOAuthCallback = () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  if (code) {
+    return { success: true, code, state };
+  } else {
+    return { success: false, error: params.get('error') || 'No code found in callback' };
   }
 };
 

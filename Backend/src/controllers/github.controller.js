@@ -45,12 +45,34 @@ const githubCallback = async (req, res) => {
 // Fetch user repositories
 const fetchRepositories = async (req, res) => {
   try {
+    console.log('=== Fetch Repositories Request ===');
     const user = req.user;
-    const repos = await githubService.fetchUserRepositories(user.accessToken);
+    console.log('User from request:', user ? user.email : 'NOT FOUND');
+    
+    if (!user) {
+      return response.error(res, 'User not authenticated', 401);
+    }
+
+    const accessToken = user.accessToken || user.githubAccessToken;
+    console.log('GitHub access token available:', !!accessToken);
+    
+    if (!accessToken) {
+      console.error('No GitHub access token found for user:', user.email);
+      return response.error(res, 'GitHub account not connected. Please authenticate with GitHub first.', 401);
+    }
+
+    console.log('Fetching repositories from GitHub...');
+    const repos = await githubService.fetchUserRepositories(accessToken);
+    console.log('Repositories fetched successfully:', repos.length);
 
     response.success(res, { repositories: repos }, 'Repositories fetched successfully');
   } catch (error) {
-    response.error(res, error.message, 500);
+    console.error('Error fetching repositories:', error);
+    if (error.response?.status === 401) {
+      response.error(res, 'GitHub token invalid or expired. Please authenticate again.', 401);
+    } else {
+      response.error(res, error.message || 'Failed to fetch repositories', 500);
+    }
   }
 };
 
