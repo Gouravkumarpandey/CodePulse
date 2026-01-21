@@ -114,8 +114,7 @@ export default function LoginPage() {
             transition={{ delay: 0.3 }}
             className="flex-1 flex flex-col justify-center text-white"
           >
-            <img src="/codepulse-logo.png" alt="Codepulse Logo" className="h-16 w-auto mb-4 mx-auto" style={{ maxHeight: '64px' }} />
-              <img src="/logo.jpg" alt="Codepulse Logo" className="h-16 w-auto mb-4 mx-auto" style={{ maxHeight: '64px' }} />
+            <img src="/logo.jpg" alt="Codepulse Logo" className="h-24 w-auto mb-6 mx-auto" style={{ maxHeight: '96px' }} />
             <p className="text-xl text-gray-200 max-w-md">
               Track your GitHub activity and boost productivity
             </p>
