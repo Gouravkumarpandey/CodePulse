@@ -115,6 +115,7 @@ export default function LoginPage() {
             className="flex-1 flex flex-col justify-center text-white"
           >
             <img src="/codepulse-logo.png" alt="Codepulse Logo" className="h-16 w-auto mb-4 mx-auto" style={{ maxHeight: '64px' }} />
+              <img src="/logo.jpg" alt="Codepulse Logo" className="h-16 w-auto mb-4 mx-auto" style={{ maxHeight: '64px' }} />
             <p className="text-xl text-gray-200 max-w-md">
               Track your GitHub activity and boost productivity
             </p>
@@ -132,19 +133,7 @@ export default function LoginPage() {
         >
           <div className="mb-8">
             <div className="flex items-center mb-6">
-              <svg
-                className="w-10 h-10 text-black dark:text-white"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
+              <img src="/logo.jpg" alt="Codepulse Logo" className="w-10 h-10 object-contain" />
               <h1 className="text-3xl font-bold text-black dark:text-white ml-3">
                 Sign in
               </h1>

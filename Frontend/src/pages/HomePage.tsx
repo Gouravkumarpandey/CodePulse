@@ -13,7 +13,7 @@ const CodePulseHomePage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <div className="flex items-center">
-                <img src="/codepulse-logo.png" alt="Codepulse Logo" className="h-10 w-auto" style={{ maxHeight: '40px' }} />
+                 <img src="/logo.jpg" alt="Codepulse Logo" className="h-10 w-auto" style={{ maxHeight: '40px' }} />
               </div>
               <div className="hidden md:flex space-x-6">
                 <a href="#features" className="text-black dark:text-white hover:underline transition-colors">Features</a>
