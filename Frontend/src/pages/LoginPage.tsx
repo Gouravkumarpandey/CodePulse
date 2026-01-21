@@ -114,7 +114,6 @@ export default function LoginPage() {
             transition={{ delay: 0.3 }}
             className="flex-1 flex flex-col justify-center text-white"
           >
-            <img src="/logo.jpg" alt="Codepulse Logo" className="h-24 w-auto mb-6 mx-auto" style={{ maxHeight: '96px' }} />
             <p className="text-xl text-gray-200 max-w-md">
               Track your GitHub activity and boost productivity
             </p>
@@ -131,15 +130,11 @@ export default function LoginPage() {
           className="w-full max-w-md"
         >
           <div className="mb-8">
-            <div className="flex items-center mb-6">
-              <img src="/logo.jpg" alt="Codepulse Logo" className="w-10 h-10 object-contain" />
-              <h1 className="text-3xl font-bold text-black dark:text-white ml-3">
-                Sign in
-              </h1>
+            <div className="flex flex-col items-center mb-6">
+              <img src="/logo.jpg" alt="Codepulse Logo" className="w-800000 h-80000 object-contain mb-4" />
+              {/* <h2 className="text-3xl font-bold text-black dark:text-white mb-1">Sign in</h2> */}
+              <p className="text-black dark:text-white text-lg">Welcome back! Please sign in to continue</p>
             </div>
-            <p className="text-black dark:text-white text-lg">
-              Welcome back! Please sign in to continue
-            </p>
           </div>
 
           {/* GOOGLE LOGIN */}

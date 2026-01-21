@@ -78,10 +78,16 @@ function RepositorySelectionPage() {
 
   useEffect(() => {
     // Only fetch after Firebase auth is ready and user is logged in
-    if (!loading && user) {
+    if (!loading) {
+      if (!user) {
+        // User is not authenticated, redirect to login
+        navigate('/login');
+        return;
+      }
+      // User is authenticated, fetch repositories
       fetchRepositories();
     }
-  }, [user, loading, fetchRepositories]);
+  }, [user, loading, fetchRepositories, navigate]);
 
   const handleConnect = () => {
     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'your-github-client-id';
@@ -119,6 +125,10 @@ function RepositorySelectionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-github-bg">
+      {/* Logo at the top */}
+      <div className="w-full flex justify-center items-center py-6">
+        <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
+      </div>
       <Sidebar role="user" />
       <main className="ml-64 min-h-screen">
         <header className="bg-white dark:bg-github-canvas-subtle border-b border-gray-200 dark:border-github-border">

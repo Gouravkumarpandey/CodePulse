@@ -167,6 +167,10 @@ export default function UserDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0d1117]">
+      {/* Logo at the top */}
+      <div className="w-full flex justify-center items-center py-6">
+        <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
+      </div>
       <Sidebar role="user" isCollapsed={sidebarCollapsed} />
       
       <main className={`min-h-screen p-6 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
@@ -356,6 +360,11 @@ export default function UserDashboardPage() {
 
               {/* Right Column - Product Activity, Alerts, Rule Engine */}
               <div className="space-y-6">
+                {/* Character Image */}
+                <div className="flex justify-center">
+                  <img src="/image/gitcharacter.svg" alt="Git Character" className="w-full h-auto max-w-md" />
+                </div>
+                
                 {/* Product Activity - Circular Chart */}
                 <Card>
                   <div className="flex items-center justify-between mb-4">

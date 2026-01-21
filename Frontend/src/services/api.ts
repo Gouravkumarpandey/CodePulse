@@ -26,10 +26,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Unauthorized - clear auth and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/auth/login';
+      // Don't redirect for GitHub repositories endpoint - let the page handle it
+      const isGitHubRepoEndpoint = error.config?.url?.includes('/github/repositories');
+      
+      if (!isGitHubRepoEndpoint) {
+        // Unauthorized - clear auth and redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

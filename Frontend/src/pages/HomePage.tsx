@@ -13,7 +13,7 @@ const CodePulseHomePage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <div className="flex items-center">
-                 <img src="/logo.jpg" alt="Codepulse Logo" className="h-10 w-auto" style={{ maxHeight: '40px' }} />
+                 <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
               </div>
               <div className="hidden md:flex space-x-6">
                 <a href="#features" className="text-black dark:text-white hover:underline transition-colors">Features</a>
@@ -45,13 +45,21 @@ const CodePulseHomePage = () => {
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-black dark:text-white mb-6 tracking-tight">
-              Real-Time Hackathon<br />
-              <span className="text-black dark:text-white">Monitoring with GitHub</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-black dark:text-white max-w-3xl mx-auto mb-10 leading-relaxed">
-              Ensure fair and continuous development during hackathons by tracking repository push activity in real-time. Monitor compliance, detect violations, and maintain transparency.
-            </p>
+            <img
+              src="/info.jpg"
+              alt="Real-Time Hackathon Monitoring with GitHub"
+              className="mx-auto mb-6 w-full -mt-32"
+              style={{ maxHeight: '400px', minWidth: '900px', marginTop: '-8rem', objectFit: 'contain' }}
+            />
+              <p className="text-xl md:text-2xl text-black dark:text-white max-w-3xl mx-auto mb-10 leading-relaxed whitespace-pre-line">
+                   Track
+                 repository pushes
+               in real time to ensure
+            fair, continuous development,
+               detect rule violations
+                 and maintain
+                   transparency.
+              </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button onClick={() => navigate('/signup')} className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-8 py-4 rounded-lg text-lg font-semibold transition-all">
                 Get Started for Free

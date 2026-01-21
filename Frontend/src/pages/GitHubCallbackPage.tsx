@@ -35,42 +35,72 @@ export default function GitHubCallbackPage() {
         setMessage('Exchanging code for access token...');
         
         // Exchange code for GitHub token via backend
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/github/callback?code=${code}`, {
-          method: 'POST',
+        const callbackResponse = await fetch(`${import.meta.env.VITE_API_URL}/github/callback?code=${code}`, {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         });
         
-        if (!response.ok) {
-          const errorData = await response.json();
+        if (!callbackResponse.ok) {
+          const errorData = await callbackResponse.json();
           throw new Error(errorData.message || 'Failed to authenticate with GitHub');
         }
         
-        const data = await response.json();
+        const callbackData = await callbackResponse.json();
         
-        if (data.success) {
-          // Store user and token in context and localStorage
-          login(data.data.user, data.data.token);
-          
-          // Store token in localStorage for persistence
-          localStorage.setItem('token', data.data.token);
-          localStorage.setItem('user', JSON.stringify(data.data.user));
-          
-          // Set flag for repository selection page
-          sessionStorage.setItem('github_authenticated', 'true');
-          
-          setStatus('success');
-          setMessage('Successfully authenticated! Redirecting to repository selection...');
-          setTimeout(() => navigate('/repo-selection'), 1500);
-        } else {
-          throw new Error(data.message || 'Authentication failed');
+        if (!callbackData.success) {
+          throw new Error(callbackData.message || 'Authentication failed');
         }
+
+        // Now link the GitHub account to the current user
+        setMessage('Linking GitHub account...');
+        
+        const token = localStorage.getItem('token');
+        const linkResponse = await fetch(`${import.meta.env.VITE_API_URL}/github/link-account`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            githubAccessToken: callbackData.data.githubAccessToken,
+            githubUser: callbackData.data.githubUser,
+          }),
+        });
+
+        if (!linkResponse.ok) {
+          const errorData = await linkResponse.json();
+          throw new Error(errorData.message || 'Failed to link GitHub account');
+        }
+        
+        // Update local user data
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const updatedUser = {
+          ...currentUser,
+          githubAccessToken: callbackData.data.githubAccessToken,
+          githubId: callbackData.data.githubUser?.githubId,
+          username: callbackData.data.githubUser?.username || currentUser.username,
+        };
+        
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Also update the auth context
+        if (login) {
+          login(updatedUser, token || '');
+        }
+        
+        // Set flag for repository selection page
+        sessionStorage.setItem('github_authenticated', 'true');
+        
+        setStatus('success');
+        setMessage('Successfully authenticated! Redirecting to repository selection...');
+        setTimeout(() => navigate('/repo-selection'), 1500);
       } catch (err: any) {
         console.error('GitHub authentication error:', err);
         setStatus('error');
         setMessage(err.message || 'Authentication failed');
-        setTimeout(() => navigate('/login'), 3000);
+        setTimeout(() => navigate('/repo-selection'), 3000);
       }
     };
 

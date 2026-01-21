@@ -113,9 +113,8 @@ export default function SignupPage() {
             transition={{ delay: 0.3 }}
             className="flex-1 flex flex-col justify-center"
           >
-            <img src="/codepulse-logo.png" alt="Codepulse Logo" className="h-16 w-auto mb-4 mx-auto" style={{ maxHeight: '64px' }} />
-              <img src="/logo.jpg" alt="Codepulse Logo" className="h-16 w-auto mb-4 mx-auto" style={{ maxHeight: '64px' }} />
-            <p className="text-xl text-gray-200 max-w-md">
+            {/* Logo removed as requested */}
+            <p className="text-xl text-gray-200 max-w-md text-center">
               Join our community and start tracking your GitHub activity
             </p>
           </motion.div>
@@ -130,11 +129,11 @@ export default function SignupPage() {
           className="w-full max-w-md"
         >
           <div className="mb-8">
-            <div className="flex items-center mb-6">
-              <img src="/logo.jpg" alt="Codepulse Logo" className="w-10 h-10 object-contain" />
-              <h1 className="text-3xl font-bold text-black dark:text-white ml-3">Create Account</h1>
+            <div className="flex flex-col items-center mb-6">
+              <img src="/logo.jpg" alt="Codepulse Logo" className="w-8000 h-8000 object-contain mb-4" />
+              <h1 className="text-3xl font-bold text-black dark:text-white mb-1">Create Account</h1>
+              <p className="text-black dark:text-white text-lg">Get started with CodePulse today</p>
             </div>
-            <p className="text-black dark:text-white text-lg">Get started with CodePulse today</p>
           </div>
 
           {/* Google Signup */}

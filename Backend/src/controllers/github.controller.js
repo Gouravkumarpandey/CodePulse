@@ -11,38 +11,75 @@ const response = require('../utils/response.util');
 const githubCallback = async (req, res) => {
   try {
     const { code } = req.query;
-    const userId = req.user?._id;
 
     if (!code) {
       return response.error(res, 'Authorization code not provided', 400);
     }
 
+    console.log('GitHub callback - exchanging code for token...');
+    
     // Exchange code for access token
-    const { access_token, user: githubUser } = await githubService.getAccessToken(code);
-
-    // Find or create user
-    let user = await User.findOne({ githubId: githubUser.id });
-    if (!user) {
-      user = new User({
-        githubId: githubUser.id,
-        username: githubUser.login,
-        email: githubUser.email,
-        avatar: githubUser.avatar_url,
-        accessToken: access_token,
-      });
-      await user.save();
-    } else {
-      user.accessToken = access_token;
-      await user.save();
+    const tokenData = await githubService.getAccessToken(code);
+    console.log('Token exchange successful');
+    
+    const { access_token } = tokenData;
+    const githubUser = tokenData.user || tokenData;
+    
+    // Get GitHub user info if not included in token response
+    let userInfo = githubUser;
+    if (!githubUser.login) {
+      console.log('Fetching GitHub user info...');
+      userInfo = await githubService.getGitHubUser(access_token);
     }
-
-    response.success(res, { user, accessToken: access_token }, 'GitHub authentication successful');
+    
+    console.log('GitHub user:', userInfo.login);
+    
+    // For now, we'll update the existing logged-in user's GitHub token
+    // In a real app, you'd match by GitHub ID or create a new user
+    
+    response.success(res, { 
+      githubUser: {
+        githubId: userInfo.id,
+        username: userInfo.login,
+        email: userInfo.email,
+        avatar: userInfo.avatar_url,
+      },
+      githubAccessToken: access_token,
+    }, 'GitHub authentication successful');
   } catch (error) {
-    response.error(res, error.message, 500);
+    console.error('GitHub callback error:', error);
+    response.error(res, error.message || 'GitHub authentication failed', 500);
   }
 };
 
-// Fetch user repositories
+// Link GitHub account to current authenticated user
+const linkGitHubAccount = async (req, res) => {
+  try {
+    const { githubAccessToken, githubUser } = req.body;
+    const userId = req.user._id;
+
+    if (!githubAccessToken) {
+      return response.error(res, 'GitHub access token required', 400);
+    }
+
+    // Update user in Firestore with GitHub info
+    await FirestoreService.updateUser(userId, {
+      githubAccessToken,
+      githubId: githubUser?.githubId,
+      username: githubUser?.username,
+      updatedAt: new Date(),
+    });
+
+    response.success(res, { 
+      message: 'GitHub account linked successfully' 
+    }, 'GitHub account linked');
+  } catch (error) {
+    console.error('Link GitHub account error:', error);
+    response.error(res, error.message || 'Failed to link GitHub account', 500);
+  }
+};
+
+module.exports = { githubCallback, linkGitHubAccount, fetchRepositories, connectRepository };
 const fetchRepositories = async (req, res) => {
   try {
     console.log('=== Fetch Repositories Request ===');
