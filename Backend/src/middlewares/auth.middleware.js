@@ -21,9 +21,11 @@ const verifyToken = async (req, res, next) => {
       return response.error(res, 'No authorization token provided', 401);
     }
 
+    console.log('Token received (first 20 chars):', token.substring(0, 20));
+
     // Check if this is a GitHub token (not a JWT)
     // GitHub tokens start with 'gho_', 'ghp_', etc.
-    if (token.startsWith('gho_') || token.startsWith('ghp_') || token.startsWith('ghu_') || token.startsWith('ghs_')) {
+    if (token.startsWith('gho_') || token.startsWith('ghp_') || token.startsWith('ghu_') || token.startsWith('ghs_') || token.startsWith('github_pat_')) {
       // This is a GitHub token, use it directly
       req.user = {
         accessToken: token,
@@ -35,6 +37,7 @@ const verifyToken = async (req, res, next) => {
     }
 
     // Otherwise, treat as JWT
+    console.log('Attempting JWT verification...');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log('JWT decoded:', decoded);
     

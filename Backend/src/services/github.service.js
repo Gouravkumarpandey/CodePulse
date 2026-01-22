@@ -17,6 +17,10 @@ class GitHubService {
    */
   static async getAccessToken(code) {
     try {
+      console.log('Exchanging code for access token...');
+      console.log('Client ID:', GITHUB_CONFIG.clientID);
+      console.log('Code:', code);
+      
       const response = await axios.post(
         'https://github.com/login/oauth/access_token',
         {
@@ -29,19 +33,35 @@ class GitHubService {
         }
       );
 
-      const { access_token } = response.data;
+      console.log('GitHub token response:', response.data);
+
+      const { access_token, error, error_description } = response.data;
+
+      if (error) {
+        throw new Error(`GitHub OAuth error: ${error_description || error}`);
+      }
+
+      if (!access_token) {
+        throw new Error('No access token received from GitHub');
+      }
 
       // Get user info
       const userResponse = await axios.get('https://api.github.com/user', {
         headers: { Authorization: `Bearer ${access_token}` },
       });
 
+      console.log('GitHub user fetched:', userResponse.data.login);
+
       return {
         access_token,
         user: userResponse.data,
       };
     } catch (error) {
-      throw new Error('Failed to get access token: ' + error.message);
+      console.error('GitHub token exchange error:', error.response?.data || error.message);
+      if (error.response?.status === 401) {
+        throw new Error('Invalid GitHub client credentials or authorization code');
+      }
+      throw new Error('Failed to get access token: ' + (error.response?.data?.error_description || error.message));
     }
   }
 

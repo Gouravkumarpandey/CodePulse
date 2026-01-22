@@ -37,7 +37,7 @@ const CodePulseHomePage = () => {
         {/* Background Image */}
         <div className="absolute inset-0 opacity-30 dark:opacity-20">
           <img
-            src="https://github.blog/wp-content/uploads/2021/02/card.png?w=1200"
+            src="https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Legends-PMP_Hero-Art_FullBleedA_Tablet_2048x1152.jpg"
             alt="Hero background"
             className="w-full h-full object-cover"
           />

@@ -12,9 +12,15 @@ const api = axios.create({
 // Request interceptor to add auth token (from localStorage)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Only add JWT token if Authorization header is not already set
+    if (!config.headers.Authorization) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('[API Interceptor] Added JWT token to request');
+      }
+    } else {
+      console.log('[API Interceptor] Authorization header already set:', config.headers.Authorization?.substring(0, 30));
     }
     return config;
   },

@@ -49,6 +49,8 @@ function RepositorySelectionPage() {
     setRepoLoading(true);
     try {
       const token = localStorage.getItem('github_token');
+      console.log('GitHub token from localStorage:', token);
+      console.log('Token starts with gho_:', token?.startsWith('gho_'));
       const response = await api.get('/github/repositories', {
         headers: { Authorization: `Bearer ${token}` }
       });

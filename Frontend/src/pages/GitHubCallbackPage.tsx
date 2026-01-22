@@ -30,9 +30,21 @@ export default function GitHubCallbackPage() {
       return;
     }
 
+    // Prevent code reuse by checking if we've already processed this code
+    const processedCode = sessionStorage.getItem('github_code_processed');
+    if (processedCode === code) {
+      setStatus('error');
+      setMessage('This authorization code has already been used');
+      setTimeout(() => navigate('/repo-selection'), 3000);
+      return;
+    }
+
     const authenticate = async () => {
       try {
         setMessage('Exchanging code for access token...');
+        
+        // Mark this code as processed to prevent reuse
+        sessionStorage.setItem('github_code_processed', code);
         
         // Exchange code for GitHub token via backend
         const callbackResponse = await fetch(`${import.meta.env.VITE_API_URL}/github/callback?code=${code}`, {
@@ -55,6 +67,8 @@ export default function GitHubCallbackPage() {
 
         // Save GitHub access token to localStorage
         localStorage.setItem('github_token', callbackData.data.githubAccessToken);
+        console.log('GitHub authentication successful - Token saved to localStorage');
+        console.log('GitHub token (first 20 chars):', callbackData.data.githubAccessToken?.substring(0, 20));
 
         // Now link the GitHub account to the current user
         setMessage('Linking GitHub account...');
@@ -95,6 +109,9 @@ export default function GitHubCallbackPage() {
         
         // Set flag for repository selection page
         sessionStorage.setItem('github_authenticated', 'true');
+        
+        // Clear the processed code marker on success
+        sessionStorage.removeItem('github_code_processed');
         
         setStatus('success');
         setMessage('Successfully authenticated! Redirecting to repository selection...');
