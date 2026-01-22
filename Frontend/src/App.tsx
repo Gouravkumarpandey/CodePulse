@@ -26,6 +26,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/auth/callback" element={<GitHubCallbackPage />} />
+            <Route path="/github/callback" element={<GitHubCallbackPage />} />
             <Route path="/github-callback" element={<GitHubCallbackPage />} />
             <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
             <Route path="/repo-selection" element={<RepositorySelectionPage />} />

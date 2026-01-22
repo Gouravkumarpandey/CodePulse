@@ -53,6 +53,9 @@ export default function GitHubCallbackPage() {
           throw new Error(callbackData.message || 'Authentication failed');
         }
 
+        // Save GitHub access token to localStorage
+        localStorage.setItem('github_token', callbackData.data.githubAccessToken);
+
         // Now link the GitHub account to the current user
         setMessage('Linking GitHub account...');
         

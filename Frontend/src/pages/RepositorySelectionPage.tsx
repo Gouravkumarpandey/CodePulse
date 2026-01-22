@@ -48,7 +48,10 @@ function RepositorySelectionPage() {
   const fetchRepositories = useCallback(async () => {
     setRepoLoading(true);
     try {
-      const response = await api.get('/github/repositories');
+      const token = localStorage.getItem('github_token');
+      const response = await api.get('/github/repositories', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (response.data.success) {
         const repos = response.data.data.repositories || [];
         if (repos.length === 0) {
@@ -91,7 +94,7 @@ function RepositorySelectionPage() {
 
   const handleConnect = () => {
     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'your-github-client-id';
-    const redirectUri = encodeURIComponent(window.location.origin + '/github-callback');
+    const redirectUri = encodeURIComponent('http://localhost:5173/github/callback');
     const scope = encodeURIComponent('repo user');
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
   };

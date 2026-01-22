@@ -58,14 +58,13 @@ const CodePulseHomePage = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button onClick={() => navigate('/signup')} className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-8 py-4 rounded-lg text-lg font-semibold transition-all">
-                Get Started for Free
+              <button 
+                onClick={() => navigate('/signup')} 
+                className="bg-[#3c3c3c] hover:bg-[#4a4a4a] text-white px-8 py-4 rounded-lg text-lg font-bold transition-all shadow-lg hover:shadow-xl border-2 border-[#55ff55] hover:border-[#66ff66]"
+                style={{ fontFamily: 'Minecraftia, sans-serif' }}
+              >
+                Let's Explore
               </button>
-              <a href="https://github.com/Gouravkumarpandey/CodePulse" target="_blank" rel="noopener noreferrer">
-                <button className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-8 py-4 rounded-lg text-lg font-semibold transition-all">
-                  View on GitHub →
-                </button>
-              </a>
             </div>
           </div>
 
