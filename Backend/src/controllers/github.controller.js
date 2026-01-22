@@ -79,7 +79,7 @@ const linkGitHubAccount = async (req, res) => {
   }
 };
 
-module.exports = { githubCallback, linkGitHubAccount, fetchRepositories, connectRepository };
+// Fetch user repositories from GitHub
 const fetchRepositories = async (req, res) => {
   try {
     console.log('=== Fetch Repositories Request ===');
@@ -210,4 +210,4 @@ const connectRepository = async (req, res) => {
   }
 };
 
-module.exports = { githubCallback, fetchRepositories, connectRepository };
+module.exports = { githubCallback, linkGitHubAccount, fetchRepositories, connectRepository };

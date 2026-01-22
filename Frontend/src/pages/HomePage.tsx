@@ -8,7 +8,7 @@ const CodePulseHomePage = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-200">
       {/* Navigation */}
-      <nav className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black sticky top-0 z-50 backdrop-blur-sm bg-opacity-90">
+      <nav className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black sticky top-0 z-50 backdrop-blur-sm bg-opacity-90" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
@@ -45,21 +45,18 @@ const CodePulseHomePage = () => {
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <img
-              src="/info.jpg"
-              alt="Real-Time Hackathon Monitoring with GitHub"
-              className="mx-auto mb-6 w-full -mt-32"
-              style={{ maxHeight: '400px', minWidth: '900px', marginTop: '-8rem', objectFit: 'contain' }}
-            />
-              <p className="text-xl md:text-2xl text-black dark:text-white max-w-3xl mx-auto mb-10 leading-relaxed whitespace-pre-line">
-                   Track
-                 repository pushes
-               in real time to ensure
-            fair, continuous development,
-               detect rule violations
-                 and maintain
-                   transparency.
-              </p>
+            {/* Minecraft Themed Hero Block */}
+            <div className="flex flex-col items-center justify-center mb-10" style={{ fontFamily: 'Minecraftia, sans-serif' }}>
+              <img
+                src="/info.jpg"
+                alt="Real-Time Hackathon Monitoring with GitHub"
+                className="mx-auto mb-6 w-full -mt-32"
+                style={{ maxHeight: '400px', minWidth: '900px', marginTop: '-8rem', objectFit: 'contain' }}
+              />
+              <div className="max-w-2xl text-2xl md:text-4xl text-black dark:text-white text-center">
+                Track commits, activity, and team progress live — all in one dashboard.
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button onClick={() => navigate('/signup')} className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-8 py-4 rounded-lg text-lg font-semibold transition-all">
                 Get Started for Free
@@ -367,7 +364,7 @@ const CodePulseHomePage = () => {
       </section>
 
       {/* Footer with Image */}
-      <footer className="relative bg-white dark:bg-black text-black dark:text-white py-16 border-t border-black dark:border-white overflow-hidden">
+      <footer className="relative bg-white dark:bg-black text-black dark:text-white py-16 border-t border-black dark:border-white overflow-hidden" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
         {/* Background Image */}
         <div className="absolute inset-0 opacity-30 dark:opacity-20">
           <img
@@ -382,11 +379,9 @@ const CodePulseHomePage = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center mb-4">
-                <svg className="w-8 h-8 text-black dark:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="ml-2 text-xl font-bold text-black dark:text-white">CodePulse</span>
-              </div>
+                  <img src="/logo.jpg" alt="CodePulse Logo" className="w-10 h-10 object-contain" />
+                  <span className="ml-2 text-xl font-bold text-black dark:text-white" style={{ fontFamily: '"Minecraftia", sans-serif' }}>CodePulse</span>
+                </div>
               <p className="text-sm text-black dark:text-white">
                 Real-time hackathon monitoring with GitHub integration.
               </p>

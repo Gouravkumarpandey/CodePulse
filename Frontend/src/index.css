@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Minecraftia";
+  src: url("/assets/font/Minecrafter.Reg.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   * {
     @apply border-gray-200 dark:border-github-border;
@@ -25,6 +33,7 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply text-gray-900 dark:text-github-text;
+    font-family: "Minecraftia", sans-serif;
   }
 
   a {
