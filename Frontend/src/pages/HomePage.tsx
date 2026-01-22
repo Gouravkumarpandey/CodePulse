@@ -35,9 +35,9 @@ const CodePulseHomePage = () => {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-white dark:bg-black py-20 lg:py-32">
         {/* Background Image */}
-        <div className="absolute inset-0 opacity-30 dark:opacity-20">
+        <div className="absolute inset-0 opacity-60 dark:opacity-40">
           <img
-            src="https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Legends-PMP_Hero-Art_FullBleedA_Tablet_2048x1152.jpg"
+            src="https://github.blog/wp-content/uploads/2020/12/102393310-07478b80-3f8d-11eb-84eb-392d555ebd29.png?w=1200"
             alt="Hero background"
             className="w-full h-full object-cover"
           />
@@ -60,7 +60,7 @@ const CodePulseHomePage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button 
                 onClick={() => navigate('/signup')} 
-                className="bg-[#3c3c3c] hover:bg-[#4a4a4a] text-white px-8 py-4 rounded-lg text-lg font-bold transition-all shadow-lg hover:shadow-xl border-2 border-[#55ff55] hover:border-[#66ff66]"
+                className="bg-[#3c3c3c] hover:bg-[#4a4a4a] text-white px-8 py-4 rounded-lg text-lg font-bold transition-all shadow-lg hover:shadow-xl border-2 border-black hover:border-gray-800"
                 style={{ fontFamily: 'Minecraftia, sans-serif' }}
               >
                 Let's Explore
