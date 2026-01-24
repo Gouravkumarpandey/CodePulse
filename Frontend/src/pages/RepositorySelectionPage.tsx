@@ -65,8 +65,10 @@ function RepositorySelectionPage() {
           'Authorization': `Bearer ${githubToken}`,
         },
       });
-      if (response.data.success) {
-        const repos = response.data.data.repositories || [];
+      
+      // Backend returns status: 'SUCCESS', not success: true
+      if (response.data.status === 'SUCCESS') {
+        const repos = response.data.data?.repositories || [];
         if (repos.length === 0) {
           setNeedsAuth(true); // Show connect button if no repos
           setRepoLoading(false);
@@ -75,6 +77,10 @@ function RepositorySelectionPage() {
         setRepositories(repos);
         setShowRepoList(true);
         setNeedsAuth(false);
+        setRepoLoading(false);
+      } else {
+        // Response not successful, show auth button
+        setNeedsAuth(true);
         setRepoLoading(false);
       }
     } catch (error: unknown) {
