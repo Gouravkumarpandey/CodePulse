@@ -48,11 +48,22 @@ function RepositorySelectionPage() {
   const fetchRepositories = useCallback(async () => {
     setRepoLoading(true);
     try {
-      const token = localStorage.getItem('github_token');
-      console.log('GitHub token from localStorage:', token);
-      console.log('Token starts with gho_:', token?.startsWith('gho_'));
+      // Get GitHub token from localStorage
+      const githubToken = localStorage.getItem('github_token');
+      console.log('GitHub token available:', !!githubToken);
+      
+      if (!githubToken) {
+        console.log('No GitHub token found, needs authentication');
+        setNeedsAuth(true);
+        setRepoLoading(false);
+        return;
+      }
+      
+      // Send GitHub token in Authorization header
       const response = await api.get('/github/repositories', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          'Authorization': `Bearer ${githubToken}`,
+        },
       });
       if (response.data.success) {
         const repos = response.data.data.repositories || [];

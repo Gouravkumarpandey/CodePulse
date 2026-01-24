@@ -6,6 +6,7 @@
 const githubService = require('../services/github.service');
 const FirestoreService = require('../services/firestore.service');
 const response = require('../utils/response.util');
+const { generateJWT } = require('../utils/jwt.util');
 
 // GitHub OAuth callback
 const githubCallback = async (req, res) => {
@@ -70,8 +71,12 @@ const linkGitHubAccount = async (req, res) => {
       updatedAt: new Date(),
     });
 
+    // Generate new JWT token with updated user info
+    const token = generateJWT(userId);
+
     response.success(res, { 
-      message: 'GitHub account linked successfully' 
+      message: 'GitHub account linked successfully',
+      token, // Return JWT token for frontend to store
     }, 'GitHub account linked');
   } catch (error) {
     console.error('Link GitHub account error:', error);
@@ -83,23 +88,20 @@ const linkGitHubAccount = async (req, res) => {
 const fetchRepositories = async (req, res) => {
   try {
     console.log('=== Fetch Repositories Request ===');
-    const user = req.user;
-    console.log('User from request:', user ? user.email : 'NOT FOUND');
     
-    if (!user) {
-      return response.error(res, 'User not authenticated', 401);
-    }
-
-    const accessToken = user.accessToken || user.githubAccessToken;
-    console.log('GitHub access token available:', !!accessToken);
+    // Get GitHub token from Authorization header
+    const authHeader = req.headers.authorization;
+    const githubToken = authHeader?.split(' ')[1];
     
-    if (!accessToken) {
-      console.error('No GitHub access token found for user:', user.email);
-      return response.error(res, 'GitHub account not connected. Please authenticate with GitHub first.', 401);
+    if (!githubToken) {
+      console.error('No GitHub token provided in Authorization header');
+      return response.error(res, 'No GitHub token provided. Please authenticate with GitHub first.', 401);
     }
-
+    
+    console.log('GitHub token received (first 10 chars):', githubToken.substring(0, 10));
     console.log('Fetching repositories from GitHub...');
-    const repos = await githubService.fetchUserRepositories(accessToken);
+    
+    const repos = await githubService.fetchUserRepositories(githubToken);
     console.log('Repositories fetched successfully:', repos.length);
 
     response.success(res, { repositories: repos }, 'Repositories fetched successfully');

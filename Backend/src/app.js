@@ -13,7 +13,14 @@ const app = express();
 // Security & logging middleware
 app.use(helmet());
 app.use(morgan('combined'));
-app.use(cors());
+
+// CORS configuration with credentials support
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true, // Allow cookies to be sent with requests
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Body parsing middleware
 app.use(express.json());

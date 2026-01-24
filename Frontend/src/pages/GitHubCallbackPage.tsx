@@ -61,9 +61,11 @@ export default function GitHubCallbackPage() {
         
         const callbackData = await callbackResponse.json();
         
-        if (!callbackData.success) {
+        if (callbackData.status !== 'SUCCESS') {
           throw new Error(callbackData.message || 'Authentication failed');
         }
+
+        console.log('GitHub authentication successful');
 
         // Save GitHub access token to localStorage
         localStorage.setItem('github_token', callbackData.data.githubAccessToken);
@@ -90,6 +92,14 @@ export default function GitHubCallbackPage() {
           const errorData = await linkResponse.json();
           throw new Error(errorData.message || 'Failed to link GitHub account');
         }
+
+        const linkData = await linkResponse.json();
+        
+        // Store the new JWT token returned from backend
+        if (linkData.data?.token) {
+          localStorage.setItem('token', linkData.data.token);
+          console.log('JWT token updated after GitHub link');
+        }
         
         // Update local user data
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -102,9 +112,10 @@ export default function GitHubCallbackPage() {
         
         localStorage.setItem('user', JSON.stringify(updatedUser));
         
-        // Also update the auth context
+        // Also update the auth context with the new token
+        const newToken = linkData.data?.token || localStorage.getItem('token') || '';
         if (login) {
-          login(updatedUser, token || '');
+          login(updatedUser, newToken);
         }
         
         // Set flag for repository selection page

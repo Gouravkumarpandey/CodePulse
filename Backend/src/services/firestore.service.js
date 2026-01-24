@@ -161,6 +161,28 @@ class FirestoreService {
   }
 
   /**
+   * Update user in Firestore (partial update)
+   * @param {string} userId - User ID
+   * @param {Object} updateData - Fields to update
+   * @returns {Promise<Object>} - Updated user data
+   */
+  static async updateUser(userId, updateData) {
+    try {
+      const userRef = db.collection('users').doc(userId);
+      await userRef.update({
+        ...updateData,
+        updatedAt: new Date(),
+      });
+
+      logger.info(`User updated in Firestore: ${userId}`);
+      return { id: userId, ...updateData };
+    } catch (error) {
+      logger.error('Error updating user in Firestore:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Save repository metadata to Firestore
    * @param {string} repoId - Repository ID
    * @param {Object} repoData - Repository information
