@@ -146,7 +146,8 @@ function RepositorySelectionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-github-bg">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
+      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
       {/* Logo at the top */}
       <div className="w-full flex justify-center items-center py-6">
         <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
@@ -166,7 +167,7 @@ function RepositorySelectionPage() {
               className="max-w-3xl mx-auto"
             >
               {/* ...existing code... */}
-              <div className="bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg overflow-hidden">
+              <div className="bg-white/90 dark:bg-[#23272e]/90 border border-gray-300 dark:border-github-border rounded-2xl shadow-2xl overflow-hidden backdrop-blur-md">
                 {/* Modal Header */}
                 <div className="px-6 py-5 border-b border-gray-200 dark:border-github-border">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-github-text mb-2">
@@ -181,26 +182,25 @@ function RepositorySelectionPage() {
                   {repositories.map((repo, index) => (
                     <div
                       key={repo.id}
-                      className={`px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-github-canvas-inset transition-colors ${
-                        index !== repositories.length - 1 ? 'border-b border-gray-100 dark:border-github-border' : ''
+                      className={`px-8 py-5 flex items-center justify-between bg-white/80 dark:bg-[#23272e]/80 hover:bg-white/95 dark:hover:bg-[#23272e]/95 transition-colors rounded-xl my-3 shadow-md border border-gray-200 dark:border-github-border ${
+                        index !== repositories.length - 1 ? 'mb-2' : ''
                       }`}
                     >
-                      {/* ...existing code... */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-base font-medium text-gray-900 dark:text-github-text">
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                             {repo.name}
                           </h3>
                           {repo.private && (
-                            <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded border border-yellow-300 dark:border-yellow-700">
+                            <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded border border-yellow-300 dark:border-yellow-700">
                               Private
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-github-text-secondary mb-2">
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 font-medium">
                           {repo.full_name}
                         </p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-github-text-secondary">
+                        <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-300 font-semibold">
                           {repo.language && (
                             <span className="flex items-center gap-1">
                               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
@@ -220,7 +220,7 @@ function RepositorySelectionPage() {
                       <button
                         onClick={() => handleSelectRepository(repo)}
                         disabled={connecting === repo.id}
-                        className="ml-4 px-6 py-2 bg-white dark:bg-github-canvas-subtle border border-gray-300 dark:border-github-border text-gray-700 dark:text-github-text rounded-md hover:bg-gray-50 dark:hover:bg-github-canvas-inset transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="ml-4 px-7 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg shadow transition-colors text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border-none"
                       >
                         {connecting === repo.id ? (
                           <>

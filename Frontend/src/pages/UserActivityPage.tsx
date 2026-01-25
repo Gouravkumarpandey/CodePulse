@@ -66,10 +66,10 @@ const UserActivityPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-github-bg">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
+      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
       <Sidebar role="user" isCollapsed={sidebarCollapsed} />
-      
-      <main className={`min-h-screen p-8 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+      <main className={`min-h-screen p-8 transition-all duration-300 relative z-10 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           className="fixed top-4 left-4 z-50 p-2 bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg hover:bg-gray-50 dark:hover:bg-github-canvas-inset transition-colors"

@@ -7,7 +7,6 @@ import {
   GitBranch,
   CheckCircle,
   ChevronDown,
-  Menu,
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,7 +49,6 @@ export default function UserDashboardPage() {
   const [selectedRepo, setSelectedRepo] = useState<{ _id: string; name: string; owner?: string; isActive?: boolean; lastSync?: string } | null>(null);
   const [repositories, setRepositories] = useState<Array<{ _id: string; name: string; owner?: string; isActive?: boolean; lastSync?: string }>>([]);
   const [commitTimeline, setCommitTimeline] = useState<Array<{ hour: string; commits: number }>>([]);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -166,23 +164,11 @@ export default function UserDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0d1117]">
-      {/* Logo at the top */}
-      <div className="w-full flex justify-center items-center py-6">
-        <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
-      </div>
-      <Sidebar role="user" isCollapsed={sidebarCollapsed} />
-      
-      <main className={`min-h-screen p-6 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="fixed top-4 left-4 z-50 p-2 bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg hover:bg-gray-50 dark:hover:bg-github-canvas-inset transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="w-5 h-5 text-gray-600 dark:text-github-text-secondary" />
-        </button>
-        
-          <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
+      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
+      <Sidebar role="user" />
+      <main className="ml-72 min-h-screen p-6 relative z-10">
+        <div className="max-w-7xl mx-auto space-y-6">
             {/* Header Section */}
             <div className="flex items-center justify-between">
               <div>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Menu } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import RepoCard from '@/components/user/RepoCard';
 import Button from '@/components/common/Button';
@@ -16,7 +15,6 @@ const UserSettingsPage = () => {
   const [githubRepos, setGithubRepos] = useState<GitHubRepository[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -70,19 +68,11 @@ const UserSettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-github-bg">
-      <Sidebar role="user" isCollapsed={sidebarCollapsed} />
-      
-      <main className={`min-h-screen p-8 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="fixed top-4 left-4 z-50 p-2 bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg hover:bg-gray-50 dark:hover:bg-github-canvas-inset transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="w-5 h-5 text-gray-600 dark:text-github-text-secondary" />
-        </button>
-        
-          <div className="space-y-6">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
+      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
+      <Sidebar role="user" />
+      <main className="ml-72 min-h-screen p-8 relative z-10">
+        <div className="space-y-6">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-github-text">Repository Settings</h1>
