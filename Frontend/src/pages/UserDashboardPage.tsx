@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MoreHorizontal, GitBranch, GitCommit, GitPullRequest, TrendingUp } from 'lucide-react';
@@ -11,6 +12,8 @@ import Sidebar from '@/components/layout/Sidebar';
 import { api } from '@/services/api';
 import { ConsistencyAnalysis } from '@/types';
 import { Commit } from '@/types/commit';
+
+
 
 export default function UserDashboardPage() {
   const navigate = useNavigate();
@@ -232,14 +235,16 @@ export default function UserDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat relative"
+      style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}
+    >
+      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
       <Sidebar role="user" />
-      
       {/* Main Content - with proper spacing to avoid sidebar collision */}
-      <div className="ml-80 min-h-screen">
+      <div className="ml-80 min-h-screen relative z-10">
         <main className="p-4 md:p-6">
           <div className="max-w-[1600px] mx-auto">
-            
             {/* Header Section */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-6">
@@ -248,7 +253,6 @@ export default function UserDashboardPage() {
                   <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
                   <p className="text-sm text-gray-500 mt-1">Monitor your coding activity and consistency</p>
                 </div>
-                
                 {/* Center: Logo */}
                 <div className="flex-1 flex justify-center">
                   <div className="flex items-center gap-2">

@@ -139,11 +139,16 @@ export default function GitHubCallbackPage() {
   }, [searchParams, navigate, login]);
 
   return (
-    <div className="min-h-screen bg-github-bg dark:bg-github-canvas-subtle flex items-center justify-center p-4">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center"
+      style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}
+    >
+      {/* Overlay for readability */}
+      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-github-canvas-subtle dark:bg-github-canvas-inset border border-github-border rounded-lg p-12 max-w-md w-full text-center"
+        className="relative z-10 bg-white/90 dark:bg-[#23272e]/90 border border-gray-300 dark:border-github-border rounded-2xl shadow-2xl p-12 max-w-md w-full text-center backdrop-blur-md"
       >
         <div className="mb-6">
           {status === 'loading' && (
@@ -163,15 +168,15 @@ export default function GitHubCallbackPage() {
           )}
         </div>
 
-        <h2 className="text-2xl font-bold text-github-text mb-3">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
           {status === 'loading' && 'Authenticating...'}
           {status === 'success' && 'Success!'}
           {status === 'error' && 'Authentication Failed'}
         </h2>
 
-        <p className="text-github-text-secondary mb-6">{message}</p>
+        <p className="text-gray-700 dark:text-gray-300 mb-6">{message}</p>
 
-        <div className="flex items-center justify-center gap-2 text-sm text-github-text-secondary">
+        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-300">
           <Github className="w-4 h-4" />
           <span>GitHub OAuth</span>
         </div>
