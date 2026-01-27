@@ -1,6 +1,6 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Link2, LayoutDashboard, Activity, AlertTriangle, Settings, Users, Database, Zap, LogOut } from 'lucide-react';
-import ThemeToggle from '../common/ThemeToggle';
+import { LogOut, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarProps {
@@ -10,90 +10,85 @@ interface SidebarProps {
 export default function Sidebar({ role }: SidebarProps) {
   const location = useLocation();
   const { logout } = useAuth();
+  const { user } = useAuth();
   const pathname = location.pathname;
+  const [collapsed, setCollapsed] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const userLinks = [
-    { href: '/repo-selection', icon: Link2, label: 'Integration', badge: null },
-    { href: '/user', icon: LayoutDashboard, label: 'Dashboard', badge: null },
-    { href: '/user/activity', icon: Activity, label: 'Activity', badge: null },
-    { href: '/user/warnings', icon: AlertTriangle, label: 'Alerts', badge: '2' },
-    { href: '/user/settings', icon: Settings, label: 'Settings', badge: null },
+    { href: '/repo-selection', icon: '/image/integration_9888476.png', label: 'Integration', badge: null },
+    { href: '/user', icon: '/image/dashboard_11264787.png', label: 'Dashboard', badge: null },
+    { href: '/user/activity', icon: '/image/gear_13640426.png', label: 'Activity Log', badge: null },
+    { href: '/user/warnings', icon: '/image/alert_11540777.png', label: 'Alerts', badge: '2' },
+    { href: '/user/settings', icon: '/image/gear_13640426.png', label: 'Settings', badge: null },
   ];
 
   const adminLinks = [
-    { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', badge: null },
-    { href: '/admin/users', icon: Users, label: 'Users', badge: null },
-    { href: '/admin/settings', icon: Settings, label: 'Settings', badge: null },
+    { href: '/admin', icon: '/image/dashboard_11264787.png', label: 'Dashboard', badge: null },
+    { href: '/admin/users', icon: '/image/user_10948899.png', label: 'Users', badge: null },
+    { href: '/admin/settings', icon: '/image/gear_13640426.png', label: 'Settings', badge: null },
   ];
 
   const links = role === 'admin' ? adminLinks : userLinks;
 
   return (
-    <aside className={
-      'fixed left-0 top-0 h-screen w-72 bg-gradient-to-b from-white to-gray-50/50 dark:from-[#0d1117] dark:to-[#161b22] border-r border-gray-200/80 dark:border-[#30363d] flex flex-col transition-all duration-300 shadow-xl'
-    }>
+    <aside className={`fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col shadow-sm transition-all duration-300 ${
+      collapsed ? 'w-24' : 'w-80'
+    }`}>
       {/* Logo & Brand */}
-      <div className="relative z-10 p-6 border-b border-gray-200/50 dark:border-[#30363d]/50 bg-white/50 dark:bg-[#0d1117]/50 backdrop-blur-sm flex-shrink-0">
-        <Link to={role === 'admin' ? '/admin' : '/user'} className="flex items-center gap-3 group">
+      <div className="p-6 border-b border-gray-200 flex-shrink-0">
+        <Link to={role === 'admin' ? '/admin' : '/user'} className="flex items-center gap-3">
           <img
             src="/logo.jpg"
             alt="Codepulse Logo"
-            className="w-10 h-10 rounded-xl object-contain shadow-lg group-hover:shadow-xl transition-shadow bg-white dark:bg-[#161b22] p-1"
-            style={{ maxWidth: '40px', maxHeight: '40px' }}
+            className="w-10 h-10 object-contain rounded"
           />
-          <div className="flex flex-col">
-            <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-              CodePulse
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              {role === 'admin' ? 'Admin Panel' : 'Developer Hub'}
-            </span>
-          </div>
+          {!collapsed && (
+            <div className="flex flex-col">
+              <span className="text-lg font-bold text-gray-900">CodePulse</span>
+              <span className="text-xs text-gray-500">Dashboard</span>
+            </div>
+          )}
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="relative z-10 flex-1 px-3 py-6 flex-shrink-0">
-        {/* Main Navigation */}
-        <div className="space-y-1">
-          <p className="px-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
-            Navigation
+      <nav className={`flex-1 ${collapsed ? 'px-2 py-4' : 'px-4 py-8'}`}>
+        {/* Main Menu Label */}
+        {!collapsed && (
+          <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">
+            Main Menu
           </p>
+        )}
+        
+        {/* Menu Items */}
+        <div className={collapsed ? 'space-y-2' : 'space-y-1'}>
           {links.map((link) => {
             const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
-            const Icon = link.icon;
             return (
               <Link
                 key={link.href}
                 to={link.href}
-                className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+                title={collapsed ? link.label : ''}
+                className={`flex items-center gap-3 ${collapsed ? 'px-2 py-2 justify-center' : 'px-4 py-3'} rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-600/20 dark:to-orange-600/20 text-amber-700 dark:text-amber-400 shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/70 dark:hover:bg-[#161b22] hover:text-gray-900 dark:hover:text-gray-200'
+                    ? 'bg-gray-100 text-gray-900'
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-amber-500 to-orange-600 rounded-r-full" />
-                )}
-                <div className="relative ml-1">
-                  <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${
-                    isActive 
-                      ? 'text-amber-600 dark:text-amber-500' 
-                      : 'text-gray-500 dark:text-gray-400 group-hover:text-amber-600 dark:group-hover:text-amber-500'
-                  }`} />
-                  {link.badge && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {link.badge}
-                    </span>
-                  )}
-                </div>
-                <span className={`text-sm font-medium flex-1 ${isActive ? 'font-semibold' : ''}`}>
-                  {link.label}
-                </span>
-                {link.badge && (
-                  <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-full">
-                    {link.badge}
-                  </span>
+                <img src={link.icon} alt={link.label} className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5'} object-contain flex-shrink-0`} />
+                {!collapsed && (
+                  <>
+                    <span className="text-sm font-medium flex-1">{link.label}</span>
+                    {link.badge && (
+                      <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                        {link.badge}
+                      </span>
+                    )}
+                    {(link.label === 'Dashboard' || link.label === 'Settings') && (
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    )}
+                  </>
                 )}
               </Link>
             );
@@ -101,41 +96,68 @@ export default function Sidebar({ role }: SidebarProps) {
         </div>
       </nav>
 
-      {/* GitHub Character Image */}
-      {role === 'user' && (
-        <div className="relative z-10 px-6 pb-4 flex justify-center flex-shrink-0">
+      {/* GitHub Character Image - Only show when collapsed */}
+      {role === 'user' && collapsed && (
+        <div className="px-6 pb-4 flex justify-center flex-shrink-0">
           <img 
             src="/image/gitcharacter.svg" 
             alt="GitHub Character" 
-            className="w-32 h-32 object-contain"
+            className="w-20 h-20 object-contain"
           />
         </div>
       )}
 
       {/* User Profile Section */}
-      <div className="relative z-10 border-t border-gray-200/50 dark:border-[#30363d]/50 p-4 bg-white/30 dark:bg-[#0d1117]/30 backdrop-blur-sm flex-shrink-0">
-        <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/5 to-orange-500/5 dark:from-amber-600/10 dark:to-orange-600/10 border border-amber-200/50 dark:border-amber-800/50">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold shadow-lg">
-            {useAuth().user?.username?.charAt(0).toUpperCase() || 'U'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-              {useAuth().user?.username || 'User'}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {useAuth().user?.email || ''}
-            </p>
-          </div>
-        </div>
-        
-        <ThemeToggle />
-        
+      <div className="border-t border-gray-200 p-4 flex-shrink-0">
         <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-all duration-200 group mt-2"
+          onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+          className="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
         >
-          <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          <span>Logout</span>
+          <img
+            src="/image/user_10948899.png"
+            alt="User Avatar"
+            className="w-10 h-10 rounded-full object-contain bg-gradient-to-br from-orange-400 to-orange-500 p-1 flex-shrink-0"
+          />
+          {!collapsed && (
+            <>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {user?.username || 'User'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user?.email || ''}
+                </p>
+              </div>
+              <ChevronRight className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${
+                profileMenuOpen ? 'rotate-90' : ''
+              }`} />
+            </>
+          )}
+        </button>
+        
+        {/* Logout Menu */}
+        {profileMenuOpen && !collapsed && (
+          <button
+            onClick={() => {
+              logout();
+              setProfileMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors mt-2"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </button>
+        )}
+      </div>
+
+      {/* Collapse Button */}
+      <div className="p-4 border-t border-gray-200 flex justify-center flex-shrink-0">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+          title={collapsed ? 'Expand' : 'Collapse'}
+        >
+          {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         </button>
       </div>
     </aside>
