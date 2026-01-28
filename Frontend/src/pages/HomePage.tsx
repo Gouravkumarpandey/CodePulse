@@ -14,7 +14,7 @@ const CodePulseHomePage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <div className="flex items-center">
-                 <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
+                <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
               </div>
               <div className="hidden md:flex space-x-6">
                 <a href="#features" className="text-black dark:text-white hover:underline transition-colors">Features</a>
@@ -35,15 +35,15 @@ const CodePulseHomePage = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-white dark:bg-black py-20 lg:py-32">
-        {/* Background Image */}
-        <div className="absolute inset-0 opacity-60 dark:opacity-40">
+        {/* Background Image - Full Coverage */}
+        <div className="absolute inset-0 opacity-70 dark:opacity-50">
           <img
             src="https://github.blog/wp-content/uploads/2020/12/102393310-07478b80-3f8d-11eb-84eb-392d555ebd29.png?w=1200"
             alt="Hero background"
             className="w-full h-full object-cover"
           />
         </div>
-        
+
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             {/* Minecraft Themed Hero Block */}
@@ -59,8 +59,8 @@ const CodePulseHomePage = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button 
-                onClick={() => navigate('/signup')} 
+              <button
+                onClick={() => navigate('/signup')}
                 className="bg-[#3c3c3c] hover:bg-[#4a4a4a] text-white px-8 py-4 rounded-lg text-lg font-bold transition-all shadow-lg hover:shadow-xl border-2 border-black hover:border-gray-800"
                 style={{ fontFamily: 'Minecraftia, sans-serif' }}
               >
@@ -82,10 +82,6 @@ const CodePulseHomePage = () => {
         </div>
 
       </section>
-
-
-
-
       {/* Features Section with River Breakout Image */}
       <section className="py-24 bg-white dark:bg-black" id="features">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -260,64 +256,86 @@ const CodePulseHomePage = () => {
 
       {/* How It Works Section */}
       <section className="py-24 bg-white dark:bg-black" id="how-it-works">
-              {/* Minecraft Game Mode Slider (after How CodePulse Works) */}
-              <div className="w-full bg-black">
-                <MinecraftModeSlider />
-              </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2
-              className="text-4xl md:text-5xl font-bold mb-6"
-              style={{
-                fontFamily: 'Minecraftia, sans-serif',
-                color: '#ffc42b',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
-              }}
-            >
-              HOW CODEPULSE WORKS
-            </h2>
-            <p className="text-xl text-black dark:text-white max-w-3xl mx-auto leading-relaxed">
-              CodePulse uses GitHub as the single source of truth, capturing real-time push events through webhooks to ensure fair hackathon participation.
-            </p>
+        {/* Minecraft Game Mode Slider (after How CodePulse Works) */}
+        <div className="w-full bg-black">
+          <MinecraftModeSlider />
+        </div>
+
+        {/* How CodePulse Works Section - White Background with Pixel Pattern */}
+        <div className="relative bg-white dark:bg-white py-24 border-b border-gray-200">
+          {/* Minecraft Pixelated Pattern - Top Left Corner - Larger Size */}
+          <div className="absolute top-0 left-0 flex flex-col">
+            {/* Row 1 */}
+            <div className="flex">
+              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-[#111]"></div>
+              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white"></div>
+              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-[#111]"></div>
+              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white"></div>
+            </div>
+            {/* Row 2 */}
+            <div className="flex">
+              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white"></div>
+              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-[#111]"></div>
+              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white"></div>
+              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-[#111]"></div>
+            </div>
           </div>
 
-          {/* Steps */}
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-black dark:bg-white rounded-full flex items-center justify-center text-white dark:text-black text-2xl font-bold mx-auto mb-4">
-                1
-              </div>
-              <h3 className="text-xl font-semibold text-black dark:text-white mb-3">Connect Repository</h3>
-              <p className="text-black dark:text-white">
-                Teams connect their GitHub repositories and CodePulse automatically configures webhooks for monitoring.
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-32 md:pt-40 lg:pt-48">
+            <div className="text-center mb-16">
+              <h2
+                className="text-4xl md:text-5xl font-bold mb-6"
+                style={{
+                  fontFamily: 'Minecraftia, sans-serif',
+                  color: '#ffc42b',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
+                }}
+              >
+                HOW CODEPULSE WORKS
+              </h2>
+              <p className="text-xl text-black max-w-3xl mx-auto leading-relaxed">
+                CodePulse uses GitHub as the single source of truth, capturing real-time push events through webhooks to ensure fair hackathon participation.
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-black dark:bg-white rounded-full flex items-center justify-center text-white dark:text-black text-2xl font-bold mx-auto mb-4">
-                2
+
+            {/* Steps */}
+            <div className="grid md:grid-cols-3 gap-8 mb-16">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                  1
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Connect Repository</h3>
+                <p className="text-black">
+                  Teams connect their GitHub repositories and CodePulse automatically configures webhooks for monitoring.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-black dark:text-white mb-3">Track Activity</h3>
-              <p className="text-black dark:text-white">
-                Every push event is captured in real-time with server-generated timestamps for tamper-proof tracking.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-black dark:bg-white rounded-full flex items-center justify-center text-white dark:text-black text-2xl font-bold mx-auto mb-4">
-                3
+              <div className="text-center">
+                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                  2
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Track Activity</h3>
+                <p className="text-black">
+                  Every push event is captured in real-time with server-generated timestamps for tamper-proof tracking.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-black dark:text-white mb-3">Ensure Compliance</h3>
-              <p className="text-black dark:text-white">
-                Automated rules engine detects violations and generates reports for organizers and judges.
-              </p>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                  3
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Ensure Compliance</h3>
+                <p className="text-black">
+                  Automated rules engine detects violations and generates reports for organizers and judges.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Open Source Section */}
-      <section className="py-24 bg-white dark:bg-black border-t border-b border-black dark:border-white" id="open-source">
+      <section className="py-24 bg-white dark:bg-black border-b border-black dark:border-white" id="open-source">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2
@@ -339,7 +357,7 @@ const CodePulseHomePage = () => {
               <a href="https://github.com/Gouravkumarpandey/CodePulse" target="_blank" rel="noopener noreferrer">
                 <button className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-8 py-4 rounded-lg text-lg font-semibold transition-all flex items-center gap-3">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                   </svg>
                   View on GitHub
                 </button>
@@ -435,15 +453,15 @@ const CodePulseHomePage = () => {
             className="w-full h-full object-cover"
           />
         </div>
-        
+
         {/* Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center mb-4">
-                  <img src="/logo.jpg" alt="CodePulse Logo" className="w-10 h-10 object-contain" />
-                  <span className="ml-2 text-xl font-bold text-black dark:text-white" style={{ fontFamily: '"Minecraftia", sans-serif' }}>CodePulse</span>
-                </div>
+                <img src="/logo.jpg" alt="CodePulse Logo" className="w-10 h-10 object-contain" />
+                <span className="ml-2 text-xl font-bold text-black dark:text-white" style={{ fontFamily: '"Minecraftia", sans-serif' }}>CodePulse</span>
+              </div>
               <p className="text-sm text-black dark:text-white">
                 Real-time hackathon monitoring with GitHub integration.
               </p>

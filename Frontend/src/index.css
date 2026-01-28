@@ -17,7 +17,7 @@
   
   body {
     @apply antialiased;
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-white text-gray-900;
     @apply dark:text-github-text;
   }
 

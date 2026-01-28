@@ -3,27 +3,18 @@ import React, { useState, useEffect, useRef } from 'react';
 // Example slides (replace with your own images/text as needed)
 const slides = [
   {
-    image: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/OV_PMP_GameModeCarousel_Art_Slide1_Desktop1.png',
+    image: '/assets/scroll1.png',
     title: 'CREATIVE MODE',
     description:
       'Set your imagination free with limitless resources, immunity to damage, and the ability to fly! In Creative mode, nothing stands in the way of the perfect build.',
   },
   {
-    image: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/OV_PMP_GameModeCarousel_Art_Slide2_Desktop1.png',
+    image: '/assets/scroll2.png',
     title: 'SURVIVAL MODE',
     description:
       'Follow the rules and regulation commit on time to get consistent and make this enjoy the development journey',
   },
-  {
-    image: 'scrolling.png',
-    title: 'LEGENDS MODE',
-    description:
-      'Explore the world of Minecraft Legends! Build, defend, and lead your allies to victory in a vibrant, living world.',
-  },
 ];
-
-const pixelMask =
-  'M0 0h1200v16H0zm0 16h75v16H0zm150 0h75v16h-75zm150 0h75v16h-75zm150 0h75v16h-75zm150 0h75v16h-75zm150 0h75v16h-75zm150 0h75v16h-75zm150 0h75v16h-75z';
 
 
 export default function MinecraftModeSlider() {
@@ -38,119 +29,71 @@ export default function MinecraftModeSlider() {
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setIndex((i) => (i === slides.length - 1 ? 0 : i + 1));
-    }, 4000); // 4 seconds
+    }, 4000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#111',
-        padding: '2rem 0',
-        minHeight: '100vh',
-      }}
-    >
-      {/* Pixelated image with SVG mask */}
-      <div style={{ position: 'relative', width: '900px', height: '540px', marginRight: 64 }}>
-        <svg width={900} height={540} style={{ position: 'absolute', top: 0, left: 0, zIndex: 2 }}>
-          <defs>
-            <clipPath id="pixelMask">
-              <path d={pixelMask} />
-              <rect x="0" y="32" width="1800" height="508" />
-            </clipPath>
-          </defs>
-          <image
-            href={slide.image}
-            width={900}
-            height={540}
-            style={{ clipPath: 'url(#pixelMask)' }}
-            preserveAspectRatio="none"
-          />
-        </svg>
-        {/* fallback for browsers without SVG mask support */}
-        <img
-          src={slide.image}
-          alt={slide.title}
-          width={900}
-          height={540}
-          style={{
-            objectFit: 'fill',
-            borderRadius: 0,
-            display: 'block',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            zIndex: 1,
-          }}
-        />
-        {/* Minecraft frame overlay */}
-        <img
-          src="https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/OV_PMP_GameModeCarousel_Frame_Slide1_Tablet1.png"
-          alt="Minecraft Frame"
-          width={900}
-          height={540}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: 900,
-            height: 540,
-            zIndex: 3,
-            pointerEvents: 'none',
-          }}
-        />
-      </div>
-      {/* Text content */}
-      <div style={{ color: 'white', maxWidth: 520, textAlign: 'center' }}>
-        <h2
-          style={{
-            fontFamily: 'Minecraftia, sans-serif',
-            fontSize: 64,
-            textTransform: 'uppercase',
-            marginBottom: 32,
-            letterSpacing: '0.04em',
-            textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
-          }}
-        >
-          {slide.title}
-        </h2>
-        <p style={{ fontSize: 28, lineHeight: 1.5, marginBottom: 40 }}>{slide.description}</p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 48 }}>
-          <button
-            aria-label="Previous"
-            onClick={prev}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              fontSize: 48,
-              cursor: 'pointer',
-              fontFamily: 'Minecraftia, sans-serif',
-              userSelect: 'none',
-            }}
-          >
-            &#8592;
-          </button>
-          <button
-            aria-label="Next"
-            onClick={next}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              fontSize: 48,
-              cursor: 'pointer',
-              fontFamily: 'Minecraftia, sans-serif',
-              userSelect: 'none',
-            }}
-          >
-            &#8594;
-          </button>
+    <div className="w-full bg-[#111] py-12 md:py-16 lg:py-20 flex items-center justify-center overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
+
+          {/* Frame and Image Container */}
+          <div className="relative w-full sm:max-w-[95vw] md:max-w-[600px] lg:max-w-[700px] xl:max-w-[900px] aspect-video flex-shrink-0">
+            {/* Slide Image (Behind Frame) */}
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="absolute top-[2%] left-[2%] w-[96%] h-[96%] object-cover z-[1] rounded-[4px]"
+            />
+
+            {/* Minecraft Frame Overlay */}
+            <img
+              src="https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/OV_PMP_GameModeCarousel_Frame_Slide1_Tablet1.png"
+              alt="Minecraft Frame"
+              className="absolute top-0 left-0 w-full h-full z-10 pointer-events-none"
+            />
+          </div>
+
+          {/* Text content */}
+          <div className="text-white max-w-full sm:max-w-md lg:max-w-lg text-center lg:text-left px-4">
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase mb-4 sm:mb-6 tracking-wide"
+              style={{
+                fontFamily: 'Minecraftia, sans-serif',
+                textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
+              }}
+            >
+              {slide.title}
+            </h2>
+
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed mb-6 sm:mb-8 lg:mb-10">
+              {slide.description}
+            </p>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-center lg:justify-start items-center gap-6 sm:gap-8 md:gap-12">
+              <button
+                aria-label="Previous"
+                onClick={prev}
+                className="bg-transparent border-none text-white text-3xl sm:text-4xl md:text-5xl cursor-pointer select-none hover:opacity-70 transition-opacity active:scale-95"
+                style={{ fontFamily: 'Minecraftia, sans-serif' }}
+              >
+                &#8592;
+              </button>
+              <button
+                aria-label="Next"
+                onClick={next}
+                className="bg-transparent border-none text-white text-3xl sm:text-4xl md:text-5xl cursor-pointer select-none hover:opacity-70 transition-opacity active:scale-95"
+                style={{ fontFamily: 'Minecraftia, sans-serif' }}
+              >
+                &#8594;
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
