@@ -290,7 +290,7 @@ function RepositorySelectionPage() {
         <main>
           <header className="bg-white dark:bg-github-canvas-subtle border-b border-gray-200 dark:border-github-border">
             <div className="max-w-7xl mx-auto px-6 py-4">
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-github-text">Integrations</h1>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-github-text tracking-wider">Integrations</h1>
             </div>
           </header>
           <div className="max-w-5xl mx-auto px-6 py-12">

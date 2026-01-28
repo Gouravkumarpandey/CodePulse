@@ -1,4 +1,5 @@
 import React from 'react';
+import MinecraftModeSlider from '../components/MinecraftModeSlider';
 import { useNavigate } from 'react-router-dom';
 import ThemeToggle from '@/components/common/ThemeToggle';
 
@@ -79,15 +80,28 @@ const CodePulseHomePage = () => {
             </div>
           </div>
         </div>
+
       </section>
+
+
+
 
       {/* Features Section with River Breakout Image */}
       <section className="py-24 bg-white dark:bg-black" id="features">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
             <div>
-              <h2 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-6">
-                Real-Time Monitoring
+              <h2
+                className="text-4xl md:text-5xl font-bold mb-6"
+                style={{
+                  fontFamily: 'Minecraftia, sans-serif',
+                  color: '#ffc42b',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
+                }}
+              >
+                REAL-TIME MONITORING
               </h2>
               <p className="text-xl text-black dark:text-white mb-6 leading-relaxed">
                 Track GitHub push events in real-time using webhooks. Monitor team activity continuously without interfering with participants' workflows.
@@ -121,8 +135,17 @@ const CodePulseHomePage = () => {
               </div>
             </div>
             <div className="order-1 lg:order-2">
-              <h2 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-6">
-                Rule-Based Compliance
+              <h2
+                className="text-4xl md:text-5xl font-bold mb-6"
+                style={{
+                  fontFamily: 'Minecraftia, sans-serif',
+                  color: '#ffc42b',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
+                }}
+              >
+                RULE-BASED COMPLIANCE
               </h2>
               <p className="text-xl text-black dark:text-white mb-6 leading-relaxed">
                 Automated compliance engine evaluates development activity against predefined hackathon rules and detects violations.
@@ -142,8 +165,17 @@ const CodePulseHomePage = () => {
       <section className="py-24 bg-white dark:bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-6">
-              Everything you need for fair hackathons
+            <h2
+              className="text-4xl md:text-5xl font-bold mb-6"
+              style={{
+                fontFamily: 'Minecraftia, sans-serif',
+                color: '#ffc42b',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
+              }}
+            >
+              EVERYTHING YOU NEED FOR FAIR HACKATHONS
             </h2>
             <p className="text-xl text-black dark:text-white max-w-3xl mx-auto">
               A comprehensive monitoring system designed to ensure fair hackathon participation with real-time insights and automated compliance.
@@ -228,10 +260,23 @@ const CodePulseHomePage = () => {
 
       {/* How It Works Section */}
       <section className="py-24 bg-white dark:bg-black" id="how-it-works">
+              {/* Minecraft Game Mode Slider (after How CodePulse Works) */}
+              <div className="w-full bg-black">
+                <MinecraftModeSlider />
+              </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-6">
-              How CodePulse Works
+            <h2
+              className="text-4xl md:text-5xl font-bold mb-6"
+              style={{
+                fontFamily: 'Minecraftia, sans-serif',
+                color: '#ffc42b',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
+              }}
+            >
+              HOW CODEPULSE WORKS
             </h2>
             <p className="text-xl text-black dark:text-white max-w-3xl mx-auto leading-relaxed">
               CodePulse uses GitHub as the single source of truth, capturing real-time push events through webhooks to ensure fair hackathon participation.
@@ -275,8 +320,17 @@ const CodePulseHomePage = () => {
       <section className="py-24 bg-white dark:bg-black border-t border-b border-black dark:border-white" id="open-source">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-6">
-              Open Source & Community Driven
+            <h2
+              className="text-4xl md:text-5xl font-bold mb-6"
+              style={{
+                fontFamily: 'Minecraftia, sans-serif',
+                color: '#ffc42b',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
+              }}
+            >
+              OPEN SOURCE & COMMUNITY DRIVEN
             </h2>
             <p className="text-xl text-black dark:text-white max-w-3xl mx-auto mb-8 leading-relaxed">
               CodePulse is an open-source project licensed under GPL-3.0. Contributions, feature requests, and feedback are welcome from the community.
@@ -343,8 +397,17 @@ const CodePulseHomePage = () => {
       {/* CTA Section */}
       <section className="py-24 bg-white dark:bg-black text-black dark:text-white relative overflow-hidden border-t border-b border-black dark:border-white" id="documentation">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Start monitoring your hackathon today
+          <h2
+            className="text-4xl md:text-5xl font-bold mb-6"
+            style={{
+              fontFamily: 'Minecraftia, sans-serif',
+              color: '#ffc42b',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
+            }}
+          >
+            START MONITORING YOUR HACKATHON TODAY
           </h2>
           <p className="text-xl mb-10 text-black dark:text-white leading-relaxed">
             Join hackathon organizers who trust CodePulse to ensure fair and transparent competitions. Get started in minutes with our easy setup.
