@@ -33,14 +33,14 @@ const CommitTimeline: React.FC<CommitTimelineProps> = ({ commits }) => {
       {commits.map((commit, index) => (
         <div
           key={commit._id}
-          className="bg-white dark:bg-github-canvas-subtle p-6 rounded-lg shadow-md border-l-4"
+          className="bg-white dark:bg-[#161b22]/90 backdrop-blur-sm p-6 rounded-lg shadow-md border-l-4 border-gray-100 dark:border-gray-800"
           style={{
             borderLeftColor:
               commit.status === 'VIOLATION'
                 ? '#DC2626'
                 : commit.status === 'WARNING'
-                ? '#F59E0B'
-                : '#10B981',
+                  ? '#F59E0B'
+                  : '#10B981',
           }}
         >
           <div className="flex justify-between items-start mb-3">

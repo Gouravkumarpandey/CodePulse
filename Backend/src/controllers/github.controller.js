@@ -18,27 +18,27 @@ const githubCallback = async (req, res) => {
     }
 
     console.log('GitHub callback - exchanging code for token...');
-    
+
     // Exchange code for access token
     const tokenData = await githubService.getAccessToken(code);
     console.log('Token exchange successful');
-    
+
     const { access_token } = tokenData;
     const githubUser = tokenData.user || tokenData;
-    
+
     // Get GitHub user info if not included in token response
     let userInfo = githubUser;
     if (!githubUser.login) {
       console.log('Fetching GitHub user info...');
       userInfo = await githubService.getGitHubUser(access_token);
     }
-    
+
     console.log('GitHub user:', userInfo.login);
-    
+
     // For now, we'll update the existing logged-in user's GitHub token
     // In a real app, you'd match by GitHub ID or create a new user
-    
-    response.success(res, { 
+
+    response.success(res, {
       githubUser: {
         githubId: userInfo.id,
         username: userInfo.login,
@@ -64,17 +64,24 @@ const linkGitHubAccount = async (req, res) => {
     }
 
     // Update user in Firestore with GitHub info
-    await FirestoreService.updateUser(userId, {
+    const updateData = {
       githubAccessToken,
       githubId: githubUser?.githubId,
       username: githubUser?.username,
       updatedAt: new Date(),
-    });
+    };
+
+    // Fix the email id based on GitHub account if provided
+    if (githubUser?.email) {
+      updateData.email = githubUser.email;
+    }
+
+    await FirestoreService.updateUser(userId, updateData);
 
     // Generate new JWT token with updated user info
     const token = generateJWT(userId);
 
-    response.success(res, { 
+    response.success(res, {
       message: 'GitHub account linked successfully',
       token, // Return JWT token for frontend to store
     }, 'GitHub account linked');
@@ -88,19 +95,19 @@ const linkGitHubAccount = async (req, res) => {
 const fetchRepositories = async (req, res) => {
   try {
     console.log('=== Fetch Repositories Request ===');
-    
+
     // Get GitHub token from Authorization header
     const authHeader = req.headers.authorization;
     const githubToken = authHeader?.split(' ')[1];
-    
+
     if (!githubToken) {
       console.error('No GitHub token provided in Authorization header');
       return response.error(res, 'No GitHub token provided. Please authenticate with GitHub first.', 401);
     }
-    
+
     console.log('GitHub token received (first 10 chars):', githubToken.substring(0, 10));
     console.log('Fetching repositories from GitHub...');
-    
+
     const repos = await githubService.fetchUserRepositories(githubToken);
     console.log('Repositories fetched successfully:', repos.length);
 
@@ -128,10 +135,10 @@ const connectRepository = async (req, res) => {
 
     // Get all user repositories from Firestore
     const userRepos = await FirestoreService.getUserRepositories(userId);
-    
+
     // Check if repository already exists
     const existingRepo = userRepos.find(r => r.githubRepoId === repoId.toString());
-    
+
     let repoDocId;
     const repoData = {
       userId: userId,
@@ -146,7 +153,7 @@ const connectRepository = async (req, res) => {
       isActive: true,
       lastSync: new Date(),
     };
-    
+
     if (!existingRepo) {
       // Deactivate all other repos for this user
       for (const repo of userRepos) {
@@ -157,14 +164,14 @@ const connectRepository = async (req, res) => {
           });
         }
       }
-      
+
       // Create new repository in Firestore with auto-generated ID
       repoDocId = `repo_${userId}_${repoId}_${Date.now()}`;
       repoData.createdAt = new Date();
       await FirestoreService.saveRepository(repoDocId, repoData);
     } else {
       repoDocId = existingRepo.id;
-      
+
       // Deactivate all other repos
       for (const repo of userRepos) {
         if (repo.id !== repoDocId && repo.isActive) {
@@ -174,7 +181,7 @@ const connectRepository = async (req, res) => {
           });
         }
       }
-      
+
       // Update existing repository
       await FirestoreService.saveRepository(repoDocId, repoData);
     }
@@ -196,7 +203,7 @@ const connectRepository = async (req, res) => {
       }
     });
 
-    response.success(res, { 
+    response.success(res, {
       repo: {
         _id: repoDocId,
         userId: userId,

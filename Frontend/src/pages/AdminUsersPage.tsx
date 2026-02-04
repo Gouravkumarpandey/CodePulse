@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Search, Users, Download, RefreshCw, Filter } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import UsersTable from '@/components/admin/UsersTable';
-import Card from '@/components/common/Card';
 import { api } from '@/services/api';
-import { User } from '@/types/user';
+import {
+  Users, Search, Filter, Download,
+  ArrowLeft, RefreshCw, Zap
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const AdminUsersPage = () => {
   const { user, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'good' | 'warning' | 'violation'>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     if (!loading) {
@@ -32,15 +32,13 @@ const AdminUsersPage = () => {
     if (isAuthenticated && user?.role === 'ADMIN') {
       loadUsers();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, isAuthenticated, user]);
+  }, [isAuthenticated, user]);
 
   const loadUsers = async () => {
     setLoadingData(true);
     try {
-      const response = await api.get(`/admin/users?page=${page}&limit=10`);
+      const response = await api.get('/admin/users');
       setUsers(response.data.users);
-      setTotal(response.data.pagination.total);
     } catch (error) {
       console.error('Failed to load users:', error);
     } finally {
@@ -48,210 +46,104 @@ const AdminUsersPage = () => {
     }
   };
 
-  const handleExport = () => {
-    console.log('Exporting user data...');
-    // Implement export functionality
-  };
-
-  const handleRefresh = () => {
-    loadUsers();
-  };
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.githubId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.selectedRepo?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = 
-      statusFilter === 'all' ||
-      (statusFilter === 'good' && (user.consistencyScore || 0) >= 80) ||
-      (statusFilter === 'warning' && (user.warnings || 0) > 0 && (user.violations || 0) === 0) ||
-      (statusFilter === 'violation' && (user.violations || 0) > 0);
-
+  const filteredUsers = users.filter((u: any) => {
+    const matchesSearch = u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && (u.violations || 0) === 0) ||
+      (statusFilter === 'warning' && (u.violations || 0) > 0 && (u.violations || 0) < 3) ||
+      (statusFilter === 'disqualified' && (u.violations || 0) >= 3);
     return matchesSearch && matchesStatus;
   });
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-github-bg">
-      <div className="text-github-text">Loading...</div>
-    </div>;
-  }
-
-  if (!isAuthenticated || user?.role !== 'ADMIN') {
-    return null;
+  if (loading || loadingData) {
+    return (
+      <div className="min-h-screen mc-dirt-bg flex items-center justify-center font-['Minecraftia']">
+        <div className="mc-panel p-10 flex flex-col items-center gap-6 shadow-2xl">
+          <div className="w-16 h-16 border-8 border-black border-t-[#5da045] animate-spin" />
+          <p className="text-xl font-bold text-[#404040] mc-text-shadow-light uppercase tracking-widest">Loading World...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-github-bg">
+    <div className="min-h-screen mc-dirt-bg p-6 font-['Minecraftia']">
       <div className="flex">
         <Sidebar role="admin" />
+
         <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+          <div className="max-w-7xl mx-auto space-y-8">
             {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-github-text">User Management</h1>
-                <p className="text-github-text-secondary mt-2">
-                  Monitor and analyze all registered users' development consistency
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
+            <header className="mc-header p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-2xl">
+              <div className="flex items-center gap-6">
                 <button
-                  onClick={handleRefresh}
-                  className="px-4 py-2 bg-github-canvas-subtle border border-github-border text-github-text rounded-md hover:bg-github-canvas-inset transition-colors flex items-center gap-2"
+                  onClick={() => navigate('/admin')}
+                  className="mc-button p-4 border-4"
                 >
-                  <RefreshCw className="w-4 h-4" />
-                  Refresh
+                  <ArrowLeft className="w-6 h-6" />
                 </button>
-                <button
-                  onClick={handleExport}
-                  className="px-4 py-2 bg-github-accent-emphasis text-white rounded-md hover:bg-github-accent-emphasis/90 transition-colors flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Export Report
+                <div>
+                  <h1 className="text-4xl font-bold text-white mc-text-shadow uppercase tracking-widest">Player Directory</h1>
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="w-3 h-3 bg-[#5da045] border-2 border-black" />
+                    <p className="text-[#aaaaaa] text-xs font-bold uppercase tracking-widest">{users.length} PLAYERS DETECTED</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <button onClick={loadUsers} className="mc-button h-16 px-6 border-4">
+                  <RefreshCw className="w-5 h-5" />
+                </button>
+                <button className="mc-button mc-button-primary h-16 px-8 border-4 uppercase text-xs font-black">
+                  <Download className="w-5 h-5" />
+                  EXPORT DATABASE
+                </button>
+              </div>
+            </header>
+
+            {/* Filter Panel */}
+            <div className="mc-panel p-1 shadow-2xl">
+              <div className="bg-[#404040] p-6 flex flex-col md:flex-row gap-6 items-center">
+                <div className="relative flex-1 group w-full">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-[#aaaaaa]" />
+                  <input
+                    type="text"
+                    placeholder="FIND BY NAME OR EMAIL..."
+                    className="mc-input w-full pl-14 pr-6 py-4 text-lg border-4"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <span className="text-xs font-bold text-white uppercase tracking-widest whitespace-nowrap">Filter:</span>
+                  <select
+                    className="mc-input py-4 pr-10 text-xs border-4 min-w-[200px]"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="all">ALL ENTITIES</option>
+                    <option value="active">SURVIVAL (ACTIVE)</option>
+                    <option value="warning">CREATIVE (WARNING)</option>
+                    <option value="disqualified">SPECTATOR (BANNED)</option>
+                  </select>
+                </div>
+
+                <button className="mc-button h-16 px-8 border-4 uppercase text-xs font-black">
+                  <Filter className="w-5 h-5" />
+                  MORE
                 </button>
               </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-github-text-secondary">Total Users</p>
-                      <p className="text-2xl font-bold text-github-text mt-1">{total}</p>
-                    </div>
-                    <Users className="w-10 h-10 text-blue-500 opacity-50" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card>
-                <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-github-text-secondary">Good Status</p>
-                      <p className="text-2xl font-bold text-green-500 mt-1">
-                        {users.filter(u => (u.consistencyScore || 0) >= 80).length}
-                      </p>
-                    </div>
-                    <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <span className="text-2xl">✓</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card>
-                <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-github-text-secondary">Warnings</p>
-                      <p className="text-2xl font-bold text-yellow-500 mt-1">
-                        {users.filter(u => (u.warnings || 0) > 0).length}
-                      </p>
-                    </div>
-                    <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                      <span className="text-2xl">⚠</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card>
-                <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-github-text-secondary">Violations</p>
-                      <p className="text-2xl font-bold text-red-500 mt-1">
-                        {users.filter(u => (u.violations || 0) > 0).length}
-                      </p>
-                    </div>
-                    <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                      <span className="text-2xl">✕</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            {/* Search and Filter */}
-            <Card>
-              <div className="p-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-github-text-secondary w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder="Search by name, email, GitHub ID, or repository..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-github-canvas-subtle border border-github-border rounded-md text-github-text placeholder-github-text-secondary focus:ring-2 focus:ring-github-accent-emphasis focus:border-transparent"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-github-text-secondary" />
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                      className="px-4 py-2 bg-github-canvas-subtle border border-github-border rounded-md text-github-text focus:ring-2 focus:ring-github-accent-emphasis"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="good">Good (80+)</option>
-                      <option value="warning">Warnings</option>
-                      <option value="violation">Violations</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Users Table */}
-            {loadingData ? (
-              <Card>
-                <div className="p-12 text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-github-accent-emphasis mx-auto"></div>
-                  <p className="text-github-text-secondary mt-4">Loading users...</p>
-                </div>
-              </Card>
-            ) : (
-              <>
+            {/* Main World Table */}
+            <div className="mc-panel p-1 shadow-2xl">
+              <div className="bg-[#c6c6c6]">
                 <UsersTable users={filteredUsers} />
-                
-                {/* Pagination */}
-                <Card>
-                  <div className="p-4 flex justify-between items-center">
-                    <div className="text-sm text-github-text-secondary">
-                      Showing <span className="font-medium text-github-text">{filteredUsers.length}</span> of{' '}
-                      <span className="font-medium text-github-text">{total}</span> users
-                      {searchTerm && ` (filtered from ${users.length} users)`}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className="px-4 py-2 bg-github-canvas-subtle border border-github-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-github-canvas-inset transition-colors text-github-text"
-                      >
-                        Previous
-                      </button>
-                      <div className="px-4 py-2 bg-github-canvas-subtle border border-github-border rounded-md text-github-text">
-                        Page {page}
-                      </div>
-                      <button
-                        onClick={() => setPage(p => p + 1)}
-                        disabled={page * 10 >= total}
-                        className="px-4 py-2 bg-github-canvas-subtle border border-github-border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-github-canvas-inset transition-colors text-github-text"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                </Card>
-              </>
-            )}
+              </div>
+            </div>
           </div>
         </main>
       </div>

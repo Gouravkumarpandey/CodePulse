@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import Button from '@/components/common/Button';
+import { ShieldCheck, Clock, Bell, Info, Save } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface AdminSettings {
   maxInactivityGapHours: number;
@@ -32,101 +33,125 @@ const RulesForm: React.FC<RulesFormProps> = ({ initialSettings, onSave }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-github-text mb-4">
-          Inactivity Rules
-        </h3>
-        <p className="text-sm text-gray-600 dark:text-github-text-secondary mb-6">
-          Configure global rules for monitoring user commit activity
-        </p>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-12 font-['Minecraftia']">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-github-text-secondary mb-2">
-            Maximum Inactivity Gap (hours)
-          </label>
+        {/* Maximum Inactivity */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="p-3 border-4 border-black bg-[#404040]">
+              <Clock className="w-6 h-6 text-[#58a6ff]" />
+            </div>
+            <label className="text-sm font-black text-[#404040] uppercase tracking-widest leading-none">
+              Commit Gap Limit (HR)
+            </label>
+          </div>
           <input
             type="number"
             min="1"
             value={settings.maxInactivityGapHours}
             onChange={(e) => handleChange('maxInactivityGapHours', parseInt(e.target.value))}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-github-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-github-canvas-subtle text-gray-900 dark:text-github-text"
+            className="mc-input w-full p-6 text-2xl font-black border-4"
             required
           />
-          <p className="text-xs text-gray-500 dark:text-github-text-secondary mt-1">
-            Maximum allowed time between commits before flagging as violation
+          <p className="text-[10px] text-[#8b8b8b] font-bold uppercase tracking-wider leading-relaxed">
+            MAX TIME ALLOWED BETWEEN SAVES BEFORE ENTITY IS FLAGGED.
           </p>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-github-text-secondary mb-2">
-            Grace Period (hours)
-          </label>
+        {/* Grace Period */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="p-3 border-4 border-black bg-[#404040]">
+              <ShieldCheck className="w-6 h-6 text-[#5da045]" />
+            </div>
+            <label className="text-sm font-black text-[#404040] uppercase tracking-widest leading-none">
+              Grace Buff (HR)
+            </label>
+          </div>
           <input
             type="number"
             min="0"
             value={settings.gracePeriodHours}
             onChange={(e) => handleChange('gracePeriodHours', parseInt(e.target.value))}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-github-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-github-canvas-subtle text-gray-900 dark:text-github-text"
+            className="mc-input w-full p-6 text-2xl font-black border-4"
             required
           />
-          <p className="text-xs text-gray-500 dark:text-github-text-secondary mt-1">
-            Additional time before marking as violation after max gap
+          <p className="text-[10px] text-[#8b8b8b] font-bold uppercase tracking-wider leading-relaxed">
+            EXTRA BUFFER TIME GRANTED BEFORE INFRACTION IS LOGGED.
           </p>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-github-text-secondary mb-2">
-            Warning Threshold (hours)
-          </label>
+        {/* Warning Threshold */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="p-3 border-4 border-black bg-[#404040]">
+              <Info className="w-6 h-6 text-[#fbc02d]" />
+            </div>
+            <label className="text-sm font-black text-[#404040] uppercase tracking-widest leading-none">
+              Warning Radar (HR)
+            </label>
+          </div>
           <input
             type="number"
             min="1"
             value={settings.warningThresholdHours}
             onChange={(e) => handleChange('warningThresholdHours', parseInt(e.target.value))}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-github-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-github-canvas-subtle text-gray-900 dark:text-github-text"
+            className="mc-input w-full p-6 text-2xl font-black border-4"
             required
           />
-          <p className="text-xs text-gray-500 dark:text-github-text-secondary mt-1">
-            Show warning when inactivity approaches this threshold
+          <p className="text-[10px] text-[#8b8b8b] font-bold uppercase tracking-wider leading-relaxed">
+            NOTIFY ENTITY WHEN THEY APPROACH THE GAP LIMIT.
           </p>
         </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="enableNotifications"
-            checked={settings.enableNotifications}
-            onChange={(e) => handleChange('enableNotifications', e.target.checked)}
-            className="w-4 h-4 text-indigo-600 border-gray-300 dark:border-github-border rounded focus:ring-indigo-500"
-          />
-          <label htmlFor="enableNotifications" className="ml-2 text-sm text-gray-700 dark:text-github-text-secondary">
-            Enable email notifications for violations
-          </label>
+        {/* Notifications Toggle */}
+        <div className="p-8 bg-[#b0b0b0] border-4 border-black flex items-center justify-between shadow-[inset_2px_2px_#dbdbdb,inset_-2px_-2px_#8b8b8b]">
+          <div className="flex items-center gap-6">
+            <div className={`p-4 border-4 border-black transition-colors ${settings.enableNotifications ? 'bg-[#5da045]' : 'bg-[#e53935]'}`}>
+              <Bell className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-black text-[#1a1a1a] uppercase mc-text-shadow-light">Alert System</p>
+              <p className={`text-[10px] font-black uppercase ${settings.enableNotifications ? 'text-[#3d6b2d]' : 'text-[#8b1a1a]'}`}>
+                {settings.enableNotifications ? 'BROADCAST ACTIVE' : 'BROADCAST SILENCED'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleChange('enableNotifications', !settings.enableNotifications)}
+            className={`w-20 h-10 border-4 border-black transition-all relative ${settings.enableNotifications ? 'bg-[#5da045]' : 'bg-[#e53935]'}`}
+            style={{ boxShadow: 'inset -4px -4px rgba(0,0,0,0.2), inset 4px 4px rgba(255,255,255,0.2)' }}
+          >
+            <div className={`absolute top-0 w-8 h-[calc(100%+0px)] bg-white border-x-4 border-black transition-all ${settings.enableNotifications ? 'right-0' : 'left-0'}`} />
+          </button>
         </div>
       </div>
 
-      <div className="pt-4 border-t border-gray-200 dark:border-github-border">
-        <Button
+      <div className="pt-8 border-t-4 border-black/10">
+        <button
           type="submit"
-          variant="primary"
           disabled={saving}
-          className="w-full md:w-auto"
+          className="mc-button mc-button-primary w-full py-6 text-2xl font-black uppercase mc-text-shadow border-4"
         >
-          {saving ? 'Saving...' : 'Save Settings'}
-        </Button>
+          {saving ? 'UPDATING WORLD...' : 'SAVE CONFIGURATION'}
+        </button>
       </div>
 
-      <div className="bg-blue-50 dark:bg-github-canvas-inset border border-blue-200 dark:border-github-border rounded-lg p-4">
-        <h4 className="font-semibold text-blue-900 dark:text-github-accent mb-2">Current Configuration:</h4>
-        <ul className="text-sm text-blue-800 dark:text-github-text-secondary space-y-1">
-          <li>• Max Gap: {settings.maxInactivityGapHours} hours</li>
-          <li>• Grace Period: {settings.gracePeriodHours} hours</li>
-          <li>• Warning Threshold: {settings.warningThresholdHours} hours</li>
-          <li>• Total allowed gap: {settings.maxInactivityGapHours + settings.gracePeriodHours} hours</li>
-        </ul>
+      {/* Logic Summary Display */}
+      <div className="bg-[#404040] p-8 border-4 border-black grid grid-cols-2 md:grid-cols-4 gap-8">
+        {[
+          { label: 'BASE GAP', value: `${settings.maxInactivityGapHours}H`, color: 'text-[#58a6ff]' },
+          { label: 'GRACE', value: `${settings.gracePeriodHours}H`, color: 'text-[#5da045]' },
+          { label: 'RADAR', value: `${settings.warningThresholdHours}H`, color: 'text-[#fbc02d]' },
+          { label: 'TIMEOUT', value: `${settings.maxInactivityGapHours + settings.gracePeriodHours}H`, color: 'text-[#e53935]' },
+        ].map((item) => (
+          <div key={item.label}>
+            <p className="text-[10px] text-[#aaaaaa] font-black uppercase tracking-[0.2em] mb-2">{item.label}</p>
+            <p className={`text-3xl font-black ${item.color} mc-text-shadow`}>{item.value}</p>
+          </div>
+        ))}
       </div>
     </form>
   );

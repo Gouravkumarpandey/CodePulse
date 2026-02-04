@@ -135,23 +135,23 @@ function RepositorySelectionPage() {
   }, []);
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-    // Ensure github_token is only for the current user
-    useEffect(() => {
-      // On mount, check if the stored github_token belongs to the current user
-      const storedUser = localStorage.getItem('user');
-      const githubToken = localStorage.getItem('github_token');
-      if (githubToken && storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          // If the user changes, remove the github_token
-          if (!user || (parsedUser && user._id !== parsedUser._id)) {
-            localStorage.removeItem('github_token');
-          }
-        } catch {
+  // Ensure github_token is only for the current user
+  useEffect(() => {
+    // On mount, check if the stored github_token belongs to the current user
+    const storedUser = localStorage.getItem('user');
+    const githubToken = localStorage.getItem('github_token');
+    if (githubToken && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // If the user changes, remove the github_token
+        if (!user || (parsedUser && user._id !== parsedUser._id)) {
           localStorage.removeItem('github_token');
         }
+      } catch {
+        localStorage.removeItem('github_token');
       }
-    }, [user]);
+    }
+  }, [user]);
   // Removed unused selectedPlatform state
   const [selectedMode, setSelectedMode] = useState<'auto' | 'manual'>('auto');
   const [repositories, setRepositories] = useState<Repository[]>([]);
@@ -160,35 +160,49 @@ function RepositorySelectionPage() {
   const [connecting, setConnecting] = useState<number | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [githubLinked, setGithubLinked] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchRepositories = useCallback(async () => {
     setRepoLoading(true);
     try {
       // Get GitHub token from localStorage
       const githubToken = localStorage.getItem('github_token');
-      console.log('GitHub token available:', !!githubToken);
       if (!githubToken) {
         setNeedsAuth(true);
         setGithubLinked(false);
         setRepoLoading(false);
         return;
       }
-      // Send GitHub token in Authorization header
-      const response = await api.get('/github/repositories', {
-        headers: {
-          'Authorization': `Bearer ${githubToken}`,
-        },
-      });
-      if (response.data.status === 'SUCCESS') {
-        const repos = response.data.data?.repositories || [];
+
+      // Fetch BOTH Github repos and existing connected repos
+      const [ghResponse, localResponse] = await Promise.all([
+        api.get('/github/repositories', {
+          headers: { 'Authorization': `Bearer ${githubToken}` }
+        }),
+        api.get('/user/repositories')
+      ]);
+
+      if (ghResponse.data.status === 'SUCCESS') {
+        const ghRepos = ghResponse.data.data?.repositories || [];
+        const localRepos = localResponse.data.data?.repositories || localResponse.data.repositories || [];
+
+        // Mark repos as current active if they exist in local list and are active
+        const processedRepos = ghRepos.map((ghRepo: any) => {
+          const matched = localRepos.find((lr: any) => lr.fullName === ghRepo.full_name);
+          return {
+            ...ghRepo,
+            isActiveInSystem: matched?.isActive || false
+          };
+        });
+
         setGithubLinked(true);
-        if (repos.length === 0) {
+        if (processedRepos.length === 0) {
           setNeedsAuth(false);
           setShowRepoList(false);
           setRepoLoading(false);
           return;
         }
-        setRepositories(repos);
+        setRepositories(processedRepos);
         setShowRepoList(true);
         setNeedsAuth(false);
         setRepoLoading(false);
@@ -201,12 +215,9 @@ function RepositorySelectionPage() {
       setGithubLinked(false);
       const apiError = error as ApiError;
       const errorMsg = apiError.response?.data?.message || apiError.message || 'Failed to fetch repositories';
-      const statusCode = apiError.response?.status;
-      if (statusCode === 401 || errorMsg.includes('token') || errorMsg.includes('authentication') || errorMsg.includes('GitHub account not connected')) {
+      if (apiError.response?.status === 401 || errorMsg.includes('token')) {
         setNeedsAuth(true);
         setShowRepoList(false);
-      } else {
-        setNeedsAuth(true);
       }
       setRepoLoading(false);
     }
@@ -242,6 +253,14 @@ function RepositorySelectionPage() {
   }, [user, loading, fetchRepositories, navigate]);
 
   const handleConnect = () => {
+    // Check if user is logged in first
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to your CodePulse account first before connecting GitHub.');
+      navigate('/login');
+      return;
+    }
+
     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'your-github-client-id';
     const redirectUri = encodeURIComponent('http://localhost:5173/github/callback');
     const scope = encodeURIComponent('repo user');
@@ -275,12 +294,19 @@ function RepositorySelectionPage() {
     }
   };
 
+  // Filter repositories based on search query
+  const filteredRepositories = repositories.filter(repo =>
+    repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    repo.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    repo.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div
       className="min-h-screen bg-cover bg-center bg-no-repeat relative"
       style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}
     >
-      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
+      <div className="absolute inset-0 bg-white/70 dark:bg-[#0d1117]/85 z-0" />
       <Sidebar role="user" />
       {/* Logo at the top */}
       <div className="w-full flex justify-center items-center py-6 relative z-10">
@@ -290,7 +316,7 @@ function RepositorySelectionPage() {
         <main>
           <header className="bg-white dark:bg-github-canvas-subtle border-b border-gray-200 dark:border-github-border">
             <div className="max-w-7xl mx-auto px-6 py-4">
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-github-text tracking-wider">Integrations</h1>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-github-text tracking-wider uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Integrations</h1>
             </div>
           </header>
           <div className="max-w-5xl mx-auto px-6 py-12">
@@ -300,71 +326,92 @@ function RepositorySelectionPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-3xl mx-auto"
               >
-                <div className="bg-white/90 dark:bg-[#23272e]/90 border border-gray-300 dark:border-github-border rounded-2xl shadow-2xl overflow-hidden backdrop-blur-md">
+                <div className="bg-white/90 dark:bg-[#161b22]/90 border border-gray-300 dark:border-gray-800 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-md">
                   {/* Modal Header */}
                   <div className="px-6 py-5 border-b border-gray-200 dark:border-github-border">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-github-text mb-2">
                       Select a Github Repository
                     </h2>
-                    <p className="text-sm text-gray-600 dark:text-github-text-secondary">
+                    <p className="text-sm text-gray-600 dark:text-github-text-secondary mb-4">
                       Choose a repository to connect. We'll automatically set up webhooks and start tracking activity.
                     </p>
+                    {/* Search Input */}
+                    <input
+                      type="text"
+                      placeholder="Search repositories..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#161b22] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
                   </div>
                   <div className="max-h-[500px] overflow-y-auto">
-                    {repositories.map((repo, index) => (
-                      <div
-                        key={repo.id}
-                        className={`px-8 py-5 flex items-center justify-between bg-white/80 dark:bg-[#23272e]/80 hover:bg-white/95 dark:hover:bg-[#23272e]/95 transition-colors rounded-xl my-3 shadow-md border border-gray-200 dark:border-github-border ${
-                          index !== repositories.length - 1 ? 'mb-2' : ''
-                        }`}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                              {repo.name}
-                            </h3>
-                            {repo.private && (
-                              <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded border border-yellow-300 dark:border-yellow-700">
-                                Private
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 font-medium">
-                            {repo.full_name}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-300 font-semibold">
-                            {repo.language && (
-                              <span className="flex items-center gap-1">
-                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                {repo.language}
-                              </span>
-                            )}
-                            <span className="flex items-center gap-1">
-                              <Star className="w-3 h-3" />
-                              {repo.stargazers_count}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <GitFork className="w-3 h-3" />
-                              {repo.forks_count}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleSelectRepository(repo)}
-                          disabled={connecting === repo.id}
-                          className="ml-4 px-7 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg shadow transition-colors text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border-none"
+                    {filteredRepositories.length > 0 ? (
+                      filteredRepositories.map((repo, index) => (
+                        <div
+                          key={repo.id}
+                          className={`px-8 py-5 flex items-center justify-between bg-white/80 dark:bg-[#23272e]/40 hover:bg-white/95 dark:hover:bg-[#23272e]/60 transition-colors rounded-xl my-3 shadow-md border border-gray-200 dark:border-gray-800 ${index !== filteredRepositories.length - 1 ? 'mb-2' : ''
+                            }`}
                         >
-                          {connecting === repo.id ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Connecting...
-                            </>
-                          ) : (
-                            'Connect'
-                          )}
-                        </button>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                {repo.name}
+                              </h3>
+                              {repo.private && (
+                                <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded border border-yellow-300 dark:border-yellow-700">
+                                  Private
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 font-medium">
+                              {repo.full_name}
+                            </p>
+                            <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-300 font-semibold">
+                              {repo.language && (
+                                <span className="flex items-center gap-1">
+                                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                  {repo.language}
+                                </span>
+                              )}
+                              <span className="flex items-center gap-1">
+                                <Star className="w-3 h-3" />
+                                {repo.stargazers_count}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <GitFork className="w-3 h-3" />
+                                {repo.forks_count}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleSelectRepository(repo)}
+                            disabled={connecting === repo.id || (repo as any).isActiveInSystem}
+                            className={`ml-4 px-7 py-2 font-bold rounded-lg shadow transition-colors text-base disabled:opacity-50 flex items-center gap-2 border-none ${(repo as any).isActiveInSystem
+                                ? 'bg-green-600 cursor-default'
+                                : 'bg-amber-500 hover:bg-amber-600 text-white cursor-pointer'
+                              }`}
+                          >
+                            {connecting === repo.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Connecting...
+                              </>
+                            ) : (repo as any).isActiveInSystem ? (
+                              <>
+                                <CheckCircle className="w-5 h-5" />
+                                Active
+                              </>
+                            ) : (
+                              'Connect'
+                            )}
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-8 py-12 text-center text-gray-500 dark:text-gray-400">
+                        No repositories found matching "{searchQuery}"
                       </div>
-                    ))}
+                    )}
                   </div>
                   {/* Modal Footer */}
                   <div className="px-6 py-4 bg-gray-50 dark:bg-github-canvas-inset border-t border-gray-200 dark:border-github-border flex items-center justify-between">
@@ -384,7 +431,7 @@ function RepositorySelectionPage() {
             ) : (
               <>
                 <div className="mb-8">
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-github-text mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 uppercase tracking-wide" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
                     Repository Integrations
                   </h2>
                   <p className="text-gray-600 dark:text-github-text-secondary">
@@ -395,11 +442,10 @@ function RepositorySelectionPage() {
                 <div className="flex border-b border-gray-200 dark:border-github-border mb-12">
                   <button
                     onClick={() => setSelectedMode('auto')}
-                    className={`px-6 py-3 border-b-2 font-medium transition-colors ${
-                      selectedMode === 'auto'
-                        ? 'border-gray-900 dark:border-github-text text-gray-900 dark:text-github-text'
-                        : 'border-transparent text-gray-600 dark:text-github-text-secondary hover:text-gray-900 dark:hover:text-github-text'
-                    }`}
+                    className={`px-6 py-3 border-b-2 font-medium transition-colors ${selectedMode === 'auto'
+                      ? 'border-gray-900 dark:border-github-text text-gray-900 dark:text-github-text'
+                      : 'border-transparent text-gray-600 dark:text-github-text-secondary hover:text-gray-900 dark:hover:text-github-text'
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <Zap className="w-4 h-4" />
@@ -411,16 +457,15 @@ function RepositorySelectionPage() {
                   </button>
                   <button
                     onClick={() => setSelectedMode('manual')}
-                    className={`px-6 py-3 border-b-2 font-medium transition-colors ${
-                      selectedMode === 'manual'
-                        ? 'border-gray-900 dark:border-github-text text-gray-900 dark:text-github-text'
-                        : 'border-transparent text-gray-600 dark:text-github-text-secondary hover:text-gray-900 dark:hover:text-github-text'
-                    }`}
+                    className={`px-6 py-3 border-b-2 font-medium transition-colors ${selectedMode === 'manual'
+                      ? 'border-gray-900 dark:border-github-text text-gray-900 dark:text-github-text'
+                      : 'border-transparent text-gray-600 dark:text-github-text-secondary hover:text-gray-900 dark:hover:text-github-text'
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="9" y1="3" x2="9" y2="21"/>
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <line x1="9" y1="3" x2="9" y2="21" />
                       </svg>
                       Manual Integration
                     </div>
@@ -430,7 +475,7 @@ function RepositorySelectionPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center"
+                    className="text-center rounded-xl p-8 bg-white/50 dark:bg-[#161b22]/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800"
                   >
                     {repoLoading ? (
                       <div className="flex flex-col items-center justify-center py-12">
@@ -455,9 +500,9 @@ function RepositorySelectionPage() {
                             <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
                           </div>
                           <div className="w-24 h-24 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center border-2 border-gray-200 dark:border-gray-700">
-                            <img 
-                              src="https://cdn.worldvectorlogo.com/logos/github-icon-2.svg" 
-                              alt="GitHub" 
+                            <img
+                              src="https://cdn.worldvectorlogo.com/logos/github-icon-2.svg"
+                              alt="GitHub"
                               className="w-16 h-16"
                             />
                           </div>

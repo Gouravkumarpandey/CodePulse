@@ -31,7 +31,9 @@ const UserSettingsPage = () => {
   const loadRepositories = async () => {
     try {
       const response = await api.get('/user/repositories');
-      setRepos(response.data.repositories);
+      const data = response.data;
+      const repositories = data.data?.repositories || data.repositories || [];
+      setRepos(repositories);
     } catch (error) {
       console.error('Failed to load repositories:', error);
     } finally {
@@ -42,7 +44,9 @@ const UserSettingsPage = () => {
   const fetchGitHubRepos = async () => {
     try {
       const response = await api.get('/github/repositories');
-      setGithubRepos(response.data.repositories);
+      const data = response.data;
+      const repositories = data.data?.repositories || data.repositories || [];
+      setGithubRepos(repositories);
       setShowAddModal(true);
     } catch (error) {
       console.error('Failed to fetch GitHub repos:', error);
@@ -69,38 +73,43 @@ const UserSettingsPage = () => {
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
-      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
+      <div className="absolute inset-0 bg-white/70 dark:bg-[#0d1117]/85 z-0" />
       <Sidebar role="user" />
       <main className="ml-72 min-h-screen p-8 relative z-10">
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-github-text">Repository Settings</h1>
-                <p className="text-gray-600 dark:text-github-text-secondary mt-2">Manage your connected repositories</p>
-              </div>
-
-              <Button onClick={fetchGitHubRepos} variant="primary">
-                + Add Repository
-              </Button>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white uppercase tracking-widest" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Repository Settings</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">Manage your connected repositories</p>
             </div>
 
-            {loadingData ? (
-              <div>Loading repositories...</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {repos.map((repo) => (
-                  <RepoCard key={repo._id} repo={repo} />
-                ))}
-              </div>
-            )}
+            <Button onClick={fetchGitHubRepos} variant="primary">
+              + Add Repository
+            </Button>
+          </div>
 
-            <Modal
-              isOpen={showAddModal}
-              onClose={() => setShowAddModal(false)}
-              title="Add Repository"
-            >
-              <div className="space-y-4">
-                {githubRepos.map((repo) => (
+          {loadingData ? (
+            <div>Loading repositories...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.isArray(repos) && repos.length > 0 ? (
+                repos.map((repo, index) => (
+                  <RepoCard key={repo._id || `repo-${index}`} repo={repo} />
+                ))
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400 col-span-full text-center">No repositories found.</div>
+              )}
+            </div>
+          )}
+
+          <Modal
+            isOpen={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            title="Add Repository"
+          >
+            <div className="space-y-4">
+              {Array.isArray(githubRepos) && githubRepos.length > 0 ? (
+                githubRepos.map((repo) => (
                   <div key={repo.id} className="flex items-center justify-between p-4 border rounded">
                     <div>
                       <div className="font-semibold">{repo.name}</div>
@@ -114,10 +123,15 @@ const UserSettingsPage = () => {
                       Connect
                     </Button>
                   </div>
-                ))}
-              </div>
-            </Modal>
-          </div>
+                ))
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400 text-center py-8">
+                  No GitHub repositories available
+                </div>
+              )}
+            </div>
+          </Modal>
+        </div>
       </main>
     </div>
   );

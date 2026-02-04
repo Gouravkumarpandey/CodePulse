@@ -32,7 +32,7 @@ const UserWarningsPage = () => {
   const loadWarnings = async () => {
     try {
       const repos = await api.get('/user/repositories');
-      
+
       const allCommits: Commit[] = [];
       for (const repo of repos.data.repositories) {
         const response = await api.get(`/user/activity/${repo._id}`);
@@ -79,7 +79,7 @@ const UserWarningsPage = () => {
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
-      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
+      <div className="absolute inset-0 bg-white/70 dark:bg-[#0d1117]/85 z-0" />
       <Sidebar role="user" />
       <main className="ml-72 min-h-screen p-8 relative z-10">
         <div className="max-w-7xl mx-auto space-y-6">
@@ -90,20 +90,19 @@ const UserWarningsPage = () => {
             className="flex items-start justify-between"
           >
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2 uppercase tracking-widest" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
                 Alerts & Violations
               </h1>
               <p className="text-gray-600 dark:text-gray-400 text-lg">
                 Monitor and manage your development consistency alerts
               </p>
             </div>
-            
-            <div className="flex items-center gap-3 bg-white dark:bg-[#161b22] px-6 py-3 rounded-xl border border-gray-200 dark:border-[#30363d] shadow-sm">
-              <div className={`w-3 h-3 rounded-full ${
-                getStatusColor() === 'red' ? 'bg-red-500 animate-pulse' :
+
+            <div className="flex items-center gap-3 bg-white dark:bg-[#161b22]/90 backdrop-blur-sm px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+              <div className={`w-3 h-3 rounded-full ${getStatusColor() === 'red' ? 'bg-red-500 animate-pulse' :
                 getStatusColor() === 'yellow' ? 'bg-yellow-500 animate-pulse' :
-                'bg-green-500'
-              }`} />
+                  'bg-green-500'
+                }`} />
               <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {getStatusMessage()}
               </span>
@@ -218,36 +217,33 @@ const UserWarningsPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-[#30363d] rounded-2xl p-2 shadow-sm"
+            className="bg-white dark:bg-[#161b22]/90 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-2 shadow-sm"
           >
             <div className="flex gap-2">
               <button
                 onClick={() => setActiveTab('all')}
-                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                  activeTab === 'all'
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#161b22]'
-                }`}
+                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'all'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#161b22]'
+                  }`}
               >
                 All Issues ({totalIssues})
               </button>
               <button
                 onClick={() => setActiveTab('violations')}
-                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                  activeTab === 'violations'
-                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#161b22]'
-                }`}
+                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'violations'
+                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#161b22]'
+                  }`}
               >
                 Violations ({violations.length})
               </button>
               <button
                 onClick={() => setActiveTab('warnings')}
-                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                  activeTab === 'warnings'
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#161b22]'
-                }`}
+                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'warnings'
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#161b22]'
+                  }`}
               >
                 Warnings ({warnings.length})
               </button>

@@ -1,117 +1,124 @@
-import { User } from '@/types/user';
-import Badge from '@/components/common/Badge';
-import { Link } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  GitCommit, AlertCircle, ShieldOff,
+  ChevronRight, Github
+} from 'lucide-react';
 
 interface UsersTableProps {
-  users: User[];
+  users: any[];
 }
 
-const UsersTable: React.FC<UsersTableProps> = ({ users }) => {
-  const getScoreBadge = (score?: number) => {
-    if (!score) return <Badge variant="default">N/A</Badge>;
-    if (score >= 80) return <Badge variant="success">{score}</Badge>;
-    if (score >= 60) return <Badge variant="warning">{score}</Badge>;
-    return <Badge variant="danger">{score}</Badge>;
-  };
+export default function UsersTable({ users }: UsersTableProps) {
+  const navigate = useNavigate();
 
-  const getStatusBadge = (score?: number, violations?: number, warnings?: number) => {
-    if (!score) return <Badge variant="default">No Data</Badge>;
-    if (violations && violations > 0) return <Badge variant="danger">Violation</Badge>;
-    if (warnings && warnings > 0) return <Badge variant="warning">Warning</Badge>;
-    if (score >= 80) return <Badge variant="success">Good</Badge>;
-    if (score >= 60) return <Badge variant="warning">Monitor</Badge>;
-    return <Badge variant="danger">Poor</Badge>;
+  const getStatusBadge = (violations: number) => {
+    if (violations >= 3) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+          <ShieldOff className="w-3.5 h-3.5" />
+          Spectator
+        </span>
+      );
+    }
+    if (violations > 0) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200">
+          <AlertCircle className="w-3.5 h-3.5" />
+          Creative
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+        <GitCommit className="w-3.5 h-3.5" />
+        Survival
+      </span>
+    );
   };
 
   return (
-    <div className="bg-white dark:bg-github-canvas-subtle rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-github-border">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-github-border">
-        <thead className="bg-gray-50 dark:bg-github-bg">
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-github-text-secondary uppercase tracking-wider">
-              User
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-github-text-secondary uppercase tracking-wider">
-              GitHub
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-github-text-secondary uppercase tracking-wider">
-              Repository
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-github-text-secondary uppercase tracking-wider">
-              Score
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-github-text-secondary uppercase tracking-wider">
-              Status
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-github-text-secondary uppercase tracking-wider">
-              Actions
-            </th>
+            <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Player Identity</th>
+            <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">World Link</th>
+            <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Last Pulse</th>
+            <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">EXP</th>
+            <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Flags</th>
+            <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Game Mode</th>
+            <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Action</th>
           </tr>
         </thead>
-        <tbody className="bg-white dark:bg-github-canvas-subtle divide-y divide-gray-200 dark:divide-github-border">
-          {users.map((user) => (
-            <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-github-canvas-inset transition-colors">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  <img
-                    className="h-10 w-10 rounded-full border-2 border-gray-200 dark:border-github-border"
-                    src={user.avatar || '/default-avatar.png'}
-                    alt={user.username}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.username || 'User');
-                    }}
-                  />
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900 dark:text-github-text">
-                      {user.username || 'Unknown User'}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-github-text-secondary">
-                      {user.email || 'No email'}
-                    </div>
-                  </div>
+        <tbody className="divide-y divide-gray-100">
+          {users.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-lg font-medium text-gray-900 mb-1">No players found</span>
+                  <span className="text-sm">There are no entities detected in this world currently.</span>
                 </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900 dark:text-github-text">
-                  @{user.githubId || user.username}
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900 dark:text-github-text">
-                  {user.selectedRepo || 'No repository'}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-github-text-secondary">
-                  {user.totalCommits ? `${user.totalCommits} commits` : 'No commits'}
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {getScoreBadge(user.consistencyScore)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {getStatusBadge(user.consistencyScore, user.violations, user.warnings)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <Link
-                  to={`/admin/users/${user._id}`}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-indigo-600 dark:text-github-accent hover:text-indigo-900 dark:hover:text-github-accent font-medium bg-indigo-50 dark:bg-github-canvas-inset hover:bg-indigo-100 dark:hover:bg-github-canvas-default rounded-md transition-colors"
-                >
-                  <Eye className="w-4 h-4" />
-                  View Details
-                </Link>
               </td>
             </tr>
-          ))}
+          ) : (
+            users.map((user) => (
+              <tr
+                key={user._id}
+                className="group hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => navigate(`/admin/users/${user._id}`)}
+              >
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-gray-100 flex-shrink-0">
+                      <img
+                        src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=random`}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">{user.username}</div>
+                      <div className="text-xs text-gray-500 truncate max-w-[150px]">{user.email}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Github className="w-4 h-4" />
+                    <span className="text-sm font-medium truncate max-w-[150px]">
+                      {user.selectedRepo || 'Offline'}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span className="text-sm text-gray-600 font-medium">2h ago</span>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-sm font-bold text-gray-900">{user.totalCommits || 0}</span>
+                    <div className="w-24 h-1 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500 w-[70%] rounded-full" />
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span className={`text-sm font-bold ${user.violations > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                    {user.violations || 0}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <div className="flex justify-end">
+                    {getStatusBadge(user.violations || 0)}
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors ml-auto" />
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
-      
-      {users.length === 0 && (
-        <div className="text-center py-12 text-gray-500 dark:text-github-text-secondary">
-          No users found
-        </div>
-      )}
     </div>
   );
-};
-
-export default UsersTable;
+}

@@ -11,19 +11,35 @@
 }
 
 @layer base {
+  :root {
+    --brand-primary: #0ea5e9;
+    --brand-secondary: #6366f1;
+    --bg-main: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --sidebar-bg: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+  }
+
   * {
     @apply border-gray-200 dark:border-github-border;
   }
-  
+
   body {
     @apply antialiased;
     @apply bg-white text-gray-900;
     @apply dark:text-github-text;
+    transition: background-color 0.3s ease;
   }
 
   .dark body {
     background: #0d1117;
-    background-image: 
+    background-image:
       radial-gradient(at 0% 0%, rgba(46, 160, 67, 0.15) 0px, transparent 50%),
       radial-gradient(at 100% 0%, rgba(31, 111, 235, 0.15) 0px, transparent 50%),
       radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
@@ -31,8 +47,33 @@
     background-attachment: fixed;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply text-gray-900 dark:text-github-text;
+  }
+
+  /* Default headers for professional mode */
+  .modern-theme h1,
+  .modern-theme h2,
+  .modern-theme h3,
+  .modern-theme h4,
+  .modern-theme h5,
+  .modern-theme h6 {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  /* Keep minecraft style explicitly namespaced */
+  .minecraft-theme h1,
+  .minecraft-theme h2,
+  .minecraft-theme h3,
+  .minecraft-theme h4,
+  .minecraft-theme h5,
+  .minecraft-theme h6 {
     font-family: "Minecraftia", sans-serif;
     letter-spacing: 0.08em;
   }
@@ -41,101 +82,168 @@
     @apply text-indigo-600 hover:underline dark:text-github-text-link;
   }
 
-  input, textarea, select {
-    @apply bg-white border-gray-300 text-gray-900;
-    @apply dark:bg-github-canvas-inset dark:border-github-border dark:text-github-text;
-  }
-
-  input:focus, textarea:focus, select:focus {
-    @apply ring-2 ring-indigo-500 border-transparent outline-none;
-    @apply dark:ring-github-accent;
-  }
-
   ::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-github-canvas-subtle;
+    @apply bg-transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-github-border rounded-lg;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-github-border-muted;
+    @apply bg-gray-300 dark:bg-slate-700/50 rounded-full;
   }
 }
 
-@layer utilities {
-  .github-card {
-    @apply bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg;
+@layer components {
+
+  /* Modern Professional Design System */
+  .modern-layout {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-h-screen: 100vh;
   }
 
-  .github-button {
-    @apply px-4 py-2 rounded-md font-medium transition-all duration-200;
+  .glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
-  .github-button-primary {
-    @apply bg-indigo-600 hover:bg-indigo-700 dark:bg-github-success dark:hover:bg-github-success/90 text-white;
+  .modern-sidebar {
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--card-border);
   }
 
-  .github-button-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 dark:bg-github-canvas-subtle dark:hover:bg-github-border-muted text-gray-900 dark:text-github-text border border-gray-300 dark:border-github-border;
+  .modern-btn {
+    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-300 active:scale-95 flex items-center justify-center gap-2;
   }
 
-  .gradient-mesh {
-    background: linear-gradient(135deg, rgba(46, 160, 67, 0.05) 0%, rgba(31, 111, 235, 0.05) 100%);
+  .modern-btn-primary {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    @apply text-white shadow-lg shadow-sky-500/20 hover:shadow-sky-500/40 hover:-translate-y-0.5;
   }
 
-  .hero-glow {
-    position: relative;
+  .modern-btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    @apply text-slate-300 hover:bg-white/10 hover:text-white;
   }
 
-  .hero-glow::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(46, 160, 67, 0.15) 0%, transparent 70%);
-    animation: pulse-glow 8s ease-in-out infinite;
-    pointer-events: none;
+  .modern-input {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--card-border);
+    @apply rounded-lg px-4 py-2.5 text-white placeholder:text-slate-500 transition-all outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500;
   }
 
-  @keyframes pulse-glow {
-    0%, 100% {
-      opacity: 0.5;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.1);
-    }
-  }
-}
-
-@layer base {
-  :root {
-    --tooltip-bg: #ffffff;
-    --tooltip-border: #e5e7eb;
-    --tooltip-text: #111827;
-    --chart-grid: #e5e7eb;
-    --chart-axis: #6b7280;
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border;
   }
 
-  .dark {
-    --tooltip-bg: #161b22;
-    --tooltip-border: #30363d;
-    --tooltip-text: #c9d1d9;
-    --chart-grid: #30363d;
-    --chart-axis: #7d8590;
+  .status-active {
+    @apply bg-emerald-500/10 text-emerald-500 border-emerald-500/20;
   }
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  .status-warning {
+    @apply bg-amber-500/10 text-amber-500 border-amber-500/20;
+  }
+
+  .status-danger {
+    @apply bg-rose-500/10 text-rose-500 border-rose-500/20;
+  }
+
+  /* --- Minecraft Aesthetics --- */
+  .mc-dirt-bg {
+    background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png'),
+      linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+      url('/image/dirt.png');
+    background-blend-mode: multiply;
+    background-repeat: repeat;
+    background-size: 64px;
+    background-color: #3b2d23;
+  }
+
+  .mc-panel {
+    background-color: #c6c6c6;
+    border: 8px solid #000;
+    box-shadow: inset -4px -4px #8b8b8b, inset 4px 4px #dbdbdb;
+    image-rendering: pixelated;
+  }
+
+  .mc-card {
+    background-color: #404040;
+    border: 4px solid #000;
+    box-shadow: inset -4px -4px #2a2a2a, inset 4px 4px #6a6a6a;
+    @apply p-4 text-white font-['Minecraftia'];
+  }
+
+  .mc-button {
+    @apply relative font-bold text-white transition-all active:translate-y-1 inline-flex items-center gap-2 px-4 py-2;
+    background-color: #7d7d7d;
+    border: 4px solid #000;
+    box-shadow: inset -4px -4px #5a5a5a, inset 4px 4px #b0b0b0;
+    text-shadow: 2px 2px #000;
+    font-family: 'Minecraftia', sans-serif;
+  }
+
+  .mc-button:hover {
+    background-color: #8b8b8b;
+  }
+
+  .mc-button-primary {
+    background-color: #5da045;
+    box-shadow: inset -4px -4px #3d6b2d, inset 4px 4px #8fcf76;
+  }
+
+  .mc-button-primary:hover {
+    background-color: #6fb952;
+  }
+
+  .mc-input {
+    background-color: #000;
+    border: 4px solid #8b8b8b;
+    border-top-color: #505050;
+    border-left-color: #505050;
+    @apply text-white p-2 font-['Minecraftia'] outline-none;
+  }
+
+  .mc-text-shadow {
+    text-shadow: 3px 3px #000;
+  }
+
+  .mc-text-shadow-light {
+    text-shadow: 2px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .mc-header {
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/image/stone.png');
+    background-size: 64px;
+    border-bottom: 8px solid #000;
+    image-rendering: pixelated;
+  }
+
+  .image-rendering-pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 24px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background-color: #404040;
+    border-left: 4px solid #000;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #c6c6c6;
+    border: 4px solid #000;
+    box-shadow: inset -4px -4px #8b8b8b, inset 4px 4px #dbdbdb;
   }
 }

@@ -33,27 +33,43 @@ const UserActivityPage = () => {
     }
   }, [selectedRepo]);
 
+  // Polling for real-time updates
+  useEffect(() => {
+    if (!selectedRepo || selectedRepo === 'all') return;
+
+    const intervalId = setInterval(() => {
+      loadCommits(selectedRepo, true); // true = silent reload
+    }, 30000); // Poll every 30 seconds
+
+    return () => clearInterval(intervalId);
+  }, [selectedRepo]);
+
   const loadRepositories = async () => {
     try {
       const response = await api.get('/user/repositories');
-      setRepos(response.data.repositories);
-      if (response.data.repositories.length > 0) {
-        setSelectedRepo(response.data.repositories[0]._id);
+      const data = response.data;
+      const repositories = data.data?.repositories || data.repositories || [];
+      setRepos(repositories);
+      if (repositories.length > 0) {
+        const activeRepo = repositories.find((r: any) => r.isActive);
+        setSelectedRepo(activeRepo ? activeRepo._id : repositories[0]._id);
       }
     } catch (error) {
       console.error('Failed to load repositories:', error);
     }
   };
 
-  const loadCommits = async (repoId: string) => {
-    setLoadingData(true);
+  const loadCommits = async (repoId: string, silent = false) => {
+    if (!silent) setLoadingData(true);
     try {
       const response = await api.get(`/user/activity/${repoId}`);
-      setCommits(response.data.commits);
+      const data = response.data;
+      const commits = data.data?.commits || data.commits || [];
+      setCommits(commits);
     } catch (error) {
       console.error('Failed to load commits:', error);
     } finally {
-      setLoadingData(false);
+      if (!silent) setLoadingData(false);
     }
   };
 
@@ -67,7 +83,7 @@ const UserActivityPage = () => {
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
-      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
+      <div className="absolute inset-0 bg-white/70 dark:bg-[#0d1117]/85 z-0" />
       <Sidebar role="user" isCollapsed={sidebarCollapsed} />
       <main className={`min-h-screen p-8 transition-all duration-300 relative z-10 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
         <button
@@ -77,34 +93,27 @@ const UserActivityPage = () => {
         >
           <Menu className="w-5 h-5 text-gray-600 dark:text-github-text-secondary" />
         </button>
-        
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-github-text">Commit Activity</h1>
-                <p className="text-gray-600 dark:text-github-text-secondary mt-2">Track your commit timeline</p>
-              </div>
 
-              <select
-                value={selectedRepo}
-                onChange={(e) => setSelectedRepo(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="all">All Repositories</option>
-                {repos.map((repo) => (
-                  <option key={repo._id} value={repo._id}>
-                    {repo.name}
-                  </option>
-                ))}
-              </select>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white uppercase tracking-widest" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Commit Activity</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">Track your commit timeline</p>
             </div>
 
-            {loadingData ? (
-              <div>Loading commits...</div>
-            ) : (
-              <CommitTimeline commits={commits} />
+            {selectedRepo && (
+              <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-700 dark:text-blue-300 font-semibold">
+                Repository: {repos.find(r => r._id === selectedRepo)?.name || 'Selected'}
+              </div>
             )}
           </div>
+
+          {loadingData ? (
+            <div>Loading commits...</div>
+          ) : (
+            <CommitTimeline commits={commits} />
+          )}
+        </div>
       </main>
     </div>
   );

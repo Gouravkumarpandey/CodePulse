@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import MinecraftModeSlider from '../components/MinecraftModeSlider';
 import { useNavigate } from 'react-router-dom';
-import ThemeToggle from '@/components/common/ThemeToggle';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 const CodePulseHomePage = () => {
   const navigate = useNavigate();
+  const { scrollY } = useScroll();
+  const yBg = useTransform(scrollY, [0, 500], [0, 100]);
+  const yFg = useTransform(scrollY, [0, 500], [0, -50]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-200">
@@ -16,52 +20,99 @@ const CodePulseHomePage = () => {
               <div className="flex items-center">
                 <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
               </div>
-              <div className="hidden md:flex space-x-6">
+              <div className="hidden lg:flex space-x-6">
                 <a href="#features" className="text-black dark:text-white hover:underline transition-colors">Features</a>
                 <a href="#how-it-works" className="text-black dark:text-white hover:underline transition-colors">How It Works</a>
                 <a href="#open-source" className="text-black dark:text-white hover:underline transition-colors">Open Source</a>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
+            <div className="hidden lg:flex items-center space-x-4">
               <button onClick={() => navigate('/login')} className="text-black dark:text-white hover:underline font-medium transition-colors">Log in</button>
               <button onClick={() => navigate('/signup')} className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-5 py-2.5 rounded-lg font-semibold transition-all">
                 Get Started
               </button>
             </div>
+
+            {/* Mobile menu button */}
+            <div className="lg:hidden flex items-center">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-black dark:text-white hover:text-gray-600 focus:outline-none"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {isMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="lg:hidden bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 absolute w-full left-0 top-16 shadow-lg z-50">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <a href="#features" className="block px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900" onClick={() => setIsMenuOpen(false)}>Features</a>
+              <a href="#how-it-works" className="block px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900" onClick={() => setIsMenuOpen(false)}>How It Works</a>
+              <a href="#open-source" className="block px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900" onClick={() => setIsMenuOpen(false)}>Open Source</a>
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-2">
+                <button onClick={() => navigate('/login')} className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900">Log in</button>
+                <button onClick={() => navigate('/signup')} className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white">Get Started</button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-white dark:bg-black py-20 lg:py-32">
+      <section className="relative overflow-hidden bg-black min-h-screen flex flex-col justify-center pt-10 pb-20 lg:pb-32">
         {/* Background Image - Full Coverage */}
-        <div className="absolute inset-0 opacity-70 dark:opacity-50">
+        {/* Background Image - Full Coverage */}
+        <motion.div
+          className="absolute inset-0"
+          style={{ y: yBg, scale: 1.2 }}
+        >
           <img
-            src="https://github.blog/wp-content/uploads/2020/12/102393310-07478b80-3f8d-11eb-84eb-392d555ebd29.png?w=1200"
+            src="/background1.jpg"
             alt="Hero background"
             className="w-full h-full object-cover"
           />
-        </div>
+        </motion.div>
+
+        {/* Foreground Image */}
+        {/* Foreground Image */}
+        <motion.div
+          className="absolute -bottom-32 left-0 w-full z-0"
+          style={{ y: yFg }}
+        >
+          <img
+            src="/Foreground.png"
+            alt="Foreground layer"
+            className="w-full object-cover"
+          />
+        </motion.div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             {/* Minecraft Themed Hero Block */}
             <div className="flex flex-col items-center justify-center mb-10" style={{ fontFamily: 'Minecraftia, sans-serif' }}>
               <img
-                src="/info.jpg"
-                alt="Real-Time Hackathon Monitoring with GitHub"
-                className="mx-auto mb-6 w-full -mt-32"
-                style={{ maxHeight: '400px', minWidth: '900px', marginTop: '-8rem', objectFit: 'contain' }}
+                src="/info.png"
+                alt="Real-Time Hackathon Monitoring"
+                className="mx-auto mb-6 w-full"
+                style={{ maxHeight: '600px', maxWidth: '1200px', marginTop: '-4rem', objectFit: 'contain' }}
               />
-              <div className="max-w-2xl text-2xl md:text-4xl text-black dark:text-white text-center">
+              <div className="max-w-2xl text-xl md:text-4xl text-white text-center mt-4 md:-mt-20 drop-shadow-md">
                 Track commits, activity, and team progress live — all in one dashboard.
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
                 onClick={() => navigate('/signup')}
-                className="bg-[#3c3c3c] hover:bg-[#4a4a4a] text-white px-8 py-4 rounded-lg text-lg font-bold transition-all shadow-lg hover:shadow-xl border-2 border-black hover:border-gray-800"
+                className="bg-[#FFD700] hover:bg-[#FFC000] text-black px-10 py-5 rounded-lg text-xl font-bold transition-all shadow-lg hover:shadow-xl border-b-4 border-r-4 border-black active:border-b-2 active:border-r-2 active:translate-y-1 active:translate-x-1"
                 style={{ fontFamily: 'Minecraftia, sans-serif' }}
               >
                 Let's Explore
@@ -88,10 +139,10 @@ const CodePulseHomePage = () => {
           <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
             <div>
               <h2
-                className="text-4xl md:text-5xl font-bold mb-6"
+                className="text-3xl md:text-5xl font-bold mb-6"
                 style={{
                   fontFamily: 'Minecraftia, sans-serif',
-                  color: '#ffc42b',
+                  color: '#FFD700',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
@@ -132,10 +183,10 @@ const CodePulseHomePage = () => {
             </div>
             <div className="order-1 lg:order-2">
               <h2
-                className="text-4xl md:text-5xl font-bold mb-6"
+                className="text-3xl md:text-5xl font-bold mb-6"
                 style={{
                   fontFamily: 'Minecraftia, sans-serif',
-                  color: '#ffc42b',
+                  color: '#FFD700',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
@@ -162,10 +213,10 @@ const CodePulseHomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2
-              className="text-4xl md:text-5xl font-bold mb-6"
+              className="text-3xl md:text-5xl font-bold mb-6"
               style={{
                 fontFamily: 'Minecraftia, sans-serif',
-                color: '#ffc42b',
+                color: '#FFD700',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
@@ -262,74 +313,116 @@ const CodePulseHomePage = () => {
         </div>
 
         {/* How CodePulse Works Section - White Background with Pixel Pattern */}
-        <div className="relative bg-white dark:bg-white py-24 border-b border-gray-200">
+        <div className="relative bg-white dark:bg-white py-12 border-b border-gray-200">
           {/* Minecraft Pixelated Pattern - Top Left Corner - Larger Size */}
           <div className="absolute top-0 left-0 flex flex-col">
             {/* Row 1 */}
             <div className="flex">
-              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-[#111]"></div>
-              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white"></div>
-              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-[#111]"></div>
-              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white"></div>
+              <div className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-[#111]"></div>
+              <div className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-white"></div>
+              <div className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-[#111]"></div>
+              <div className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-white"></div>
             </div>
             {/* Row 2 */}
             <div className="flex">
-              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white"></div>
-              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-[#111]"></div>
-              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white"></div>
-              <div className="w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-[#111]"></div>
+              <div className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-white"></div>
+              <div className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-[#111]"></div>
+              <div className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-white"></div>
+              <div className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-[#111]"></div>
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-32 md:pt-40 lg:pt-48">
-            <div className="text-center mb-16">
-              <h2
-                className="text-4xl md:text-5xl font-bold mb-6"
-                style={{
-                  fontFamily: 'Minecraftia, sans-serif',
-                  color: '#ffc42b',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
-                }}
-              >
-                HOW CODEPULSE WORKS
-              </h2>
-              <p className="text-xl text-black max-w-3xl mx-auto leading-relaxed">
-                CodePulse uses GitHub as the single source of truth, capturing real-time push events through webhooks to ensure fair hackathon participation.
-              </p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-20 md:pt-28 lg:pt-32">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-24 mb-16 px-4 md:px-8">
+              <div className="text-center lg:text-left flex-1">
+                <h2
+                  className="text-3xl md:text-5xl font-bold mb-6"
+                  style={{
+                    fontFamily: 'Minecraftia, sans-serif',
+                    color: '#FFD700',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
+                  }}
+                >
+                  HOW CODEPULSE WORKS
+                </h2>
+                <p className="text-xl text-black max-w-2xl leading-relaxed">
+                  CodePulse uses GitHub as the single source of truth, capturing real-time push events through webhooks to ensure fair hackathon participation.
+                </p>
+              </div>
+              <img
+                src="/code.png"
+                alt="CodePulse Logo"
+                className="w-full max-w-xs lg:max-w-none lg:w-96 h-auto object-contain drop-shadow-md flex-shrink-0 mt-8 lg:-mt-24"
+              />
             </div>
 
             {/* Steps */}
             <div className="grid md:grid-cols-3 gap-8 mb-16">
               <div className="text-center">
-                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 border-2 border-[#FFD700] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                   1
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Connect Repository</h3>
-                <p className="text-black">
+                <h3
+                  className="text-2xl font-bold mb-3"
+                  style={{
+                    fontFamily: 'Minecraftia, sans-serif',
+                    color: '#FFD700',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    textShadow: '2px 2px 0 #000, 3px 3px 0 #222',
+                  }}
+                >
+                  Connect Repository
+                </h3>
+                <p className="text-lg text-black leading-relaxed">
                   Teams connect their GitHub repositories and CodePulse automatically configures webhooks for monitoring.
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 border-2 border-[#FFD700] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                   2
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Track Activity</h3>
-                <p className="text-black">
+                <h3
+                  className="text-2xl font-bold mb-3"
+                  style={{
+                    fontFamily: 'Minecraftia, sans-serif',
+                    color: '#FFD700',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    textShadow: '2px 2px 0 #000, 3px 3px 0 #222',
+                  }}
+                >
+                  Track Activity
+                </h3>
+                <p className="text-lg text-black leading-relaxed">
                   Every push event is captured in real-time with server-generated timestamps for tamper-proof tracking.
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 border-2 border-[#FFD700] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                   3
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Ensure Compliance</h3>
-                <p className="text-black">
+                <h3
+                  className="text-2xl font-bold mb-3"
+                  style={{
+                    fontFamily: 'Minecraftia, sans-serif',
+                    color: '#FFD700',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    textShadow: '2px 2px 0 #000, 3px 3px 0 #222',
+                  }}
+                >
+                  Ensure Compliance
+                </h3>
+                <p className="text-lg text-black leading-relaxed">
                   Automated rules engine detects violations and generates reports for organizers and judges.
                 </p>
               </div>
             </div>
+
+
           </div>
         </div>
       </section>
@@ -339,10 +432,10 @@ const CodePulseHomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2
-              className="text-4xl md:text-5xl font-bold mb-6"
+              className="text-3xl md:text-5xl font-bold mb-6"
               style={{
                 fontFamily: 'Minecraftia, sans-serif',
-                color: '#ffc42b',
+                color: '#FFD700',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
@@ -416,10 +509,10 @@ const CodePulseHomePage = () => {
       <section className="py-24 bg-white dark:bg-black text-black dark:text-white relative overflow-hidden border-t border-b border-black dark:border-white" id="documentation">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <h2
-            className="text-4xl md:text-5xl font-bold mb-6"
+            className="text-3xl md:text-5xl font-bold mb-6"
             style={{
               fontFamily: 'Minecraftia, sans-serif',
-              color: '#ffc42b',
+              color: '#FFD700',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               textShadow: '2px 2px 0 #000, 4px 4px 0 #222',
@@ -444,56 +537,67 @@ const CodePulseHomePage = () => {
       </section>
 
       {/* Footer with Image */}
-      <footer className="relative bg-white dark:bg-black text-black dark:text-white py-16 border-t border-black dark:border-white overflow-hidden" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
-        {/* Background Image */}
-        <div className="absolute inset-0 opacity-30 dark:opacity-20">
-          <img
-            src="https://github.blog/wp-content/uploads/2021/02/footer-concept-illustration.jpg?w=1024"
-            alt="Footer illustration"
-            className="w-full h-full object-cover"
-          />
-        </div>
+      <footer className="relative bg-[#131313] text-white pt-16 pb-16 font-sans overflow-hidden">
+
 
         {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center mb-4">
-                <img src="/logo.jpg" alt="CodePulse Logo" className="w-10 h-10 object-contain" />
-                <span className="ml-2 text-xl font-bold text-black dark:text-white" style={{ fontFamily: '"Minecraftia", sans-serif' }}>CodePulse</span>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-16">
+
+          {/* Left Side: Logos & Copyright */}
+          <div className="flex flex-col gap-8 md:w-1/3">
+            <div className="flex items-center gap-8">
+              <img src="/logo.jpg" alt="CodePulse Studio" className="h-16 w-auto object-contain" />
+              <img src="https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/logos/Logo_Xbox_Game_Studio.png" alt="Xbox Game Studios" className="h-16 w-auto object-contain" />
+            </div>
+            <div className="text-gray-400 text-base space-y-2">
+              <p>&copy; {new Date().getFullYear()} CodePulse. InnovexlLabs PVT Limited.</p>
+              <div className="flex gap-4 text-[#43b526]">
+                <a href="#" className="hover:underline">CodePulse Usage Guidelines</a>
+                <span>|</span>
+                <a href="#" className="hover:underline">Manage Consent</a>
               </div>
-              <p className="text-sm text-black dark:text-white">
-                Real-time hackathon monitoring with GitHub integration.
-              </p>
             </div>
+          </div>
+
+          {/* Right Side: Links Grid */}
+          {/* Right Side: Links Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-8 flex-1">
             <div>
-              <h3 className="text-black dark:text-white font-semibold mb-4">Product</h3>
-              <ul className="space-y-2">
-                <li><a href="#features" className="text-black dark:text-white hover:underline transition-colors">Features</a></li>
-                <li><a href="#how-it-works" className="text-black dark:text-white hover:underline transition-colors">How It Works</a></li>
-                <li><a href="#documentation" className="text-black dark:text-white hover:underline transition-colors">Documentation</a></li>
+              <h4 className="font-bold mb-4 text-xl text-white">Product</h4>
+              <ul className="space-y-2 text-gray-400 text-base">
+                <li><a href="#" className="hover:text-white hover:underline transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-white hover:underline transition-colors">How It Works</a></li>
+                <li><a href="#" className="hover:text-white hover:underline transition-colors">Documentation</a></li>
               </ul>
             </div>
+
             <div>
-              <h3 className="text-black dark:text-white font-semibold mb-4">Resources</h3>
-              <ul className="space-y-2">
-                <li><a href="https://github.com/Gouravkumarpandey/CodePulse" className="text-black dark:text-white hover:underline transition-colors">GitHub</a></li>
-                <li><a href="#" className="text-black dark:text-white hover:underline transition-colors">API Reference</a></li>
-                <li><a href="#" className="text-black dark:text-white hover:underline transition-colors">Support</a></li>
+              <h4 className="font-bold mb-4 text-xl text-white">Resources</h4>
+              <ul className="space-y-2 text-gray-400 text-base">
+                <li><a href="#" className="hover:text-white hover:underline transition-colors">GitHub</a></li>
+                <li><a href="#" className="hover:text-white hover:underline transition-colors">API Reference</a></li>
+                <li><a href="#" className="hover:text-white hover:underline transition-colors">Support</a></li>
               </ul>
             </div>
+
             <div>
-              <h3 className="text-black dark:text-white font-semibold mb-4">Company</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-black dark:text-white hover:underline transition-colors">About</a></li>
-                <li><a href="#" className="text-black dark:text-white hover:underline transition-colors">Privacy</a></li>
-                <li><a href="#" className="text-black dark:text-white hover:underline transition-colors">Terms</a></li>
+              <h4 className="font-bold mb-4 text-xl text-white">Company</h4>
+              <ul className="space-y-2 text-gray-400 text-base">
+                <li><a href="#" className="hover:text-white hover:underline transition-colors">About</a></li>
+                <li><a href="#" className="hover:text-white hover:underline transition-colors">Privacy</a></li>
+                <li><a href="#" className="hover:text-white hover:underline transition-colors">Terms</a></li>
               </ul>
             </div>
           </div>
-          <div className="pt-8 border-t border-black dark:border-white text-center text-sm">
-            <p>&copy; {new Date().getFullYear()} CodePulse. All rights reserved.</p>
-          </div>
+        </div>
+
+        {/* Bottom Utility Bar */}
+        <div className="relative z-10 mt-0 pt-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-end items-center gap-6 text-sm text-white">
+          <a href="#" className="hover:underline transition-colors">Privacy and Cookies</a>
+          <a href="#" className="hover:underline transition-colors">Terms of use</a>
+          <a href="#" className="hover:underline transition-colors">Trademarks</a>
+          <a href="#" className="hover:underline transition-colors">About our ads</a>
+          <span>&copy; {new Date().getFullYear()} Innovexlabs</span>
         </div>
       </footer>
     </div>

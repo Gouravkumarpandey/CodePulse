@@ -4,6 +4,7 @@
  */
 
 const FirestoreService = require('../services/firestore.service');
+const Commit = require('../models/Commit');
 const response = require('../utils/response.util');
 const timeUtil = require('../utils/time.util');
 
@@ -36,16 +37,17 @@ const getActiveRepository = async (req, res) => {
       return response.success(res, { repository: null }, 'No active repository');
     }
 
-    // Get last commit
-    const commits = await FirestoreService.getCommitsByRepo(activeRepo.id, 1);
-    const lastCommit = commits.length > 0 ? commits[0] : null;
+    // Get last commit from MongoDB
+    const lastCommit = await Commit.findOne({ repoId: activeRepo.id })
+      .sort({ commitDate: -1 })
+      .lean();
 
     // Get admin settings
     const settings = await FirestoreService.getAdminSettings();
     const maxGap = settings?.maxInactivityGapHours || 24;
 
     // Calculate current gap
-    const currentGap = lastCommit 
+    const currentGap = lastCommit
       ? timeUtil.getGapInHours(lastCommit.commitDate, new Date())
       : null;
 
@@ -138,9 +140,28 @@ const getRepositoryActivity = async (req, res) => {
     const { repoId } = req.params;
     const limit = parseInt(req.query.limit) || 50;
 
-    const commits = await FirestoreService.getCommitsByRepo(repoId, limit);
+    // Fetch commits from MongoDB instead of Firestore
+    const commits = await Commit.find({ repoId })
+      .sort({ commitDate: -1 })
+      .limit(limit)
+      .lean();
 
-    response.success(res, { commits });
+    // Transform to match expected format
+    const formattedCommits = commits.map(commit => ({
+      _id: commit._id,
+      commitSha: commit.commitSha,
+      message: commit.message,
+      author: commit.author,
+      commitDate: commit.commitDate,
+      filesChanged: commit.filesChanged,
+      additions: commit.additions,
+      deletions: commit.deletions,
+      branch: commit.branch,
+      status: commit.status,
+      inactivityGap: commit.inactivityGap,
+    }));
+
+    response.success(res, { commits: formattedCommits });
   } catch (error) {
     response.error(res, error.message, 500);
   }
@@ -159,9 +180,22 @@ const getWarningsAndViolations = async (req, res) => {
       return response.success(res, { warnings: [], violations: [] });
     }
 
-    // Get warnings and violations
-    const warnings = await FirestoreService.getCommitsByStatus(repoIds, 'WARNING', 50);
-    const violations = await FirestoreService.getCommitsByStatus(repoIds, 'VIOLATION', 50);
+    // Get warnings and violations from MongoDB
+    const warnings = await Commit.find({
+      repoId: { $in: repoIds },
+      status: 'WARNING'
+    })
+      .sort({ commitDate: -1 })
+      .limit(50)
+      .lean();
+
+    const violations = await Commit.find({
+      repoId: { $in: repoIds },
+      status: 'VIOLATION'
+    })
+      .sort({ commitDate: -1 })
+      .limit(50)
+      .lean();
 
     response.success(res, { warnings, violations });
   } catch (error) {
@@ -181,17 +215,26 @@ const getDashboardSummary = async (req, res) => {
     // Get user data
     const user = await FirestoreService.getUser(userId);
 
-    // Count commits by status (simplified - could be optimized)
+    // Count commits by status using MongoDB aggregation (optimized)
+    const commitStats = await Commit.aggregate([
+      { $match: { repoId: { $in: repoIds } } },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
     let totalCommits = 0;
     let violations = 0;
     let warnings = 0;
 
-    for (const repoId of repoIds) {
-      const commits = await FirestoreService.getCommitsByRepo(repoId, 1000);
-      totalCommits += commits.length;
-      violations += commits.filter(c => c.status === 'VIOLATION').length;
-      warnings += commits.filter(c => c.status === 'WARNING').length;
-    }
+    commitStats.forEach(stat => {
+      totalCommits += stat.count;
+      if (stat._id === 'VIOLATION') violations = stat.count;
+      if (stat._id === 'WARNING') warnings = stat.count;
+    });
 
     response.success(res, {
       summary: {
@@ -217,7 +260,7 @@ const getAdminRules = async (req, res) => {
     const settings = await FirestoreService.getAdminSettings();
 
     if (!settings) {
-      return response.success(res, { 
+      return response.success(res, {
         rules: {
           maxInactivityGapHours: 24,
           gracePeriodHours: 12,

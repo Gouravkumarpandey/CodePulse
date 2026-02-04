@@ -1,512 +1,319 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
-  Activity,
-  Settings as SettingsIcon,
-  Users,
-  AlertTriangle,
-  Download,
-  Eye,
-  Ban,
-  LogOut,
-  Search,
-  Filter,
+  Users, Zap, Ban, AlertTriangle, Activity,
+  Search, Filter, Settings as SettingsIcon,
+  ShieldAlert, RefreshCw, Layout, ChevronRight
 } from 'lucide-react';
-import Card from '@/components/common/Card';
-import Button from '@/components/common/Button';
-import StatusBadge from '@/components/ui/StatusBadge';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import Sidebar from '@/components/layout/Sidebar';
+import UsersTable from '@/components/admin/UsersTable';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
-export default function AdminDashboardPage() {
+const AdminDashboardPage = () => {
+  const { user, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'monitoring' | 'settings' | 'analytics'>('monitoring');
-  const [settings, setSettings] = useState({
-    maxIdleTime: 2,
-    warningThreshold: 3,
-    autoDisqualify: true,
-    codeDumpDetection: true,
-    shadowMode: false,
-    realTimeUpdates: true,
-  });
+  const [activeTab, setActiveTab] = useState<'monitoring' | 'live-feed' | 'violations' | 'settings'>('monitoring');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Mock teams data - replace with API call to Firestore
-  const mockTeams: any[] = [];
+  const stats = [
+    { label: 'PLAYERS', value: '124', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
+    { label: 'ACTIVE', value: '98', icon: Zap, color: 'text-green-500', bg: 'bg-green-50', border: 'border-green-200' },
+    { label: 'BANNED', value: '3', icon: Ban, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' },
+    { label: 'VIOLATIONS', value: '12', icon: AlertTriangle, color: 'text-yellow-500', bg: 'bg-yellow-50', border: 'border-yellow-200' },
+    { label: 'EXP EARNED', value: '452', icon: Activity, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
+  ];
 
-  // Mock heatmap data - replace with API call to Firestore
-  const mockHeatmapData: any[] = [];
+  const chartData = [
+    { name: '00:00', commits: 45 },
+    { name: '04:00', commits: 30 },
+    { name: '08:00', commits: 85 },
+    { name: '12:00', commits: 125 },
+    { name: '16:00', commits: 210 },
+    { name: '20:00', commits: 150 },
+    { name: '23:59', commits: 90 },
+  ];
 
-  const filteredTeams = mockTeams.filter(
-    (team) =>
-      team.repoName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      team.owner.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const liveFeed = [
+    { id: 1, type: 'COMMIT', user: 'Alex Rivers', repo: 'ecommerce-engine', time: '2m ago', color: 'text-blue-600', bg: 'bg-blue-100' },
+    { id: 2, type: 'VIOLATION', user: 'Max Dev', repo: 'auth-service', time: '15m ago', color: 'text-red-600', bg: 'bg-red-100' },
+    { id: 3, type: 'COMMIT', user: 'Sarah Chen', repo: 'data-viz-lib', time: '34m ago', color: 'text-blue-600', bg: 'bg-blue-100' },
+    { id: 4, type: 'WARNING', user: 'Joe Smith', repo: 'api-gateway', time: '1h ago', color: 'text-yellow-600', bg: 'bg-yellow-100' },
+  ];
 
-  const handleExportReport = () => {
-    console.log('Exporting compliance report...');
-  };
-
-  const handleIssueWarning = (teamId: string) => {
-    console.log('Issuing warning to team:', teamId);
-  };
-
-  const handleMarkObservation = (teamId: string) => {
-    console.log('Marking team under observation:', teamId);
-  };
-
-  const handleDisqualify = (teamId: string) => {
-    console.log('Disqualifying team:', teamId);
-  };
+  if (loading) return null;
+  if (!isAuthenticated || user?.role !== 'ADMIN') {
+    navigate('/login');
+    return null;
+  }
 
   return (
-    <div className="min-h-screen bg-github-bg">
-      {/* Header */}
-      <header className="border-b border-github-border bg-github-canvas-subtle sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-github-danger to-orange-500 rounded-lg flex items-center justify-center">
-                <Activity className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-github-text">Admin Dashboard</h1>
-                <p className="text-sm text-github-text-secondary">Hackathon Compliance Control Panel</p>
-              </div>
+    <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
+      <Sidebar role="admin" />
+      <main className="ml-72 flex-1 p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h1 className="text-4xl font-extrabold text-black tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
+                Admin Dashboard
+              </h1>
+              <p className="text-lg text-gray-600 mt-1">
+                Hackathon Monitoring Command Center
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={handleExportReport}>
-                <Download className="w-4 h-4" />
-                Export Report
-              </Button>
-              <button
-                onClick={() => navigate('/')}
-                className="p-2 hover:bg-github-canvas-inset rounded-lg transition-colors"
-              >
-                <LogOut className="w-5 h-5 text-github-text-secondary" />
+            <div className="flex gap-4">
+              <button className="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 rounded-lg font-bold transition-all shadow-sm hover:shadow-md">
+                <RefreshCw className="w-5 h-5" />
+                Sync
+              </button>
+              <button className="flex items-center gap-2 px-6 py-3 bg-black text-white hover:bg-gray-800 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                <Zap className="w-5 h-5" />
+                Action
               </button>
             </div>
           </div>
-        </div>
-      </header>
 
-      {/* Navigation Tabs */}
-      <div className="border-b border-github-border bg-github-canvas-subtle">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-6">
+          {/* Navigation Tabs */}
+          <div className="flex border-b border-gray-200">
             {[
-              { id: 'monitoring', label: 'Team Monitoring', icon: Users },
-              { id: 'settings', label: 'Global Settings', icon: SettingsIcon },
-              { id: 'analytics', label: 'Analytics', icon: Activity },
+              { id: 'monitoring', label: 'Monitor', icon: Layout },
+              { id: 'live-feed', label: 'Live Logs', icon: Activity },
+              { id: 'violations', label: 'Sentinel', icon: ShieldAlert },
+              { id: 'settings', label: 'Config', icon: SettingsIcon },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-github-accent text-github-text'
-                    : 'border-transparent text-github-text-secondary hover:text-github-text'
-                }`}
+                className={`flex items-center gap-2 px-6 py-4 border-b-2 transition-all font-medium ${activeTab === tab.id
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
+                <tab.icon className="w-5 h-5" />
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Team Monitoring Tab */}
-        {activeTab === 'monitoring' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-github-text-secondary mb-1">Total Teams</p>
-                    <p className="text-3xl font-bold text-github-text">{mockTeams.length}</p>
-                  </div>
-                  <Users className="w-8 h-8 text-github-accent" />
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {stats.map((stat) => (
+              <div key={stat.label} className={`bg-white p-6 rounded-2xl border ${stat.border} shadow-sm hover:shadow-md transition-all`}>
+                <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center mb-4`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
-              </Card>
-              <Card>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-github-text-secondary mb-1">Compliant</p>
-                    <p className="text-3xl font-bold text-github-success">
-                      {mockTeams.filter((t) => t.status === 'compliant').length}
-                    </p>
-                  </div>
-                  <div className="w-8 h-8 bg-github-success/10 rounded-lg flex items-center justify-center">
-                    <Activity className="w-5 h-5 text-github-success" />
-                  </div>
-                </div>
-              </Card>
-              <Card>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-github-text-secondary mb-1">Under Watch</p>
-                    <p className="text-3xl font-bold text-github-warning">
-                      {mockTeams.filter((t) => t.status === 'observation' || t.status === 'warning').length}
-                    </p>
-                  </div>
-                  <div className="w-8 h-8 bg-github-warning/10 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="w-5 h-5 text-github-warning" />
-                  </div>
-                </div>
-              </Card>
-              <Card>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-github-text-secondary mb-1">Disqualified</p>
-                    <p className="text-3xl font-bold text-github-danger">
-                      {mockTeams.filter((t) => t.status === 'disqualified').length}
-                    </p>
-                  </div>
-                  <div className="w-8 h-8 bg-github-danger/10 rounded-lg flex items-center justify-center">
-                    <Ban className="w-5 h-5 text-github-danger" />
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            {/* Search and Filters */}
-            <Card>
-              <div className="flex items-center gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-github-text-secondary" />
-                  <input
-                    type="text"
-                    placeholder="Search teams by repository or owner..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-github-canvas-inset border border-github-border rounded-md text-github-text placeholder-github-text-secondary focus:outline-none focus:ring-2 focus:ring-github-accent focus:border-transparent"
-                  />
-                </div>
-                <Button variant="ghost">
-                  <Filter className="w-4 h-4" />
-                  Filter
-                </Button>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{stat.label}</p>
+                <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
               </div>
-            </Card>
+            ))}
+          </div>
 
-            {/* Teams Table */}
-            <Card title="Team Monitoring">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-github-border">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-github-text">Repository</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-github-text">Owner</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-github-text">Last Commit</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-github-text">Violations</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-github-text">Score</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-github-text">Status</th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-github-text">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTeams.map((team) => (
-                      <tr key={team.id} className="border-b border-github-border hover:bg-github-canvas-inset transition-colors">
-                        <td className="py-3 px-4">
-                          <p className="text-sm font-medium text-github-text">{team.repoName}</p>
-                        </td>
-                        <td className="py-3 px-4">
-                          <p className="text-sm text-github-text-secondary">{team.owner}</p>
-                        </td>
-                        <td className="py-3 px-4">
-                          <p className="text-sm text-github-text-secondary">{team.lastCommit}</p>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              team.violations === 0
-                                ? 'bg-github-success/10 text-github-success'
-                                : team.violations < 3
-                                ? 'bg-github-warning/10 text-github-warning'
-                                : 'bg-github-danger/10 text-github-danger'
-                            }`}
-                          >
-                            {team.violations}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 bg-github-canvas-inset rounded-full h-2">
-                              <div
-                                className={`h-2 rounded-full ${
-                                  team.complianceScore >= 70
-                                    ? 'bg-github-success'
-                                    : team.complianceScore >= 50
-                                    ? 'bg-github-warning'
-                                    : 'bg-github-danger'
-                                }`}
-                                style={{ width: `${team.complianceScore}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-github-text-secondary">{team.complianceScore}</span>
+          {/* Content Area */}
+          <AnimatePresence mode="wait">
+            {activeTab === 'monitoring' && (
+              <motion.div
+                key="monitoring"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-8"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Activity Feed Snippet */}
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 max-h-[400px] flex flex-col">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+                      <Activity className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                      {liveFeed.slice(0, 4).map((event) => (
+                        <div key={event.id} className="flex flex-col p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded ${event.bg} ${event.color}`}>
+                              {event.type}
+                            </span>
+                            <span className="text-xs text-gray-500 font-medium">{event.time}</span>
                           </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <StatusBadge status={team.status} />
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleIssueWarning(team.id)}
-                              className="p-1.5 hover:bg-github-warning/10 rounded text-github-warning transition-colors"
-                              title="Issue Warning"
-                            >
-                              <AlertTriangle className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleMarkObservation(team.id)}
-                              className="p-1.5 hover:bg-github-accent/10 rounded text-github-accent transition-colors"
-                              title="Mark Under Observation"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDisqualify(team.id)}
-                              className="p-1.5 hover:bg-github-danger/10 rounded text-github-danger transition-colors"
-                              title="Disqualify"
-                            >
-                              <Ban className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Global Settings Tab */}
-        {activeTab === 'settings' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl space-y-6"
-          >
-            <Card title="Rule Configuration" subtitle="Configure hackathon compliance rules">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-github-text mb-2">
-                    Maximum Idle Time (hours)
-                  </label>
-                  <select
-                    value={settings.maxIdleTime}
-                    onChange={(e) => setSettings({ ...settings, maxIdleTime: Number(e.target.value) })}
-                    className="w-full px-4 py-2 bg-github-canvas-inset border border-github-border rounded-md text-github-text focus:outline-none focus:ring-2 focus:ring-github-accent focus:border-transparent"
-                  >
-                    <option value={1}>1 hour</option>
-                    <option value={2}>2 hours</option>
-                    <option value={3}>3 hours</option>
-                    <option value={4}>4 hours</option>
-                  </select>
-                  <p className="text-xs text-github-text-secondary mt-1">
-                    Maximum allowed time between commits before triggering a warning
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-github-text mb-2">
-                    Warning Threshold
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={settings.warningThreshold}
-                    onChange={(e) => setSettings({ ...settings, warningThreshold: Number(e.target.value) })}
-                    className="w-full px-4 py-2 bg-github-canvas-inset border border-github-border rounded-md text-github-text focus:outline-none focus:ring-2 focus:ring-github-accent focus:border-transparent"
-                  />
-                  <p className="text-xs text-github-text-secondary mt-1">
-                    Number of violations before disqualification
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between py-3 border-t border-github-border">
-                  <div>
-                    <p className="text-sm font-medium text-github-text">Auto-Disqualification</p>
-                    <p className="text-xs text-github-text-secondary">
-                      Automatically disqualify teams exceeding warning threshold
-                    </p>
+                          <span className="text-sm font-bold text-gray-900">{event.user}</span>
+                          <span className="text-xs text-gray-500 truncate">{event.repo}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={() => setActiveTab('live-feed')} className="w-full mt-4 py-2 text-sm text-gray-600 hover:text-black font-semibold transition-colors border-t border-gray-100 pt-4">
+                      View All Logs
+                    </button>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={settings.autoDisqualify}
-                      onChange={(e) => setSettings({ ...settings, autoDisqualify: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-github-border rounded-full peer peer-checked:bg-github-success peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-                  </label>
-                </div>
 
-                <div className="flex items-center justify-between py-3 border-t border-github-border">
-                  <div>
-                    <p className="text-sm font-medium text-github-text">Code Dump Detection</p>
-                    <p className="text-xs text-github-text-secondary">
-                      Detect and flag suspicious large code commits
-                    </p>
+                  {/* Chart Window */}
+                  <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">Commit Activity</h3>
+                        <p className="text-sm text-gray-500">Live Hackathon Volume</p>
+                      </div>
+                      <select className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-black">
+                        <option>Last 24 Hours</option>
+                        <option>Last 7 Days</option>
+                      </select>
+                    </div>
+                    <div className="h-[280px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData}>
+                          <defs>
+                            <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                          <XAxis
+                            dataKey="name"
+                            tick={{ fill: '#6b7280', fontSize: 12 }}
+                            axisLine={{ stroke: '#e5e7eb' }}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tick={{ fill: '#6b7280', fontSize: 12 }}
+                            axisLine={{ stroke: '#e5e7eb' }}
+                            tickLine={false}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#fff',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                            }}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="commits"
+                            stroke="#3b82f6"
+                            strokeWidth={3}
+                            fill="url(#colorCommits)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={settings.codeDumpDetection}
-                      onChange={(e) => setSettings({ ...settings, codeDumpDetection: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-github-border rounded-full peer peer-checked:bg-github-success peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-                  </label>
                 </div>
 
-                <div className="flex items-center justify-between py-3 border-t border-github-border">
-                  <div>
-                    <p className="text-sm font-medium text-github-text">Shadow Monitoring Mode</p>
-                    <p className="text-xs text-github-text-secondary">
-                      Monitor teams without revealing specific rules
-                    </p>
+                {/* Main Player Table */}
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                  <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">Player Database</h3>
+                    <div className="flex w-full md:w-auto gap-4">
+                      <div className="relative flex-1 md:w-[320px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                          type="text"
+                          placeholder="Search players..."
+                          className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors">
+                        <Filter className="w-5 h-5" />
+                        Filter
+                      </button>
+                    </div>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={settings.shadowMode}
-                      onChange={(e) => setSettings({ ...settings, shadowMode: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-github-border rounded-full peer peer-checked:bg-github-success peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-                  </label>
-                </div>
-
-                <div className="flex items-center justify-between py-3 border-t border-github-border">
-                  <div>
-                    <p className="text-sm font-medium text-github-text">Real-time Updates</p>
-                    <p className="text-xs text-github-text-secondary">
-                      Enable webhook-based real-time monitoring
-                    </p>
+                  <div className="overflow-hidden">
+                    <UsersTable users={[]} />
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={settings.realTimeUpdates}
-                      onChange={(e) => setSettings({ ...settings, realTimeUpdates: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-github-border rounded-full peer peer-checked:bg-github-success peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-                  </label>
                 </div>
+              </motion.div>
+            )}
 
-                <div className="pt-4 border-t border-github-border">
-                  <Button variant="primary">Save Settings</Button>
+            {activeTab === 'live-feed' && (
+              <motion.div
+                key="live-feed"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900">Live Activity Log</h3>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs font-bold uppercase">Live Updates Active</span>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Analytics Tab */}
-        {activeTab === 'analytics' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            <Card title="Commit Frequency Heatmap" subtitle="Hourly commit patterns across all teams">
-              <div className="grid grid-cols-24 gap-1">
-                {mockHeatmapData.map((cell, index) => {
-                  const intensity = Math.min(cell.value / 20, 1);
-                  return (
-                    <div
-                      key={index}
-                      className="aspect-square rounded"
-                      style={{
-                        backgroundColor: `rgba(46, 160, 67, ${intensity})`,
-                      }}
-                      title={`${cell.day} ${cell.hour}:00 - ${cell.value} commits`}
-                    ></div>
-                  );
-                })}
-              </div>
-              <div className="flex items-center justify-between mt-4 text-xs text-github-text-secondary">
-                <span>Less</span>
-                <div className="flex items-center gap-1">
-                  {[0, 0.2, 0.4, 0.6, 0.8, 1].map((intensity) => (
-                    <div
-                      key={intensity}
-                      className="w-3 h-3 rounded"
-                      style={{ backgroundColor: `rgba(46, 160, 67, ${intensity})` }}
-                    ></div>
+                <div className="space-y-4">
+                  {liveFeed.map((event) => (
+                    <div key={event.id} className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100 group">
+                      <div className={`p-3 rounded-xl ${event.bg} ${event.color}`}>
+                        {event.type === 'COMMIT' ? <Activity className="w-6 h-6" /> : <ShieldAlert className="w-6 h-6" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <p className="text-base font-bold text-gray-900">{event.user}</p>
+                          <span className="text-xs text-gray-500 font-medium">{event.time}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-0.5">
+                          {event.type} detected in <span className="font-medium text-gray-900">{event.repo}</span>
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                    </div>
                   ))}
                 </div>
-                <span>More</span>
-              </div>
-            </Card>
+              </motion.div>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card title="Code Dump Indicators">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-github-text-secondary">Flagged Commits</span>
-                    <span className="text-sm font-semibold text-github-danger">12</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-github-text-secondary">Under Review</span>
-                    <span className="text-sm font-semibold text-github-warning">5</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-github-text-secondary">False Positives</span>
-                    <span className="text-sm font-semibold text-github-text">3</span>
-                  </div>
+            {activeTab === 'violations' && (
+              <motion.div
+                key="violations"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center"
+              >
+                <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <ShieldAlert className="w-10 h-10" />
                 </div>
-              </Card>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Sentinel Alert System</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-8">
+                  Monitoring 12 active flags across 3 repositories. Check resolution center for details.
+                </p>
+                <button className="px-8 py-3 bg-red-600 text-white hover:bg-red-700 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl">
+                  Open Resolution Center
+                </button>
+              </motion.div>
+            )}
 
-              <Card title="Suspicious Activities">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-github-text-secondary">Late Night Commits</span>
-                    <span className="text-sm font-semibold text-github-warning">8</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-github-text-secondary">Unusual Patterns</span>
-                    <span className="text-sm font-semibold text-github-danger">4</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-github-text-secondary">Verified</span>
-                    <span className="text-sm font-semibold text-github-success">25</span>
-                  </div>
+            {activeTab === 'settings' && (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center"
+              >
+                <div className="w-20 h-20 bg-gray-50 text-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <SettingsIcon className="w-10 h-10" />
                 </div>
-              </Card>
-
-              <Card title="Contributor Authenticity">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-github-text-secondary">Verified Contributors</span>
-                    <span className="text-sm font-semibold text-github-success">89%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-github-text-secondary">Pending Review</span>
-                    <span className="text-sm font-semibold text-github-warning">7%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-github-text-secondary">Suspicious</span>
-                    <span className="text-sm font-semibold text-github-danger">4%</span>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </motion.div>
-        )}
-      </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Global Configuration</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-8">
+                  Manage hackathon rules, integrations, and global settings from the dedicated settings page.
+                </p>
+                <button
+                  onClick={() => navigate('/admin/settings')}
+                  className="px-8 py-3 bg-black text-white hover:bg-gray-800 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl"
+                >
+                  Open Configuration Panel
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
     </div>
   );
-}
+};
+
+export default AdminDashboardPage;

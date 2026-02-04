@@ -20,7 +20,7 @@ class GitHubService {
       console.log('Exchanging code for access token...');
       console.log('Client ID:', GITHUB_CONFIG.clientID);
       console.log('Code:', code);
-      
+
       const response = await axios.post(
         'https://github.com/login/oauth/access_token',
         {
@@ -114,47 +114,104 @@ class GitHubService {
   }
 
   /**
+   * Get repository branches
+   */
+  static async getRepositoryBranches(owner, repo, accessToken) {
+    try {
+      const response = await axios.get(
+        `https://api.github.com/repos/${owner}/${repo}/branches`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          params: { per_page: 100 },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch branches:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Get repository pull requests
+   */
+  static async getRepositoryPullRequests(owner, repo, accessToken) {
+    try {
+      const response = await axios.get(
+        `https://api.github.com/repos/${owner}/${repo}/pulls`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          params: { state: 'open', per_page: 100 },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch pull requests:', error.message);
+      return [];
+    }
+  }
+
+  /**
    * Fetch commits and run analysis
    */
   static async fetchAndAnalyzeCommits(repo, accessToken) {
     try {
       console.log(`Fetching commits for ${repo.fullName}...`);
-      
+
       // Parse owner and repo name from fullName
       const [owner, repoName] = repo.fullName.split('/');
-      
+
       // Fetch commits from GitHub
       const commits = await this.getRepositoryCommits(owner, repoName, accessToken);
-      
+
       console.log(`Fetched ${commits.length} commits`);
-      
+
+      // Fetch branches and PRs
+      const branches = await this.getRepositoryBranches(owner, repoName, accessToken);
+      const pullRequests = await this.getRepositoryPullRequests(owner, repoName, accessToken);
+
+      console.log(`Fetched ${branches.length} branches and ${pullRequests.length} open PRs`);
+
       // Store commits in database
       const commitDocs = commits.map(commit => ({
         repoId: repo._id,
-        sha: commit.sha,
+        userId: repo.userId,
+        commitSha: commit.sha,
         message: commit.commit.message,
         author: commit.commit.author.name,
         authorEmail: commit.commit.author.email,
         commitDate: new Date(commit.commit.author.date),
         url: commit.html_url,
+        status: 'OK', // Default status
+        inactivityGap: 0,
       }));
-      
+
       // Delete existing commits for this repo to avoid duplicates
       await Commit.deleteMany({ repoId: repo._id });
-      
+
       // Insert new commits
       if (commitDocs.length > 0) {
         await Commit.insertMany(commitDocs);
       }
-      
+
       console.log(`Stored ${commitDocs.length} commits in database`);
-      
+
+      // Update repository with branch and PR counts in Firestore
+      const FirestoreService = require('./firestore.service');
+      await FirestoreService.saveRepository(repo._id, {
+        branchCount: branches.length,
+        openPRCount: pullRequests.length,
+        lastSync: new Date(),
+      });
+
       // Run consistency analysis
       const analysis = await consistencyService.analyzeRepository(repo._id);
-      
+
       // Run rule engine
       const ruleResults = await ruleEngineService.evaluateRules(repo._id);
-      
+
       // Generate AI insights
       let aiInsights = '';
       try {
@@ -169,7 +226,7 @@ class GitHubService {
         console.error('AI insights generation failed:', error.message);
         aiInsights = 'AI insights unavailable at this time.';
       }
-      
+
       // Store analysis results
       await RepoAnalysis.findOneAndUpdate(
         { repoId: repo._id },
@@ -188,9 +245,9 @@ class GitHubService {
         },
         { upsert: true, new: true }
       );
-      
+
       console.log(`Analysis completed for ${repo.fullName}`);
-      
+
       return { success: true, commitsCount: commitDocs.length };
     } catch (error) {
       console.error('Error in fetchAndAnalyzeCommits:', error);

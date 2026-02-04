@@ -42,10 +42,10 @@ export default function GitHubCallbackPage() {
     const authenticate = async () => {
       try {
         setMessage('Exchanging code for access token...');
-        
+
         // Mark this code as processed to prevent reuse
         sessionStorage.setItem('github_code_processed', code);
-        
+
         // Exchange code for GitHub token via backend
         const callbackResponse = await fetch(`${import.meta.env.VITE_API_URL}/github/callback?code=${code}`, {
           method: 'GET',
@@ -53,14 +53,14 @@ export default function GitHubCallbackPage() {
             'Content-Type': 'application/json',
           },
         });
-        
+
         if (!callbackResponse.ok) {
           const errorData = await callbackResponse.json();
           throw new Error(errorData.message || 'Failed to authenticate with GitHub');
         }
-        
+
         const callbackData = await callbackResponse.json();
-        
+
         if (callbackData.status !== 'SUCCESS') {
           throw new Error(callbackData.message || 'Authentication failed');
         }
@@ -74,8 +74,17 @@ export default function GitHubCallbackPage() {
 
         // Now link the GitHub account to the current user
         setMessage('Linking GitHub account...');
-        
+
         const token = localStorage.getItem('token');
+
+        if (!token) {
+          console.error('No JWT token found in localStorage');
+          throw new Error('You must be logged in to link your GitHub account. Please log in first.');
+        }
+
+        console.log('JWT token found (first 20 chars):', token.substring(0, 20));
+        console.log('Linking GitHub account with backend...');
+
         const linkResponse = await fetch(`${import.meta.env.VITE_API_URL}/github/link-account`, {
           method: 'POST',
           headers: {
@@ -90,17 +99,19 @@ export default function GitHubCallbackPage() {
 
         if (!linkResponse.ok) {
           const errorData = await linkResponse.json();
+          console.error('Link account error response:', errorData);
           throw new Error(errorData.message || 'Failed to link GitHub account');
         }
 
         const linkData = await linkResponse.json();
-        
+        console.log('Link account response:', linkData);
+
         // Store the new JWT token returned from backend
         if (linkData.data?.token) {
           localStorage.setItem('token', linkData.data.token);
           console.log('JWT token updated after GitHub link');
         }
-        
+
         // Update local user data
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const updatedUser = {
@@ -109,21 +120,21 @@ export default function GitHubCallbackPage() {
           githubId: callbackData.data.githubUser?.githubId,
           username: callbackData.data.githubUser?.username || currentUser.username,
         };
-        
+
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        
+
         // Also update the auth context with the new token
         const newToken = linkData.data?.token || localStorage.getItem('token') || '';
         if (login) {
           login(updatedUser, newToken);
         }
-        
+
         // Set flag for repository selection page
         sessionStorage.setItem('github_authenticated', 'true');
-        
+
         // Clear the processed code marker on success
         sessionStorage.removeItem('github_code_processed');
-        
+
         setStatus('success');
         setMessage('Successfully authenticated! Redirecting to repository selection...');
         setTimeout(() => navigate('/repo-selection'), 1500);
