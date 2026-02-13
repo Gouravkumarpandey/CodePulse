@@ -1,5 +1,4 @@
-
-![Uploading image.png…]()
+<img width="1908" height="905" alt="image" src="https://github.com/user-attachments/assets/a10d942d-9248-4e4a-a27a-8e88e3bfb2ac" />
 
 
 # CodePulse - GitHub Commit Consistency & Insight Platform
