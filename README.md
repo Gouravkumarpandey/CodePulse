@@ -1,5 +1,5 @@
+<img width="1908" height="905" alt="image" src="https://github.com/user-attachments/assets/a10d942d-9248-4e4a-a27a-8e88e3bfb2ac" />
 
-<img width="1901" height="908" alt="image" src="https://github.com/user-attachments/assets/6e7dfdcc-e89e-4a61-8ce2-9c13d4e9bb06" />
 
 # CodePulse - GitHub Commit Consistency & Insight Platform
 
