@@ -17,11 +17,17 @@ router.use(authMiddleware.verifyToken);
 
 // User profile
 router.get('/profile', userController.getUserProfile);
+router.put('/profile', userController.updateUserProfile);
+router.post('/otp', userController.sendOtp);
+router.post('/deactivate', userController.deactivateAccount);
+router.delete('/', userController.deleteUserAccount);
+
 
 // Repository management
 router.get('/repositories', userController.getUserRepositories);
 router.get('/active-repository', userController.getActiveRepository);
 router.post('/active-repository', userController.setActiveRepository);
+router.delete('/repositories/:repoId', userController.deleteRepository);
 
 // Activity and monitoring
 router.get('/activity/:repoId', userController.getRepositoryActivity);

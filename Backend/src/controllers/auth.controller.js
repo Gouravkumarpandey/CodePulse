@@ -1,17 +1,10 @@
-/**
- * Auth Controller
- * Handles user login, signup, and authentication
- */
-
-// const User = require('../models/User'); // Removed MongoDB User model
+const User = require('../models/User');
 const { generateJWT } = require('../utils/jwt.util');
 const response = require('../utils/response.util');
 const axios = require('axios');
 const GITHUB_CONFIG = require('../config/github');
-// const { admin } = require('../config/firebase'); // Firebase admin not needed for Google OAuth 2.0
-const FirestoreService = require('../services/firestore.service');
 
-// Email/Password Signup (Firestore only)
+// Email/Password Signup
 const signup = async (req, res) => {
   try {
     const { email, password, username, role } = req.body;
@@ -20,37 +13,34 @@ const signup = async (req, res) => {
       return response.error(res, 'Email, password, and username are required', 400);
     }
 
-    const userRole = role && (role === 'ADMIN' || role === 'USER') ? role : 'USER';
-
-    // Check if user exists in Firestore
-    const existingUser = await FirestoreService.getUser(email);
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
-      return response.error(res, 'User with this email already exists', 400);
+      return response.error(res, 'User with this email or username already exists', 400);
     }
 
-    // Save user to Firestore
-    const userData = {
+    const newUser = new User({
       email,
-      password, // Consider hashing if needed, or remove if not required
+      password, // In a real app, hash this!
       username,
-      role: userRole,
-      avatar: null,
-      createdAt: new Date(),
-      status: 'ACTIVE',
-    };
-    await FirestoreService.saveUser(email, userData);
+      role: role || 'USER',
+      coins: 0,
+      avatarId: 1,
+    });
 
-    const token = generateJWT(email);
-    const userResponse = { ...userData };
+    await newUser.save();
+
+    const token = generateJWT(newUser._id);
+    const userResponse = newUser.toObject();
     delete userResponse.password;
 
     response.success(res, { user: userResponse, token }, 'User created successfully', 201);
   } catch (error) {
+    console.error('Signup error:', error);
     response.error(res, error.message, 500);
   }
 };
 
-// Email/Password Login (Firestore only)
+// Email/Password Login
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -59,79 +49,94 @@ const login = async (req, res) => {
       return response.error(res, 'Email and password are required', 400);
     }
 
-    const user = await FirestoreService.getUser(email);
+    // Find user (explicitly including password field if it was selected out by default)
+    const user = await User.findOne({ email });
     if (!user) {
       return response.error(res, 'Invalid email or password', 401);
     }
 
-    // Password check (plain, or hash if you implement it)
     if (user.password !== password) {
       return response.error(res, 'Invalid email or password', 401);
     }
 
-    if (user.status === 'DISQUALIFIED') {
-      return response.error(res, 'Your account has been disqualified. Please contact admin.', 403);
+    if (!user.isActive) {
+      // Logic for reactivation could go here, for now just deny
+      return response.error(res, 'Account is deactivated. Please contact support.', 403);
     }
 
-    const token = generateJWT(user.email);
-    const userResponse = { ...user };
+    user.lastLogin = new Date();
+    await user.save();
+
+    const token = generateJWT(user._id);
+    const userResponse = user.toObject();
     delete userResponse.password;
 
     response.success(res, { user: userResponse, token }, 'Login successful');
   } catch (error) {
+    console.error('Login error:', error);
     response.error(res, error.message, 500);
   }
 };
 
-// GitHub OAuth Signup/Login (Firestore only)
+// GitHub OAuth Signup/Login
 const githubAuth = async (req, res) => {
   try {
     const { githubId, username, email, avatar, accessToken } = req.body;
 
-    if (!githubId || !accessToken) {
-      return response.error(res, 'GitHub ID and access token are required', 400);
+    if (!githubId) {
+      return response.error(res, 'GitHub ID is required', 400);
     }
 
-    // Use firebaseUid if available, otherwise use email or githubId
-    const userId = req.body.firebaseUid || email || `github_${githubId}`;
-
-    // Check if user exists in Firestore
-    let user = await FirestoreService.getUser(userId);
+    let user = await User.findOne({ githubId });
 
     if (user) {
-      // Update existing user with GitHub info
-      user.githubId = githubId;
-      user.githubAccessToken = accessToken; // Store GitHub token
-      user.avatar = avatar || user.avatar;
-      user.username = user.username || username;
-      user.email = user.email || email;
-      await FirestoreService.saveUser(userId, user);
+      // Update existing user
+      user.githubAccessToken = accessToken;
+      if (avatar) user.avatar = avatar;
+      user.lastLogin = new Date();
+      if (!user.isActive) user.isActive = true; // Auto-reactivate on login?
+      await user.save();
     } else {
-      // Create new user
-      user = {
-        githubId,
-        username,
-        email: email || `${githubId}@github.temp`,
-        avatar,
-        githubAccessToken: accessToken, // Store GitHub token
-        role: 'USER',
-        createdAt: new Date(),
-        status: 'ACTIVE',
-      };
-      await FirestoreService.saveUser(userId, user);
+      // Check if email exists to link accounts
+      if (email) {
+        const emailUser = await User.findOne({ email });
+        if (emailUser) {
+          user = emailUser;
+          user.githubId = githubId;
+          user.githubAccessToken = accessToken;
+          user.avatar = avatar || user.avatar;
+          await user.save();
+        }
+      }
+
+      if (!user) {
+        // Create new user
+        user = new User({
+          username: username || `githubuser_${githubId}`,
+          email: email || `${githubId}@github.temp`,
+          githubId,
+          githubAccessToken: accessToken,
+          avatar,
+          role: 'USER',
+          coins: 0,
+          avatarId: 1,
+        });
+        await user.save();
+      }
     }
 
-    const token = generateJWT(userId);
-    const userResponse = { ...user };
+    const token = generateJWT(user._id);
+    const userResponse = user.toObject();
     delete userResponse.password;
 
     response.success(res, { user: userResponse, token }, 'GitHub authentication successful');
   } catch (error) {
+    console.error('GitHub Auth error:', error);
     response.error(res, error.message, 500);
   }
 };
 
-// GitHub OAuth Callback - Exchange code for access token
+// GitHub OAuth Callback
 const githubCallback = async (req, res) => {
   try {
     const { code } = req.query;
@@ -140,7 +145,7 @@ const githubCallback = async (req, res) => {
       return response.error(res, 'Authorization code is required', 400);
     }
 
-    // Exchange code for access tokengithubCallback, 
+    // Exchange code for access token
     const tokenResponse = await axios.post(
       'https://github.com/login/oauth/access_token',
       {
@@ -149,77 +154,49 @@ const githubCallback = async (req, res) => {
         code,
       },
       {
-        headers: {
-          Accept: 'application/json',
-        },
+        headers: { Accept: 'application/json' },
       }
     );
 
     const accessToken = tokenResponse.data.access_token;
-
     if (!accessToken) {
       return response.error(res, 'Failed to obtain access token', 400);
     }
 
     // Fetch user data from GitHub
     const userResponse = await axios.get('https://api.github.com/user', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/vnd.github.v3+json',
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     const githubUser = userResponse.data;
 
-    // Check if user exists
-    let user = await User.findOne({ 
-      $or: [
-        { githubId: githubUser.id.toString() },
-        { email: githubUser.email }
-      ] 
+    let user = await User.findOne({
+      $or: [{ githubId: githubUser.id.toString() }, { email: githubUser.email }]
     });
 
     if (user) {
-      // Update existing user
       user.githubId = githubUser.id.toString();
-      user.accessToken = accessToken;
+      user.githubAccessToken = accessToken;
       user.avatar = githubUser.avatar_url;
-      if (!user.username) user.username = githubUser.login;
-      if (githubUser.email && !user.email) user.email = githubUser.email;
+      user.lastLogin = new Date();
       await user.save();
     } else {
-      // Create new user
       user = new User({
         githubId: githubUser.id.toString(),
         username: githubUser.login,
-        email: githubUser.email || `${githubUser.id}@github.temp`,
+        email: githubUser.email || `${githubUser.id}@github.temp`, // Handle null email
         avatar: githubUser.avatar_url,
-        accessToken,
+        githubAccessToken: accessToken,
         role: 'USER',
+        coins: 0,
+        avatarId: 1,
       });
       await user.save();
     }
 
-    // Save/update user in Firestore
-    try {
-      await FirestoreService.saveUser(user._id.toString(), {
-        email: user.email,
-        username: user.username,
-        role: user.role,
-        githubId: user.githubId,
-        avatar: user.avatar || null,
-        createdAt: user.createdAt || new Date(),
-        status: user.status || 'ACTIVE',
-      });
-    } catch (firestoreError) {
-      console.error('Failed to save user to Firestore:', firestoreError);
-    }
-
     const token = generateJWT(user._id);
-
     const userResponseData = user.toObject();
     delete userResponseData.password;
-    delete userResponseData.accessToken;
 
     response.success(res, { user: userResponseData, token }, 'GitHub authentication successful');
   } catch (error) {
@@ -228,25 +205,12 @@ const githubCallback = async (req, res) => {
   }
 };
 
-// Logout
-const logout = (req, res) => {
-  try {
-    response.success(res, {}, 'Logout successful');
-  } catch (error) {
-    response.error(res, error.message, 500);
-  }
-};
-
-// Google OAuth - Verify credential token from Google Sign-In library
+// Google OAuth Callback
 const googleCallback = async (req, res) => {
   try {
     const { credential } = req.body;
+    if (!credential) return response.error(res, 'Credential is required', 400);
 
-    if (!credential) {
-      return response.error(res, 'Credential is required', 400);
-    }
-
-    // Verify the credential token with Google
     const tokenVerificationResponse = await axios.post(
       `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`
     );
@@ -257,35 +221,28 @@ const googleCallback = async (req, res) => {
 
     const { email, name, picture, sub } = tokenVerificationResponse.data;
 
-    if (!email) {
-      return response.error(res, 'Email not found in Google account', 400);
-    }
-
-    // Check if user exists in Firestore
-    let user = await FirestoreService.getUser(email);
+    let user = await User.findOne({ email });
 
     if (user) {
-      // Update existing user
       user.googleId = sub;
-      user.avatar = picture || user.avatar;
-      if (!user.username) user.username = name || email.split('@')[0];
-      await FirestoreService.saveUser(email, user);
+      if (!user.avatar) user.avatar = picture;
+      user.lastLogin = new Date();
+      await user.save();
     } else {
-      // Create new user
-      user = {
-        googleId: sub,
+      user = new User({
+        email,
         username: name || email.split('@')[0],
-        email: email,
+        googleId: sub,
         avatar: picture,
         role: 'USER',
-        createdAt: new Date(),
-        status: 'ACTIVE',
-      };
-      await FirestoreService.saveUser(email, user);
+        coins: 0,
+        avatarId: 1,
+      });
+      await user.save();
     }
 
-    const token = generateJWT(email);
-    const userResponseData = { ...user };
+    const token = generateJWT(user._id);
+    const userResponseData = user.toObject();
     delete userResponseData.password;
 
     response.success(res, { user: userResponseData, token }, 'Google authentication successful');
@@ -295,6 +252,9 @@ const googleCallback = async (req, res) => {
   }
 };
 
-// (Firebase Google Auth endpoint removed)
+// Logout
+const logout = (req, res) => {
+  response.success(res, {}, 'Logout successful');
+};
 
 module.exports = { signup, login, githubAuth, githubCallback, logout, googleCallback };

@@ -11,47 +11,95 @@ import UsersTable from '@/components/admin/UsersTable';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
+import AdminLoginForm from '@/components/admin/AdminLoginForm';
+
+import { useSidebar } from '@/context/SidebarContext';
+
 const AdminDashboardPage = () => {
   const { user, isAuthenticated, loading } = useAuth();
+  const { collapsed } = useSidebar();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'monitoring' | 'live-feed' | 'violations' | 'settings'>('monitoring');
+
+  // State variables
+  const [activeTab, setActiveTab] = useState('monitoring');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Mock stats data
   const stats = [
-    { label: 'PLAYERS', value: '124', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
-    { label: 'ACTIVE', value: '98', icon: Zap, color: 'text-green-500', bg: 'bg-green-50', border: 'border-green-200' },
-    { label: 'BANNED', value: '3', icon: Ban, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' },
-    { label: 'VIOLATIONS', value: '12', icon: AlertTriangle, color: 'text-yellow-500', bg: 'bg-yellow-50', border: 'border-yellow-200' },
-    { label: 'EXP EARNED', value: '452', icon: Activity, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
+    { label: 'Total Players', value: '24', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
+    { label: 'Active Now', value: '18', icon: Activity, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' },
+    { label: 'Violations', value: '3', icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100' },
+    { label: 'Commits Today', value: '127', icon: Zap, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100' },
+    { label: 'Avg Score', value: '78', icon: ShieldAlert, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100' },
   ];
 
-  const chartData = [
-    { name: '00:00', commits: 45 },
-    { name: '04:00', commits: 30 },
-    { name: '08:00', commits: 85 },
-    { name: '12:00', commits: 125 },
-    { name: '16:00', commits: 210 },
-    { name: '20:00', commits: 150 },
-    { name: '23:59', commits: 90 },
-  ];
-
+  // Mock live feed data
   const liveFeed = [
-    { id: 1, type: 'COMMIT', user: 'Alex Rivers', repo: 'ecommerce-engine', time: '2m ago', color: 'text-blue-600', bg: 'bg-blue-100' },
-    { id: 2, type: 'VIOLATION', user: 'Max Dev', repo: 'auth-service', time: '15m ago', color: 'text-red-600', bg: 'bg-red-100' },
-    { id: 3, type: 'COMMIT', user: 'Sarah Chen', repo: 'data-viz-lib', time: '34m ago', color: 'text-blue-600', bg: 'bg-blue-100' },
-    { id: 4, type: 'WARNING', user: 'Joe Smith', repo: 'api-gateway', time: '1h ago', color: 'text-yellow-600', bg: 'bg-yellow-100' },
+    { id: 1, type: 'COMMIT', user: 'Alice', repo: 'project-alpha', time: '2m ago', bg: 'bg-green-50', color: 'text-green-700' },
+    { id: 2, type: 'VIOLATION', user: 'Bob', repo: 'project-beta', time: '5m ago', bg: 'bg-red-50', color: 'text-red-700' },
+    { id: 3, type: 'COMMIT', user: 'Charlie', repo: 'project-gamma', time: '8m ago', bg: 'bg-green-50', color: 'text-green-700' },
+    { id: 4, type: 'COMMIT', user: 'Diana', repo: 'project-delta', time: '12m ago', bg: 'bg-green-50', color: 'text-green-700' },
+    { id: 5, type: 'VIOLATION', user: 'Eve', repo: 'project-epsilon', time: '15m ago', bg: 'bg-red-50', color: 'text-red-700' },
   ];
 
+  // Mock chart data
+  const chartData = [
+    { name: '00:00', commits: 12 },
+    { name: '04:00', commits: 8 },
+    { name: '08:00', commits: 25 },
+    { name: '12:00', commits: 42 },
+    { name: '16:00', commits: 35 },
+    { name: '20:00', commits: 28 },
+  ];
+
+  // If loading, show simple loader or nothing
   if (loading) return null;
-  if (!isAuthenticated || user?.role !== 'ADMIN') {
-    navigate('/login');
-    return null;
+
+  // If not authenticated, show Admin Login Form (instead of redirecting to generic login)
+  if (!isAuthenticated) {
+    return <AdminLoginForm />;
+  }
+
+  // If authenticated but not admin, show access denied
+  if (user?.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen admin-github-bg flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-red-100">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Ban className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-500 mb-6">
+            Your account ({user?.email}) does not have administrator privileges.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => navigate('/user')}
+              className="px-6 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+            >
+              Go to User Dashboard
+            </button>
+            <button
+              onClick={() => {
+                // Logout logic provided by auth context would be better here, 
+                // but simpler to redirect or let them switch
+                sessionStorage.clear();
+                window.location.reload();
+              }}
+              className="px-6 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
+    <div className="min-h-screen admin-github-bg flex font-sans text-gray-900">
       <Sidebar role="admin" />
-      <main className="ml-72 flex-1 p-8">
+      <main className={`flex-1 p-8 transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">

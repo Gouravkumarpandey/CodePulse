@@ -1,26 +1,23 @@
-/**
- * User Controller  
- * Enhanced with repository overview and activity tracking
- */
-
-const FirestoreService = require('../services/firestore.service');
+const User = require('../models/User');
+const Repo = require('../models/Repo');
 const Commit = require('../models/Commit');
 const response = require('../utils/response.util');
 const timeUtil = require('../utils/time.util');
+const crypto = require('crypto');
+
+// Helper to send email (Mock)
+const sendEmail = async (email, subject, text) => {
+  console.log(`\n=== MOCK EMAIL ===\nTo: ${email}\nSubject: ${subject}\nBody: ${text}\n==================\n`);
+};
 
 // Get user profile
 const getUserProfile = async (req, res) => {
   try {
-    const user = await FirestoreService.getUser(req.user._id);
+    const user = await User.findById(req.user._id).select('-password -otp -otpExpires');
 
     if (!user) {
       return response.error(res, 'User not found', 404);
     }
-
-    // Remove sensitive fields
-    delete user.password;
-    delete user.accessToken;
-    delete user.refreshToken;
 
     response.success(res, { user });
   } catch (error) {
@@ -31,20 +28,20 @@ const getUserProfile = async (req, res) => {
 // Get active repository with overview
 const getActiveRepository = async (req, res) => {
   try {
-    const activeRepo = await FirestoreService.getActiveRepository(req.user._id);
+    const activeRepo = await Repo.findOne({ userId: req.user._id, isActive: true });
 
     if (!activeRepo) {
       return response.success(res, { repository: null }, 'No active repository');
     }
 
-    // Get last commit from MongoDB
-    const lastCommit = await Commit.findOne({ repoId: activeRepo.id })
+    // Get last commit
+    const lastCommit = await Commit.findOne({ repoId: activeRepo._id })
       .sort({ commitDate: -1 })
       .lean();
 
-    // Get admin settings
-    const settings = await FirestoreService.getAdminSettings();
-    const maxGap = settings?.maxInactivityGapHours || 24;
+    // Default settings (since AdminSettings model usage is inconsistent, hardcode defaults for now)
+    const settings = { maxInactivityGapHours: 24, gracePeriodHours: 12, warningThresholdHours: 20 };
+    const maxGap = settings.maxInactivityGapHours;
 
     // Calculate current gap
     const currentGap = lastCommit
@@ -54,21 +51,15 @@ const getActiveRepository = async (req, res) => {
     // Determine status
     let status = 'COMPLIANT';
     if (currentGap) {
-      if (currentGap > maxGap + (settings?.gracePeriodHours || 0)) {
+      if (currentGap > maxGap + settings.gracePeriodHours) {
         status = 'VIOLATION';
-      } else if (currentGap > (settings?.warningThresholdHours || 20)) {
+      } else if (currentGap > settings.warningThresholdHours) {
         status = 'WARNING';
       }
     }
 
     const overview = {
-      repository: {
-        name: activeRepo.name,
-        fullName: activeRepo.fullName,
-        url: activeRepo.url,
-        description: activeRepo.description,
-        language: activeRepo.language,
-      },
+      repository: activeRepo,
       lastCommit: lastCommit ? {
         message: lastCommit.message,
         date: lastCommit.commitDate,
@@ -78,11 +69,7 @@ const getActiveRepository = async (req, res) => {
       currentInactivityGap: currentGap,
       allowedGap: maxGap,
       status,
-      rules: {
-        maxInactivityGap: maxGap,
-        gracePeriod: settings?.gracePeriodHours || 0,
-        warningThreshold: settings?.warningThresholdHours || 20,
-      },
+      rules: settings,
     };
 
     response.success(res, { overview });
@@ -94,12 +81,7 @@ const getActiveRepository = async (req, res) => {
 // Get user repositories
 const getUserRepositories = async (req, res) => {
   try {
-    console.log('Getting repositories for user:', req.user._id);
-    console.log('User object:', req.user);
-    const userId = req.user._id.toString();
-    console.log('User ID string:', userId);
-    const repos = await FirestoreService.getUserRepositories(userId);
-    console.log('Repos returned:', repos);
+    const repos = await Repo.find({ userId: req.user._id }).sort({ createdAt: -1 });
     response.success(res, { repositories: repos });
   } catch (error) {
     console.error('getUserRepositories error:', error);
@@ -107,28 +89,149 @@ const getUserRepositories = async (req, res) => {
   }
 };
 
-// Set active repository (only one can be active)
+// Set active repository
 const setActiveRepository = async (req, res) => {
   try {
     const { repoId } = req.body;
 
-    const repos = await FirestoreService.getUserRepositories(req.user._id);
-    const repo = repos.find(r => r.id === repoId);
+    const repo = await Repo.findOne({ _id: repoId, userId: req.user._id });
     if (!repo) {
       return response.error(res, 'Repository not found', 404);
     }
 
-    // Deactivate all repos and activate selected one
-    const operations = repos.map(r => ({
-      collection: 'repositories',
-      docId: r.id,
-      type: 'update',
-      data: { isActive: r.id === repoId }
-    }));
+    // Deactivate all repos
+    await Repo.updateMany({ userId: req.user._id }, { isActive: false });
 
-    await FirestoreService.batchWrite(operations);
+    // Activate selected
+    repo.isActive = true;
+    await repo.save();
 
-    response.success(res, { repository: { ...repo, isActive: true } }, 'Active repository updated');
+    response.success(res, { repository: repo }, 'Active repository updated');
+  } catch (error) {
+    response.error(res, error.message, 500);
+  }
+};
+
+// Delete repository
+const deleteRepository = async (req, res) => {
+  try {
+    const { repoId } = req.params;
+
+    const repo = await Repo.findOne({ _id: repoId, userId: req.user._id });
+    if (!repo) {
+      return response.error(res, 'Repository not found or unauthorized', 404);
+    }
+
+    // Delete repo and associated commits
+    await Repo.deleteOne({ _id: repoId });
+    await Commit.deleteMany({ repoId: repoId });
+
+    response.success(res, null, 'Repository deleted successfully');
+  } catch (error) {
+    response.error(res, error.message, 500);
+  }
+};
+
+// Update user profile (Settings)
+const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const updateData = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return response.error(res, 'User not found', 404);
+
+    if (updateData.username) user.username = updateData.username;
+    if (updateData.avatarId) user.avatarId = updateData.avatarId;
+
+    // Update settings object
+    if (updateData.settings) {
+      user.settings = { ...user.settings, ...updateData.settings };
+    }
+
+    // Compatibility: Map 'notifications' to 'settings'
+    if (updateData.notifications) {
+      user.settings = { ...user.settings, ...updateData.notifications };
+    }
+
+    // Handle specific toggles if sent flat
+    if (updateData.inactivityAlert !== undefined) user.settings.inactivityAlert = updateData.inactivityAlert;
+    if (updateData.burstCommitWarning !== undefined) user.settings.burstCommitWarning = updateData.burstCommitWarning;
+    if (updateData.emailNotifications !== undefined) user.settings.emailNotifications = updateData.emailNotifications;
+
+    await user.save();
+
+    response.success(res, { user }, 'Profile updated successfully');
+  } catch (error) {
+    response.error(res, error.message, 500);
+  }
+};
+
+// Generate and Send OTP
+const sendOtp = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    await user.save();
+
+    await sendEmail(user.email, 'Security Verification OTP', `Your OTP is: ${otp}. It expires in 5 minutes.`);
+
+    response.success(res, { message: 'OTP sent to your email' });
+  } catch (error) {
+    response.error(res, error.message, 500);
+  }
+};
+
+// Deactivate Account
+const deactivateAccount = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user.otp || !user.otpExpires || user.otp !== otp || user.otpExpires < new Date()) {
+      return response.error(res, 'Invalid or expired OTP', 400);
+    }
+
+    user.isActive = false;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    response.success(res, null, 'Account deactivated successfully');
+  } catch (error) {
+    response.error(res, error.message, 500);
+  }
+};
+
+// Delete Account (Permanent/Soft)
+const deleteUserAccount = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user.otp || !user.otpExpires || user.otp !== otp || user.otpExpires < new Date()) {
+      return response.error(res, 'Invalid or expired OTP', 400);
+    }
+
+    // Soft delete
+    user.isDeleted = true;
+    user.isActive = false;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    // Optionally: could handle hard delete here
+    // await User.deleteOne({ _id: userId });
+    // await Repo.deleteMany({ userId });
+    // await Commit.deleteMany({ userId });
+
+    response.success(res, null, 'Account marked for deletion');
   } catch (error) {
     response.error(res, error.message, 500);
   }
@@ -140,13 +243,11 @@ const getRepositoryActivity = async (req, res) => {
     const { repoId } = req.params;
     const limit = parseInt(req.query.limit) || 50;
 
-    // Fetch commits from MongoDB instead of Firestore
     const commits = await Commit.find({ repoId })
       .sort({ commitDate: -1 })
       .limit(limit)
       .lean();
 
-    // Transform to match expected format
     const formattedCommits = commits.map(commit => ({
       _id: commit._id,
       commitSha: commit.commitSha,
@@ -161,7 +262,14 @@ const getRepositoryActivity = async (req, res) => {
       inactivityGap: commit.inactivityGap,
     }));
 
-    response.success(res, { commits: formattedCommits });
+    // In a real implementation, you'd calculate summary here or store it in RepoAnalysis
+    const RepoAnalysis = require('../models/RepoAnalysis');
+    const analysis = await RepoAnalysis.findOne({ repoId });
+
+    response.success(res, {
+      commits: formattedCommits,
+      summary: analysis || {}
+    });
   } catch (error) {
     response.error(res, error.message, 500);
   }
@@ -170,32 +278,22 @@ const getRepositoryActivity = async (req, res) => {
 // Get warnings and violations
 const getWarningsAndViolations = async (req, res) => {
   try {
-    const userId = req.user._id;
-
-    // Get all user's repositories
-    const repos = await FirestoreService.getUserRepositories(userId);
-    const repoIds = repos.map(r => r.id);
+    const repos = await Repo.find({ userId: req.user._id }).select('_id');
+    const repoIds = repos.map(r => r._id);
 
     if (repoIds.length === 0) {
       return response.success(res, { warnings: [], violations: [] });
     }
 
-    // Get warnings and violations from MongoDB
     const warnings = await Commit.find({
       repoId: { $in: repoIds },
       status: 'WARNING'
-    })
-      .sort({ commitDate: -1 })
-      .limit(50)
-      .lean();
+    }).sort({ commitDate: -1 }).limit(50).lean();
 
     const violations = await Commit.find({
       repoId: { $in: repoIds },
       status: 'VIOLATION'
-    })
-      .sort({ commitDate: -1 })
-      .limit(50)
-      .lean();
+    }).sort({ commitDate: -1 }).limit(50).lean();
 
     response.success(res, { warnings, violations });
   } catch (error) {
@@ -207,23 +305,15 @@ const getWarningsAndViolations = async (req, res) => {
 const getDashboardSummary = async (req, res) => {
   try {
     const userId = req.user._id;
+    const user = await User.findById(userId);
 
-    const repos = await FirestoreService.getUserRepositories(userId);
+    const repos = await Repo.find({ userId });
     const activeRepo = repos.find(r => r.isActive);
-    const repoIds = repos.map(r => r.id);
+    const repoIds = repos.map(r => r._id);
 
-    // Get user data
-    const user = await FirestoreService.getUser(userId);
-
-    // Count commits by status using MongoDB aggregation (optimized)
     const commitStats = await Commit.aggregate([
       { $match: { repoId: { $in: repoIds } } },
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
+      { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
 
     let totalCommits = 0;
@@ -243,10 +333,9 @@ const getDashboardSummary = async (req, res) => {
         totalCommits,
         violations,
         warnings,
-        userStatus: user?.status || 'ACTIVE',
-        warningCount: user?.warningCount || 0,
-        violationCount: user?.violationCount || 0,
-        isUnderObservation: user?.isUnderObservation || false,
+        userStatus: user.isActive ? 'ACTIVE' : 'INACTIVE',
+        coins: user.coins || 0,
+        avatarId: user.avatarId || 1,
       },
     });
   } catch (error) {
@@ -254,32 +343,17 @@ const getDashboardSummary = async (req, res) => {
   }
 };
 
-// Get admin rules (read-only for users)
+// Get admin rules (mock for now, or fetch from AdminSettings model if you restore it)
 const getAdminRules = async (req, res) => {
-  try {
-    const settings = await FirestoreService.getAdminSettings();
-
-    if (!settings) {
-      return response.success(res, {
-        rules: {
-          maxInactivityGapHours: 24,
-          gracePeriodHours: 12,
-          warningThresholdHours: 20,
-        }
-      });
-    }
-
-    response.success(res, {
-      rules: {
-        maxInactivityGapHours: settings.maxInactivityGapHours,
-        gracePeriodHours: settings.gracePeriodHours,
-        warningThresholdHours: settings.warningThresholdHours,
-        totalAllowedGap: settings.maxInactivityGapHours + settings.gracePeriodHours,
-      },
-    });
-  } catch (error) {
-    response.error(res, error.message, 500);
-  }
+  // Hardcoded defaults as requested to avoid complex dependency restoration right now
+  response.success(res, {
+    rules: {
+      maxInactivityGapHours: 24,
+      gracePeriodHours: 12,
+      warningThresholdHours: 20,
+      totalAllowedGap: 36,
+    },
+  });
 };
 
 module.exports = {
@@ -287,6 +361,11 @@ module.exports = {
   getActiveRepository,
   getUserRepositories,
   setActiveRepository,
+  deleteRepository,
+  updateUserProfile,
+  sendOtp,
+  deactivateAccount,
+  deleteUserAccount,
   getRepositoryActivity,
   getWarningsAndViolations,
   getDashboardSummary,

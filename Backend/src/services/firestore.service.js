@@ -64,7 +64,7 @@ class FirestoreService {
   static async getCommitBySha(commitSha) {
     try {
       const doc = await db.collection('commits').doc(commitSha).get();
-      
+
       if (!doc.exists) {
         return null;
       }
@@ -107,7 +107,7 @@ class FirestoreService {
   static async getRepoAnalysis(repoId) {
     try {
       const doc = await db.collection('repoAnalysis').doc(repoId).get();
-      
+
       if (!doc.exists) {
         return null;
       }
@@ -148,7 +148,7 @@ class FirestoreService {
   static async getUser(userId) {
     try {
       const doc = await db.collection('users').doc(userId).get();
-      
+
       if (!doc.exists) {
         return null;
       }
@@ -156,6 +156,21 @@ class FirestoreService {
       return { id: doc.id, ...doc.data() };
     } catch (error) {
       logger.error('Error fetching user from Firestore:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete user from Firestore
+   * @param {string} userId - User ID
+   * @returns {Promise<void>}
+   */
+  static async deleteUser(userId) {
+    try {
+      await db.collection('users').doc(userId).delete();
+      logger.info(`User deleted from Firestore: ${userId}`);
+    } catch (error) {
+      logger.error('Error deleting user from Firestore:', error);
       throw error;
     }
   }
@@ -199,6 +214,21 @@ class FirestoreService {
       return { id: repoRef.id, ...repoData };
     } catch (error) {
       logger.error('Error saving repository to Firestore:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete repository from Firestore
+   * @param {string} repoId - Repository ID
+   * @returns {Promise<void>}
+   */
+  static async deleteRepository(repoId) {
+    try {
+      await db.collection('repositories').doc(repoId).delete();
+      logger.info(`Repository deleted from Firestore: ${repoId}`);
+    } catch (error) {
+      logger.error('Error deleting repository from Firestore:', error);
       throw error;
     }
   }
@@ -296,7 +326,7 @@ class FirestoreService {
   static async getRepository(repoId) {
     try {
       const doc = await db.collection('repositories').doc(repoId).get();
-      
+
       if (!doc.exists) {
         return null;
       }
@@ -341,7 +371,7 @@ class FirestoreService {
   static async getAdminSettings() {
     try {
       const snapshot = await db.collection('adminSettings').limit(1).get();
-      
+
       if (snapshot.empty) {
         return null;
       }

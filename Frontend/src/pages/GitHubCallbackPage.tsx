@@ -67,18 +67,18 @@ export default function GitHubCallbackPage() {
 
         console.log('GitHub authentication successful');
 
-        // Save GitHub access token to localStorage
-        localStorage.setItem('github_token', callbackData.data.githubAccessToken);
-        console.log('GitHub authentication successful - Token saved to localStorage');
+        // Save GitHub access token to sessionStorage
+        sessionStorage.setItem('github_token', callbackData.data.githubAccessToken);
+        console.log('GitHub authentication successful - Token saved to sessionStorage');
         console.log('GitHub token (first 20 chars):', callbackData.data.githubAccessToken?.substring(0, 20));
 
         // Now link the GitHub account to the current user
         setMessage('Linking GitHub account...');
 
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
 
         if (!token) {
-          console.error('No JWT token found in localStorage');
+          console.error('No JWT token found in sessionStorage');
           throw new Error('You must be logged in to link your GitHub account. Please log in first.');
         }
 
@@ -108,12 +108,12 @@ export default function GitHubCallbackPage() {
 
         // Store the new JWT token returned from backend
         if (linkData.data?.token) {
-          localStorage.setItem('token', linkData.data.token);
+          sessionStorage.setItem('token', linkData.data.token);
           console.log('JWT token updated after GitHub link');
         }
 
         // Update local user data
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const currentUser = JSON.parse(sessionStorage.getItem('user') || '{}');
         const updatedUser = {
           ...currentUser,
           githubAccessToken: callbackData.data.githubAccessToken,
@@ -121,10 +121,10 @@ export default function GitHubCallbackPage() {
           username: callbackData.data.githubUser?.username || currentUser.username,
         };
 
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        sessionStorage.setItem('user', JSON.stringify(updatedUser));
 
         // Also update the auth context with the new token
-        const newToken = linkData.data?.token || localStorage.getItem('token') || '';
+        const newToken = linkData.data?.token || sessionStorage.getItem('token') || '';
         if (login) {
           login(updatedUser, newToken);
         }
@@ -136,7 +136,7 @@ export default function GitHubCallbackPage() {
         sessionStorage.removeItem('github_code_processed');
 
         setStatus('success');
-        setMessage('Successfully authenticated! Redirecting to repository selection...');
+        setMessage('Connected successfully! Redirecting to repository selection...');
         setTimeout(() => navigate('/repo-selection'), 1500);
       } catch (err: any) {
         console.error('GitHub authentication error:', err);
@@ -151,11 +151,11 @@ export default function GitHubCallbackPage() {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center"
+      className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4"
       style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}
     >
-      {/* Overlay for readability */}
-      <div className="absolute inset-0 bg-white/70 dark:bg-white/60 z-0" />
+      {/* Subtle Dark Overlay for depth */}
+      <div className="absolute inset-0 bg-black/30 dark:bg-black/40 z-0" />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

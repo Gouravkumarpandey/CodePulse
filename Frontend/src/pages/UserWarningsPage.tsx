@@ -5,15 +5,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { AlertTriangle, XCircle, ShieldAlert, CheckCircle2, TrendingDown, Clock, GitCommit, AlertCircle } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import WarningList from '@/components/user/WarningList';
-import Card from '@/components/common/Card';
 import { api } from '@/services/api';
 import { Commit } from '@/types/commit';
 
+import { useSidebar } from '@/context/SidebarContext';
+
 const UserWarningsPage = () => {
   const { isAuthenticated, loading } = useAuth();
+  const { collapsed } = useSidebar();
   const navigate = useNavigate();
   const [warnings, setWarnings] = useState<Commit[]>([]);
   const [violations, setViolations] = useState<Commit[]>([]);
+  const [allCommitsLength, setAllCommitsLength] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'violations' | 'warnings'>('all');
 
@@ -31,14 +34,31 @@ const UserWarningsPage = () => {
 
   const loadWarnings = async () => {
     try {
-      const repos = await api.get('/user/repositories');
+      setLoadingData(true);
+      const response = await api.get('/user/repositories');
+      const repoList = response.data?.data?.repositories || response.data?.repositories || [];
 
-      const allCommits: Commit[] = [];
-      for (const repo of repos.data.repositories) {
-        const response = await api.get(`/user/activity/${repo._id}`);
-        allCommits.push(...response.data.commits);
+      if (!Array.isArray(repoList)) {
+        console.error('Repositories is not an array:', repoList);
+        setLoadingData(false);
+        return;
       }
 
+      const allCommits: Commit[] = [];
+      for (const repo of repoList) {
+        if (!repo?._id) continue;
+        try {
+          const activityRes = await api.get(`/user/activity/${repo._id}`);
+          const commits = activityRes.data?.data?.commits || activityRes.data?.commits || [];
+          if (Array.isArray(commits)) {
+            allCommits.push(...commits);
+          }
+        } catch (err) {
+          console.error(`Failed to load activity for repo ${repo._id}:`, err);
+        }
+      }
+
+      setAllCommitsLength(allCommits.length);
       const warns = allCommits.filter(c => c.status === 'WARNING');
       const viols = allCommits.filter(c => c.status === 'VIOLATION');
 
@@ -51,12 +71,6 @@ const UserWarningsPage = () => {
     }
   };
 
-  const getStatusColor = () => {
-    if (violations.length > 0) return 'red';
-    if (warnings.length > 0) return 'yellow';
-    return 'green';
-  };
-
   const getStatusMessage = () => {
     if (violations.length > 0) return 'Critical Issues Detected';
     if (warnings.length > 0) return 'Attention Required';
@@ -65,8 +79,8 @@ const UserWarningsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0d1117] flex items-center justify-center">
-        <div className="text-gray-900 dark:text-white">Loading...</div>
+      <div className="min-h-screen user-dashboard-bg flex items-center justify-center">
+        <div className="text-white font-bold uppercase tracking-widest text-xl">Loading...</div>
       </div>
     );
   }
@@ -78,302 +92,183 @@ const UserWarningsPage = () => {
   const totalIssues = violations.length + warnings.length;
 
   return (
-    <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
-      <div className="absolute inset-0 bg-white/70 dark:bg-[#0d1117]/85 z-0" />
+    <div className="min-h-screen user-dashboard-bg flex font-sans text-white overflow-x-hidden">
       <Sidebar role="user" />
-      <main className="ml-72 min-h-screen p-8 relative z-10">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-start justify-between"
-          >
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2 uppercase tracking-widest" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
-                Alerts & Violations
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 text-lg">
-                Monitor and manage your development consistency alerts
-              </p>
-            </div>
 
-            <div className="flex items-center gap-3 bg-white dark:bg-[#161b22]/90 backdrop-blur-sm px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-              <div className={`w-3 h-3 rounded-full ${getStatusColor() === 'red' ? 'bg-red-500 animate-pulse' :
-                getStatusColor() === 'yellow' ? 'bg-yellow-500 animate-pulse' :
-                  'bg-green-500'
-                }`} />
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                {getStatusMessage()}
-              </span>
-            </div>
-          </motion.div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
-                      <XCircle className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-3xl font-bold text-red-600 dark:text-red-400">
-                      {violations.length}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    Violations
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                    Critical issues requiring immediate attention
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center shadow-lg">
-                      <AlertTriangle className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                      {warnings.length}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    Warnings
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                    Potential issues to monitor
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                      <ShieldAlert className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                      {totalIssues}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    Total Issues
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                    Combined alerts detected
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
-                      <CheckCircle2 className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-3xl font-bold text-green-600 dark:text-green-400">
-                      {totalIssues === 0 ? '100%' : Math.max(0, 100 - (totalIssues * 10)) + '%'}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    Compliance Rate
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                    Overall consistency score
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
-          </div>
-
-          {/* Tab Navigation */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white dark:bg-[#161b22]/90 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-2xl p-2 shadow-sm"
-          >
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'all'
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#161b22]'
-                  }`}
-              >
-                All Issues ({totalIssues})
-              </button>
-              <button
-                onClick={() => setActiveTab('violations')}
-                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'violations'
-                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#161b22]'
-                  }`}
-              >
-                Violations ({violations.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('warnings')}
-                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'warnings'
-                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#161b22]'
-                  }`}
-              >
-                Warnings ({warnings.length})
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Content Section */}
-          {loadingData ? (
-            <Card>
-              <div className="p-12 text-center">
-                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">Loading alerts...</p>
+      {/* Main Content */}
+      <div className={`flex-1 w-full transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+        <div className="p-4 md:p-8 lg:p-12 overflow-y-auto min-h-screen">
+          <main className="max-w-7xl mx-auto space-y-8">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+              <div>
+                <motion.h1
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-4xl font-extrabold text-white tracking-[0.1em] uppercase drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]"
+                  style={{ fontFamily: '"Minecraftia", sans-serif' }}
+                >
+                  System Alerts
+                </motion.h1>
+                <p className="text-gray-200 mt-2 font-medium drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+                  Review and resolve coding violations and system warnings
+                </p>
               </div>
-            </Card>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="space-y-6"
-            >
-              {/* Violations Section */}
-              {(activeTab === 'all' || activeTab === 'violations') && (
-                <Card>
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                        <XCircle className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                          Critical Violations
-                        </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {violations.length} serious compliance issues detected
-                        </p>
-                      </div>
-                    </div>
 
-                    {violations.length > 0 ? (
-                      <WarningList items={violations} type="violation" />
-                    ) : (
-                      <div className="text-center py-12">
-                        <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-4">
-                          <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                          No Violations Found
+              <div className="flex items-center gap-4 bg-slate-900/40 backdrop-blur-xl p-4 rounded-2xl border border-white/10 shadow-2xl">
+                <div className={`p-3 rounded-xl ${totalIssues > 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                  {totalIssues > 0 ? <ShieldAlert className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Global Status</div>
+                  <div className={`text-lg font-black uppercase tracking-tight ${totalIssues > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                    {getStatusMessage()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-slate-900/60 backdrop-blur-2xl rounded-2xl p-6 border border-white/10 shadow-xl group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-red-500/20 rounded-xl text-red-400">
+                    <XCircle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black text-white">{violations.length}</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Violations</div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-slate-900/60 backdrop-blur-2xl rounded-2xl p-6 border border-white/10 shadow-xl group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-yellow-500/20 rounded-xl text-yellow-400">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black text-white">{warnings.length}</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Warnings</div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-slate-900/60 backdrop-blur-2xl rounded-2xl p-6 border border-white/10 shadow-xl group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-500/20 rounded-xl text-blue-400">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black text-white">{allCommitsLength}</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Monitored</div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Main Content Tabs */}
+            <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+              <div className="flex border-b border-white/10">
+                {(['all', 'violations', 'warnings'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex-1 py-4 px-6 text-xs font-bold uppercase tracking-widest transition-all ${activeTab === tab
+                      ? 'bg-white/10 text-white border-b-2 border-blue-500'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                  >
+                    {tab === 'all' ? `All Issues (${totalIssues})` :
+                      tab === 'violations' ? `Violations (${violations.length})` :
+                        `Warnings (${warnings.length})`}
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-6">
+                {loadingData ? (
+                  <div className="py-20 text-center">
+                    <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+                    <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Analyzing Commits...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-8">
+                    {(activeTab === 'all' || activeTab === 'violations') && violations.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-black text-red-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                          <XCircle className="w-4 h-4" /> Critical violations
                         </h3>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Great job! You're maintaining excellent development consistency.
-                        </p>
+                        <WarningList items={violations} type="violation" />
+                      </div>
+                    )}
+                    {(activeTab === 'all' || activeTab === 'warnings') && warnings.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-black text-yellow-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4" /> System warnings
+                        </h3>
+                        <WarningList items={warnings} type="warning" />
+                      </div>
+                    )}
+                    {totalIssues === 0 && !loadingData && (
+                      <div className="py-20 text-center">
+                        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4 opacity-20" />
+                        <p className="text-gray-400 font-bold uppercase tracking-widest">No issues detected</p>
                       </div>
                     )}
                   </div>
-                </Card>
-              )}
+                )}
+              </div>
+            </div>
 
-              {/* Warnings Section */}
-              {(activeTab === 'all' || activeTab === 'warnings') && (
-                <Card>
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
-                        <AlertTriangle className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                          Active Warnings
-                        </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {warnings.length} areas requiring attention
-                        </p>
-                      </div>
+            {/* Best Practices */}
+            <div className="bg-gradient-to-br from-indigo-600/60 to-purple-800/60 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[100px] rounded-full pointer-events-none" />
+              <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 animate-pulse">
+                  <ShieldAlert className="w-8 h-8 text-yellow-300" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-4" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Improvement Guide</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                      <Clock className="w-6 h-6 text-blue-300 flex-shrink-0" />
+                      <p className="text-sm font-medium text-gray-200">Maintain regular commit intervals (at least every 24-48 hours) to maximize your consistency score.</p>
                     </div>
-
-                    {warnings.length > 0 ? (
-                      <WarningList items={warnings} type="warning" />
-                    ) : (
-                      <div className="text-center py-12">
-                        <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-4">
-                          <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                          No Warnings Active
-                        </h3>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          All clear! Keep up the consistent development pace.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              )}
-
-              {/* Best Practices Card */}
-              {totalIssues > 0 && (
-                <Card>
-                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-xl">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                        <AlertCircle className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                          Improvement Recommendations
-                        </h3>
-                        <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                          <li className="flex items-start gap-2">
-                            <Clock className="w-4 h-4 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                            <span>Maintain regular commit intervals to avoid large gaps</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <GitCommit className="w-4 h-4 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                            <span>Break down work into smaller, frequent commits</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <TrendingDown className="w-4 h-4 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                            <span>Avoid bulk commits that may indicate inconsistent development patterns</span>
-                          </li>
-                        </ul>
-                      </div>
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                      <GitCommit className="w-6 h-6 text-purple-300 flex-shrink-0" />
+                      <p className="text-sm font-medium text-gray-200">Break down large features into smaller, atomic commits to avoid "Burst" violation detections.</p>
+                    </div>
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                      <TrendingDown className="w-6 h-6 text-green-300 flex-shrink-0" />
+                      <p className="text-sm font-medium text-gray-200">Avoid bulk commits. Spreading your effort over time creates a healthier development profile.</p>
+                    </div>
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                      <AlertCircle className="w-6 h-6 text-orange-300 flex-shrink-0" />
+                      <p className="text-sm font-medium text-gray-200">Watch for warnings early. Resolving patterns early prevents Grade-F violations.</p>
                     </div>
                   </div>
-                </Card>
-              )}
-            </motion.div>
-          )}
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

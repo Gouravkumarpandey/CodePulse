@@ -10,18 +10,18 @@ const api = axios.create({
   withCredentials: true, // Include cookies in cross-origin requests
 });
 
-// Request interceptor to add auth token (from localStorage)
+// Request interceptor to add auth token (from sessionStorage)
 api.interceptors.request.use(
   (config) => {
     // Only add JWT token if Authorization header is not already set
     if (!config.headers.Authorization) {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
         console.log('[API Interceptor] Added JWT token to request');
       }
     } else {
-      console.log('[API Interceptor] Authorization header already set:', config.headers.Authorization?.substring(0, 30));
+      console.log('[API Interceptor] Authorization header already set:', String(config.headers.Authorization).substring(0, 30));
     }
     return config;
   },
@@ -35,12 +35,15 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Don't redirect for GitHub repositories endpoint - let the page handle it
       const isGitHubRepoEndpoint = error.config?.url?.includes('/github/repositories');
-      
+
       if (!isGitHubRepoEndpoint) {
         // Unauthorized - clear auth and redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        const isAuthEndpoint = error.config?.url?.includes('/auth/login');
+        if (!isAuthEndpoint) {
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

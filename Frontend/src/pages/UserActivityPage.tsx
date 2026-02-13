@@ -8,14 +8,16 @@ import { api } from '@/services/api';
 import { Commit } from '@/types/commit';
 import { Repository } from '@/types/repository';
 
+import { useSidebar } from '@/context/SidebarContext';
+
 const UserActivityPage = () => {
   const { isAuthenticated, loading } = useAuth();
+  const { collapsed } = useSidebar();
   const navigate = useNavigate();
   const [commits, setCommits] = useState<Commit[]>([]);
   const [repos, setRepos] = useState<Repository[]>([]);
   const [selectedRepo, setSelectedRepo] = useState<string>('all');
   const [loadingData, setLoadingData] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -84,15 +86,8 @@ const UserActivityPage = () => {
   return (
     <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
       <div className="absolute inset-0 bg-white/70 dark:bg-[#0d1117]/85 z-0" />
-      <Sidebar role="user" isCollapsed={sidebarCollapsed} />
-      <main className={`min-h-screen p-8 transition-all duration-300 relative z-10 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="fixed top-4 left-4 z-50 p-2 bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg hover:bg-gray-50 dark:hover:bg-github-canvas-inset transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="w-5 h-5 text-gray-600 dark:text-github-text-secondary" />
-        </button>
+      <Sidebar role="user" />
+      <main className={`min-h-screen p-8 transition-all duration-500 relative z-10 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
 
         <div className="space-y-6">
           <div className="flex justify-between items-center">

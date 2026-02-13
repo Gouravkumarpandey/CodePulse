@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import MinecraftModeSlider from '../components/MinecraftModeSlider';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { useAuth } from '../hooks/useAuth';
 
 const CodePulseHomePage = () => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ const CodePulseHomePage = () => {
   const yBg = useTransform(scrollY, [0, 500], [0, 100]);
   const yFg = useTransform(scrollY, [0, 500], [0, -50]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-200">
@@ -27,10 +29,21 @@ const CodePulseHomePage = () => {
               </div>
             </div>
             <div className="hidden lg:flex items-center space-x-4">
-              <button onClick={() => navigate('/login')} className="text-black dark:text-white hover:underline font-medium transition-colors">Log in</button>
-              <button onClick={() => navigate('/signup')} className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-5 py-2.5 rounded-lg font-semibold transition-all">
-                Get Started
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => navigate(user?.role === 'ADMIN' ? '/admin' : '/user')}
+                  className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-5 py-2.5 rounded-lg font-semibold transition-all"
+                >
+                  Dashboard
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => navigate('/login')} className="text-black dark:text-white hover:underline font-medium transition-colors">Log in</button>
+                  <button onClick={() => navigate('/signup')} className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-5 py-2.5 rounded-lg font-semibold transition-all">
+                    Get Started
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -59,8 +72,19 @@ const CodePulseHomePage = () => {
               <a href="#how-it-works" className="block px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900" onClick={() => setIsMenuOpen(false)}>How It Works</a>
               <a href="#open-source" className="block px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900" onClick={() => setIsMenuOpen(false)}>Open Source</a>
               <div className="pt-4 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-2">
-                <button onClick={() => navigate('/login')} className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900">Log in</button>
-                <button onClick={() => navigate('/signup')} className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white">Get Started</button>
+                {isAuthenticated ? (
+                  <button
+                    onClick={() => navigate(user?.role === 'ADMIN' ? '/admin' : '/user')}
+                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white"
+                  >
+                    Dashboard
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => navigate('/login')} className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900">Log in</button>
+                    <button onClick={() => navigate('/signup')} className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white">Get Started</button>
+                  </>
+                )}
               </div>
             </div>
           </div>

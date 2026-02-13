@@ -1,16 +1,11 @@
-/**
- * Auth Middleware
- * JWT token verification
- */
-
 const jwt = require('jsonwebtoken');
 const response = require('../utils/response.util');
-const FirestoreService = require('../services/firestore.service');
+const User = require('../models/User');
 
 const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader) {
       return response.error(res, 'No authorization token provided', 401);
     }
@@ -21,40 +16,43 @@ const verifyToken = async (req, res, next) => {
       return response.error(res, 'No authorization token provided', 401);
     }
 
-    console.log('Token received (first 20 chars):', token.substring(0, 20));
-
     // Check if this is a GitHub token (not a JWT)
-    // GitHub tokens start with 'gho_', 'ghp_', etc.
     if (token.startsWith('gho_') || token.startsWith('ghp_') || token.startsWith('ghu_') || token.startsWith('ghs_') || token.startsWith('github_pat_')) {
-      // This is a GitHub token, use it directly
-      req.user = {
-        accessToken: token,
-        githubAccessToken: token,
-      };
-      console.log('GitHub token detected and used directly');
+      // Allow raw GitHub tokens for direct Repo access if needed, but fetch user by token if possible?
+      // For now, let's assume raw token access is limited or needs User context.
+      // If we don't have a user, some controllers might break.
+      // Let's try to find a user with this GitHub token.
+      const user = await User.findOne({ githubAccessToken: token });
+      if (user) {
+        req.user = user;
+        next();
+        return;
+      }
+
+      // Fallback: limited access without user context (dangerous for user specific data)
+      req.user = { githubAccessToken: token };
       next();
       return;
     }
 
-    // Otherwise, treat as JWT
-    console.log('Attempting JWT verification...');
+    // JWT Verification
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('JWT decoded:', decoded);
-    
-    const user = await FirestoreService.getUser(decoded.userId);
-    console.log('User fetched from Firestore:', user ? `${user.email}` : 'NOT FOUND');
+
+    const user = await User.findById(decoded.userId).select('-password');
 
     if (!user) {
-      return response.error(res, 'User not found', 404);
+      return response.error(res, 'User not found', 401);
     }
 
-    req.user = {
-      ...user,
-      _id: decoded.userId,
-      // Support both accessToken and githubAccessToken field names
-      accessToken: user.githubAccessToken || user.accessToken,
-    };
-    console.log('User attached to request with accessToken:', !!req.user.accessToken);
+    if (!user.isActive) {
+      return response.error(res, 'Account is deactivated', 403);
+    }
+
+    // Attach user to request
+    req.user = user;
+    // Helper accessors for legacy code compatibility
+    req.user.accessToken = user.githubAccessToken;
+
     next();
   } catch (error) {
     console.error('Token verification error:', error.message);

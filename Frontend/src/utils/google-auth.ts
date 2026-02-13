@@ -50,11 +50,11 @@ export const handleGoogleCallback = async (code: string) => {
     }
 
     const data = await response.json();
-    
+
     // Store the token and user data
-    localStorage.setItem('token', data.data.token);
-    localStorage.setItem('user', JSON.stringify(data.data.user));
-    
+    sessionStorage.setItem('token', data.data.token);
+    sessionStorage.setItem('user', JSON.stringify(data.data.user));
+
     return { success: true, data: data.data };
   } catch (error) {
     console.error('Google OAuth callback error:', error);
@@ -69,9 +69,9 @@ export const fetchGoogleUser = async (accessToken: string) => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    
+
     if (!response.ok) throw new Error('Failed to fetch user');
-    
+
     const user = await response.json();
     return user;
   } catch (error) {

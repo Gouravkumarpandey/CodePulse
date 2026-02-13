@@ -156,9 +156,15 @@ class GitHubService {
   /**
    * Fetch commits and run analysis
    */
+  /**
+   * Fetch commits and run analysis
+   */
   static async fetchAndAnalyzeCommits(repo, accessToken) {
     try {
       console.log(`Fetching commits for ${repo.fullName}...`);
+
+      const User = require('../models/User');
+      const CoinTransaction = require('../models/CoinTransaction');
 
       // Parse owner and repo name from fullName
       const [owner, repoName] = repo.fullName.split('/');
@@ -174,33 +180,94 @@ class GitHubService {
 
       console.log(`Fetched ${branches.length} branches and ${pullRequests.length} open PRs`);
 
-      // Store commits in database
-      const commitDocs = commits.map(commit => ({
-        repoId: repo._id,
-        userId: repo.userId,
-        commitSha: commit.sha,
-        message: commit.commit.message,
-        author: commit.commit.author.name,
-        authorEmail: commit.commit.author.email,
-        commitDate: new Date(commit.commit.author.date),
-        url: commit.html_url,
-        status: 'OK', // Default status
-        inactivityGap: 0,
-      }));
+      // Fetch existing commits to identify new ones
+      const existingCommits = await Commit.find({ repoId: repo._id }).select('commitSha');
+      const existingShas = new Set(existingCommits.map(c => c.commitSha));
 
-      // Delete existing commits for this repo to avoid duplicates
-      await Commit.deleteMany({ repoId: repo._id });
+      const newCommits = [];
+      const commitOps = [];
 
-      // Insert new commits
-      if (commitDocs.length > 0) {
-        await Commit.insertMany(commitDocs);
+      for (const commit of commits) {
+        const isNew = !existingShas.has(commit.sha);
+
+        const commitDoc = {
+          repoId: repo._id,
+          userId: repo.userId,
+          commitSha: commit.sha,
+          message: commit.commit.message,
+          author: commit.commit.author.name,
+          authorEmail: commit.commit.author.email,
+          commitDate: new Date(commit.commit.author.date),
+          url: commit.html_url,
+          status: 'OK',
+          inactivityGap: 0,
+        };
+
+        // Prepare bulk operation
+        commitOps.push({
+          updateOne: {
+            filter: { commitSha: commit.sha, repoId: repo._id },
+            update: { $set: commitDoc },
+            upsert: true,
+          }
+        });
+
+        if (isNew) {
+          newCommits.push(commitDoc);
+        }
       }
 
-      console.log(`Stored ${commitDocs.length} commits in database`);
+      // Execute bulk write for commits
+      if (commitOps.length > 0) {
+        await Commit.bulkWrite(commitOps);
+      }
 
-      // Update repository with branch and PR counts in Firestore
-      const FirestoreService = require('./firestore.service');
-      await FirestoreService.saveRepository(repo._id, {
+      console.log(`Processed ${commits.length} commits (${newCommits.length} new)`);
+
+      // === COIN REWARD SYSTEM ===
+      let coinsAwarded = 0;
+      const coinTransactions = [];
+
+      for (const commit of newCommits) {
+        // Spam Check: Ignore "Update README" or "Initial commit"
+        const lowerMsg = commit.message.toLowerCase();
+        if (lowerMsg.includes('update readme') || lowerMsg.includes('initial commit') || lowerMsg.includes('merge pull request')) {
+          continue;
+        }
+
+        const REWARD_AMOUNT = 5;
+        coinsAwarded += REWARD_AMOUNT;
+
+        coinTransactions.push({
+          userId: repo.userId,
+          amount: REWARD_AMOUNT,
+          type: 'REWARD',
+          source: 'COMMIT',
+          referenceId: commit.commitSha,
+          description: `Reward for commit: ${commit.message.substring(0, 50)}...`,
+          createdAt: new Date(),
+        });
+      }
+
+      if (coinsAwarded > 0) {
+        // Update User Balance
+        await User.findByIdAndUpdate(repo.userId, { $inc: { coins: coinsAwarded } });
+
+        // Save Transactions
+        if (coinTransactions.length > 0) {
+          await CoinTransaction.insertMany(coinTransactions);
+        }
+        console.log(`Awarded ${coinsAwarded} coins for ${coinTransactions.length} valid commits`);
+      }
+      // ==========================
+
+      // Update repository with branch and PR counts (using Mongoose now, not Firestore)
+      // Note: Assuming Repo model is used elsewhere or accessible. 
+      // If "repo" passed here is a plain object, we might need to update using Mongoose model.
+      // FirestoreService usage removed as per migration plan.
+
+      const Repo = require('../models/Repo'); // Lazy load
+      await Repo.findByIdAndUpdate(repo._id, {
         branchCount: branches.length,
         openPRCount: pullRequests.length,
         lastSync: new Date(),
@@ -248,7 +315,7 @@ class GitHubService {
 
       console.log(`Analysis completed for ${repo.fullName}`);
 
-      return { success: true, commitsCount: commitDocs.length };
+      return { success: true, commitsCount: commits.length, newCommits: newCommits.length, coinsAwarded };
     } catch (error) {
       console.error('Error in fetchAndAnalyzeCommits:', error);
       throw error;

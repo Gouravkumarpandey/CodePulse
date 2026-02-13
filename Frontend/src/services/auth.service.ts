@@ -62,13 +62,13 @@ export const authService = {
   // Logout
   async logout(): Promise<void> {
     await api.post('/auth/logout');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
   },
 
   // Get current user from token
   getCurrentUser(): User | null {
-    const userStr = localStorage.getItem('user');
+    const userStr = sessionStorage.getItem('user');
     if (!userStr) return null;
     try {
       return JSON.parse(userStr);
@@ -79,7 +79,7 @@ export const authService = {
 
   // Check if user is authenticated
   isAuthenticated(): boolean {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const user = this.getCurrentUser();
     return !!(token && user);
   },

@@ -7,9 +7,12 @@ import { api } from '@/services/api';
 import { User } from '@/types/user';
 import { ArrowLeft, Download, RefreshCw } from 'lucide-react';
 
+import { useSidebar } from '@/context/SidebarContext';
+
 const AdminUserDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user: authUser, isAuthenticated, loading } = useAuth();
+  const { collapsed } = useSidebar();
   const navigate = useNavigate();
   const [targetUser, setTargetUser] = useState<User | null>(null);
   const [analysis, setAnalysis] = useState<any>(null);
@@ -45,7 +48,7 @@ const AdminUserDetailPage = () => {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen mc-dirt-bg flex items-center justify-center font-['Minecraftia']">
+      <div className="min-h-screen admin-github-bg flex items-center justify-center font-['Minecraftia']">
         <div className="mc-panel p-10 flex flex-col items-center gap-6 shadow-2xl">
           <div className="w-16 h-16 border-8 border-black border-t-[#5da045] animate-spin" />
           <p className="text-xl font-bold text-[#404040] mc-text-shadow-light uppercase tracking-widest">Identifying Entity...</p>
@@ -55,11 +58,11 @@ const AdminUserDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen mc-dirt-bg p-6 font-['Minecraftia']">
+    <div className="min-h-screen admin-github-bg p-6 font-['Minecraftia']">
       <div className="flex">
         <Sidebar role="admin" />
 
-        <main className="flex-1 p-6">
+        <main className={`flex-1 p-6 transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
           <div className="max-w-7xl mx-auto space-y-8">
             {/* Header Navigation */}
             <header className="mc-header p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-2xl">

@@ -125,30 +125,28 @@ interface Repository {
 }
 
 
+import { useSidebar } from '@/context/SidebarContext';
+
 function RepositorySelectionPage() {
   // Per-tab session: clear sessionStorage on new tab open
-  useEffect(() => {
-    if (!sessionStorage.getItem('repo_selection_tab_initialized')) {
-      sessionStorage.clear();
-      sessionStorage.setItem('repo_selection_tab_initialized', '1');
-    }
-  }, []);
+
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { collapsed } = useSidebar();
   // Ensure github_token is only for the current user
   useEffect(() => {
     // On mount, check if the stored github_token belongs to the current user
-    const storedUser = localStorage.getItem('user');
-    const githubToken = localStorage.getItem('github_token');
+    const storedUser = sessionStorage.getItem('user');
+    const githubToken = sessionStorage.getItem('github_token');
     if (githubToken && storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
         // If the user changes, remove the github_token
         if (!user || (parsedUser && user._id !== parsedUser._id)) {
-          localStorage.removeItem('github_token');
+          sessionStorage.removeItem('github_token');
         }
       } catch {
-        localStorage.removeItem('github_token');
+        sessionStorage.removeItem('github_token');
       }
     }
   }, [user]);
@@ -165,8 +163,8 @@ function RepositorySelectionPage() {
   const fetchRepositories = useCallback(async () => {
     setRepoLoading(true);
     try {
-      // Get GitHub token from localStorage
-      const githubToken = localStorage.getItem('github_token');
+      // Get GitHub token from sessionStorage
+      const githubToken = sessionStorage.getItem('github_token');
       if (!githubToken) {
         setNeedsAuth(true);
         setGithubLinked(false);
@@ -228,7 +226,7 @@ function RepositorySelectionPage() {
     if (!window.confirm('Are you sure you want to unlink your GitHub account?')) return;
     try {
       await unlinkGithubAccount();
-      localStorage.removeItem('github_token');
+      sessionStorage.removeItem('github_token');
       setGithubLinked(false);
       setNeedsAuth(true);
       setShowRepoList(false);
@@ -254,7 +252,7 @@ function RepositorySelectionPage() {
 
   const handleConnect = () => {
     // Check if user is logged in first
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (!token) {
       alert('Please log in to your CodePulse account first before connecting GitHub.');
       navigate('/login');
@@ -302,23 +300,15 @@ function RepositorySelectionPage() {
   );
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat relative"
-      style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}
-    >
-      <div className="absolute inset-0 bg-white/70 dark:bg-[#0d1117]/85 z-0" />
+    <div className="min-h-screen user-dashboard-bg relative">
       <Sidebar role="user" />
       {/* Logo at the top */}
       <div className="w-full flex justify-center items-center py-6 relative z-10">
         <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
       </div>
-      <div className="ml-80 min-h-screen relative z-10">
+      <div className={`min-h-screen relative z-10 transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
         <main>
-          <header className="bg-white dark:bg-github-canvas-subtle border-b border-gray-200 dark:border-github-border">
-            <div className="max-w-7xl mx-auto px-6 py-4">
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-github-text tracking-wider uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Integrations</h1>
-            </div>
-          </header>
+
           <div className="max-w-5xl mx-auto px-6 py-12">
             {showRepoList && repositories.length > 0 ? (
               <motion.div
@@ -387,8 +377,8 @@ function RepositorySelectionPage() {
                             onClick={() => handleSelectRepository(repo)}
                             disabled={connecting === repo.id || (repo as any).isActiveInSystem}
                             className={`ml-4 px-7 py-2 font-bold rounded-lg shadow transition-colors text-base disabled:opacity-50 flex items-center gap-2 border-none ${(repo as any).isActiveInSystem
-                                ? 'bg-green-600 cursor-default'
-                                : 'bg-amber-500 hover:bg-amber-600 text-white cursor-pointer'
+                              ? 'bg-green-600 cursor-default'
+                              : 'bg-amber-500 hover:bg-amber-600 text-white cursor-pointer'
                               }`}
                           >
                             {connecting === repo.id ? (

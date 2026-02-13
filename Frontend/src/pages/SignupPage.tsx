@@ -14,12 +14,13 @@ export default function SignupPage() {
   const navigate = useNavigate();
 
   /* ✅ Safe AuthContext usage */
+  /* ✅ Safe AuthContext usage */
   const authContext = useContext(AuthContext);
   if (!authContext) {
     throw new Error('SignupPage must be used inside AuthProvider');
   }
 
-  const { login, isAuthenticated } = authContext;
+  const { login, isAuthenticated, loading: authLoading, user } = authContext;
 
   /* ---------------- STATE ---------------- */
   const [name, setName] = useState('');
@@ -29,17 +30,35 @@ export default function SignupPage() {
   const [role, setRole] = useState<Role>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   // State for password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   /* ---------------- EFFECTS ---------------- */
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/repo-selection');
+    if (isAuthenticated && !authLoading) {
+      if (user?.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        // Check if user has GitHub connected
+        const githubToken = sessionStorage.getItem('github_token');
+        if (!githubToken) {
+          navigate('/connect-github');
+        } else {
+          navigate('/user');
+        }
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, authLoading, navigate, user]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
+        <p className="text-xl text-black dark:text-white">Loading...</p>
+      </div>
+    );
+  }
 
   /* ---------------- HANDLERS ---------------- */
   const handleGoogleSignupSuccess = async (credentialResponse: CredentialResponse) => {
@@ -60,7 +79,11 @@ export default function SignupPage() {
       const data = await response.json();
       if (response.ok && data.data) {
         login(data.data.user, data.data.token);
-        navigate(data.data.user.role === 'ADMIN' ? '/admin' : '/user');
+        if (data.data.user.role === 'ADMIN') {
+          navigate('/admin');
+        } else {
+          navigate('/connect-github');
+        }
       } else {
         setError(data.message || 'Google signup failed');
       }
@@ -80,10 +103,7 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    if (!role) {
-      setError('Please select an account type');
-      return;
-    }
+    const assignedRole = email === 'kumarpandeygourav@gmail.com' ? 'ADMIN' : 'USER';
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -95,6 +115,8 @@ export default function SignupPage() {
       return;
     }
 
+    // Auto-assign role, remove validation for empty role
+
     setLoading(true);
 
     try {
@@ -102,11 +124,11 @@ export default function SignupPage() {
         username: name,
         email,
         password,
-        role,
+        role: assignedRole,
       });
 
       login(response.user, response.token);
-      navigate('/repo-selection');
+      navigate('/connect-github');
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -189,10 +211,10 @@ export default function SignupPage() {
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <g>
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                   </g>
                 </svg>
                 <span style={{ fontWeight: 700, fontSize: '1.05rem', letterSpacing: '0.5px' }}>Sign up with Google</span>
@@ -241,28 +263,11 @@ export default function SignupPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-black border-2 border-black dark:border-white rounded-md text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-black border-2 border-black dark:border-white rounded-md text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all font-sans"
                   placeholder="Your Name"
                   required
                 />
               </div>
-            </div>
-
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-black dark:text-white mb-2">
-                Account Type <span className="text-red-600">*</span>
-              </label>
-              <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value as Role)}
-                className="w-full px-4 py-3 bg-white dark:bg-black border-2 border-black dark:border-white rounded-md text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
-                required
-              >
-                <option value="">Select account type</option>
-                <option value="USER">User</option>
-                <option value="ADMIN">Admin</option>
-              </select>
             </div>
 
             <div>
@@ -276,7 +281,7 @@ export default function SignupPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-black border-2 border-black dark:border-white rounded-md text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-black border-2 border-black dark:border-white rounded-md text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all font-sans"
                   placeholder="you@example.com"
                   required
                 />
@@ -294,7 +299,7 @@ export default function SignupPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-10 py-3 bg-white dark:bg-black border-2 border-black dark:border-white rounded-md text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+                  className="w-full pl-10 pr-10 py-3 bg-white dark:bg-black border-2 border-black dark:border-white rounded-md text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all font-sans"
                   placeholder="••••••••"
                   required
                 />
@@ -321,7 +326,7 @@ export default function SignupPage() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-10 pr-10 py-3 bg-white dark:bg-black border-2 border-black dark:border-white rounded-md text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+                  className="w-full pl-10 pr-10 py-3 bg-white dark:bg-black border-2 border-black dark:border-white rounded-md text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all font-sans"
                   placeholder="••••••••"
                   required
                 />

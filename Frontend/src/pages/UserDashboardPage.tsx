@@ -1,11 +1,21 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoreHorizontal, GitBranch, GitCommit, GitPullRequest, TrendingUp } from 'lucide-react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
-  AreaChart, Area
+  GitBranch,
+  GitCommit,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Activity,
+  Users,
+  ChevronDown,
+  Settings,
+  Award,
+  Zap
+} from 'lucide-react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/layout/Sidebar';
@@ -13,20 +23,18 @@ import { api } from '@/services/api';
 import { ConsistencyAnalysis } from '@/types';
 import { Commit } from '@/types/commit';
 
-
+import { useSidebar } from '@/context/SidebarContext';
 
 export default function UserDashboardPage() {
   const navigate = useNavigate();
   const { isAuthenticated, loading, user } = useAuth();
+  const { collapsed } = useSidebar();
   const [consistencyData, setConsistencyData] = useState<ConsistencyAnalysis | null>(null);
   const [selectedRepo, setSelectedRepo] = useState<{ _id: string; name: string; owner?: string; isActive?: boolean; lastSync?: string; language?: string } | null>(null);
   const [repositories, setRepositories] = useState<Array<{ _id: string; name: string; owner?: string; isActive?: boolean; lastSync?: string; language?: string }>>([]);
   const [commitTimeline, setCommitTimeline] = useState<Array<{ date: string; commits: number }>>([]);
-  const [languageData, setLanguageData] = useState<Array<{ name: string; value: number }>>([]);
-  const [activityData, setActivityData] = useState<Array<{ day: string; commits: number; additions: number; deletions: number }>>([]);
   const [recentCommits, setRecentCommits] = useState<Commit[]>([]);
-  const [totalBranches, setTotalBranches] = useState(0);
-  const [totalPRs, setTotalPRs] = useState(0);
+  const [showRepoDropdown, setShowRepoDropdown] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -40,23 +48,6 @@ export default function UserDashboardPage() {
     }
   }, [isAuthenticated]);
 
-  const loadGitHubStats = useCallback(async () => {
-    if (!selectedRepo) return;
-
-    try {
-      // Use branch and PR counts from repository data (stored during sync)
-      const branchCount = (selectedRepo as any).branchCount || 0;
-      const prCount = (selectedRepo as any).openPRCount || 0;
-
-      setTotalBranches(branchCount);
-      setTotalPRs(prCount);
-
-      console.log(`[Dashboard] Loaded GitHub stats - Branches: ${branchCount}, PRs: ${prCount}`);
-    } catch (error) {
-      console.error('Failed to load GitHub stats:', error);
-    }
-  }, [selectedRepo]);
-
   const loadRepositoryAnalysis = useCallback(async () => {
     if (!selectedRepo?._id) return;
 
@@ -64,8 +55,6 @@ export default function UserDashboardPage() {
       const response = await api.get(`/user/activity/${selectedRepo._id}`);
       const summary = response.data.data?.summary || response.data.summary;
       const commits = response.data.data?.commits || response.data.commits || [];
-      console.log('[Dashboard] Loaded commits:', commits.length);
-      console.log('[Dashboard] Consistency data:', summary);
 
       if (summary) {
         setConsistencyData({
@@ -88,44 +77,22 @@ export default function UserDashboardPage() {
         });
       }
 
-      // Process commits for timeline and recent messages
       if (commits.length > 0) {
-        setRecentCommits(commits.slice(0, 10));
-
-        // Generate timeline from actual commit data
+        setRecentCommits(commits.slice(0, 5));
         const timeline = generateTimelineFromCommits(commits);
         setCommitTimeline(timeline);
-
-        // Generate activity data (last 7 days)
-        const activity = generateActivityData(commits);
-        setActivityData(activity);
-      }
-
-      // Fetch GitHub repo stats for branches and PRs
-      await loadGitHubStats();
-
-      // Generate language data from repository info
-      if (selectedRepo.language) {
-        setLanguageData([
-          { name: selectedRepo.language, value: 100 }
-        ]);
       }
     } catch (error) {
       console.error('Failed to load repository analysis:', error);
     }
-  }, [selectedRepo, loadGitHubStats]);
+  }, [selectedRepo]);
 
   useEffect(() => {
     if (selectedRepo) {
       loadRepositoryAnalysis();
     } else {
-      // Show placeholder data when no repo is selected
       setCommitTimeline([]);
       setRecentCommits([]);
-      setLanguageData([]);
-      setActivityData([]);
-      setTotalBranches(0);
-      setTotalPRs(0);
     }
   }, [selectedRepo, loadRepositoryAnalysis]);
 
@@ -135,7 +102,7 @@ export default function UserDashboardPage() {
       const repos = response.data.data?.repositories || response.data.repositories || [];
       setRepositories(repos);
       if (repos.length > 0) {
-        const activeRepo = repos.find((r: any) => r.isActive);
+        const activeRepo = repos.find(r => r.isActive);
         setSelectedRepo(activeRepo || repos[0]);
       } else {
         setSelectedRepo(null);
@@ -148,7 +115,6 @@ export default function UserDashboardPage() {
   };
 
   const generateTimelineFromCommits = (commits: Commit[]) => {
-    // Group commits by date (last 7 days)
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
@@ -167,46 +133,6 @@ export default function UserDashboardPage() {
     }));
   };
 
-  const generateActivityData = (commits: Commit[]) => {
-    // Group by last 7 days with additions/deletions
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
-      return {
-        dateStr: date.toISOString().split('T')[0],
-        day: date.toLocaleDateString('en-US', { weekday: 'short' })
-      };
-    });
-
-    const activityByDate: Record<string, { commits: number; additions: number; deletions: number }> = {};
-
-    commits.forEach(commit => {
-      const dateStr = new Date(commit.commitDate).toISOString().split('T')[0];
-      if (!activityByDate[dateStr]) {
-        activityByDate[dateStr] = { commits: 0, additions: 0, deletions: 0 };
-      }
-      activityByDate[dateStr].commits += 1;
-      activityByDate[dateStr].additions += commit.additions || 0;
-      activityByDate[dateStr].deletions += commit.deletions || 0;
-    });
-
-    return last7Days.map(({ dateStr, day }) => ({
-      day,
-      commits: activityByDate[dateStr]?.commits || 0,
-      additions: activityByDate[dateStr]?.additions || 0,
-      deletions: activityByDate[dateStr]?.deletions || 0
-    }));
-  };
-
-  const getCurrentDate = () => {
-    const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date().toLocaleDateString('en-US', options);
-  };
-
-  const formatCommitMessage = (message: string) => {
-    return message.length > 60 ? message.substring(0, 60) + '...' : message;
-  };
-
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffMs = now.getTime() - new Date(date).getTime();
@@ -219,13 +145,29 @@ export default function UserDashboardPage() {
     return `${diffDays}d ago`;
   };
 
-  // Color scheme for charts - More professional palette
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-  const CHART_COLORS = {
-    commits: '#3b82f6',
-    additions: '#10b981',
-    deletions: '#ef4444'
+  const getActivityStatus = () => {
+    if (!recentCommits.length) return { status: 'Inactive', color: 'red', message: 'No commits found' };
+
+    const lastCommit = recentCommits[0];
+    const hoursSinceLastCommit = (new Date().getTime() - new Date(lastCommit.commitDate).getTime()) / 3600000;
+
+    if (hoursSinceLastCommit < 24) {
+      return { status: 'Active', color: 'green', message: `Last commit ${formatTimeAgo(lastCommit.commitDate)}` };
+    } else if (hoursSinceLastCommit < 72) {
+      return { status: 'At Risk', color: 'yellow', message: `Last commit ${formatTimeAgo(lastCommit.commitDate)}` };
+    } else {
+      return { status: 'Inactive', color: 'red', message: `Last commit ${formatTimeAgo(lastCommit.commitDate)}` };
+    }
   };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 90) return 'Excellent';
+    if (score >= 70) return 'Good';
+    if (score >= 50) return 'Average';
+    return 'Low';
+  };
+
+  const activityStatus = getActivityStatus();
 
   if (loading) {
     return (
@@ -240,430 +182,447 @@ export default function UserDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
+    <div className="min-h-screen user-dashboard-bg flex font-sans text-white overflow-x-hidden">
       <Sidebar role="user" />
+
       {/* Main Content */}
-      <div className="ml-80 flex-1 p-8">
-        <main className="max-w-7xl mx-auto space-y-8">
-          {/* Header Section */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
+      <div className={`flex-1 w-full transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+        <div className="p-4 md:p-8 lg:p-12 overflow-y-auto min-h-screen">
+          <main className="max-w-7xl mx-auto space-y-6">
+            {/* Top Header */}
+            <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="text-4xl font-extrabold text-black tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>Dashboard</h1>
-                <p className="text-lg text-gray-600 mt-1">Monitor your coding activity and consistency</p>
+                <h1 className="text-4xl font-extrabold text-white tracking-[0.1em] uppercase drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
+                  Participant Dashboard
+                </h1>
+                <p className="text-gray-200 mt-2 font-medium drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">Track your coding consistency and activity</p>
               </div>
 
-              {/* Logo */}
-              <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
-                <img src="/logo.jpg" alt="CodePulse" className="w-8 h-8 object-contain rounded-md" />
-                <h2 className="text-xl font-bold text-black tracking-wide">
-                  CODEPULSE
-                </h2>
-              </div>
-
-              {/* Action Button */}
-              <div>
+              {/* Repository Dropdown */}
+              <div className="relative">
                 <button
-                  onClick={() => navigate('/user/activity')}
-                  className="flex items-center gap-2 px-6 py-3 bg-black text-white hover:bg-gray-800 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  onClick={() => setShowRepoDropdown(!showRepoDropdown)}
+                  className="flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-xl hover:border-white/40 transition-all shadow-xl group"
                 >
-                  <TrendingUp className="w-5 h-5" />
-                  View Activity
+                  <GitBranch className="w-5 h-5 text-blue-300 group-hover:scale-110 transition-transform" />
+                  <div className="text-left">
+                    <div className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">Repository</div>
+                    <div className="font-bold text-white text-sm">{selectedRepo?.name || 'Select Repo'}</div>
+                  </div>
+                  <ChevronDown className="w-5 h-5 text-gray-400 group-hover:translate-y-0.5 transition-transform" />
                 </button>
-              </div>
-            </div>
 
-            {/* Greeting */}
-            <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex justify-between items-center">
-              <div>
-                <h2 className="text-3xl font-bold text-black mb-1 flex items-center gap-3">
-                  Hello, {user?.username || 'Developer'}! <span className="animate-wave text-3xl">👋</span>
-                </h2>
-                <p className="text-gray-500 font-medium">
-                  {getCurrentDate()}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Summary Cards Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Repository Card */}
-            <div className="bg-[#e6f0ff] dark:bg-[#0c2d6b]/40 border-l-4 border-blue-500 shadow-sm hover:shadow-md transition-all relative group backdrop-blur-sm">
-              <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 bg-blue-600 rounded-lg shadow-md">
-                  <GitBranch className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-gray-500 dark:text-blue-200 uppercase tracking-wider mb-1">Active Repository</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white truncate mb-1" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
-                  {selectedRepo?.name || 'No repository selected'}
-                </h3>
-                {selectedRepo?.owner && (
-                  <p className="text-sm text-gray-600 dark:text-gray-300">by {selectedRepo.owner}</p>
+                {showRepoDropdown && repositories.length > 0 && (
+                  <div className="absolute right-0 mt-2 w-80 bg-slate-900/90 backdrop-blur-2xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/20 z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="p-3 border-b border-white/10 bg-white/5">
+                      <h3 className="font-bold text-white text-xs tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Your Repositories</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {repositories.map((repo, idx) => (
+                        <button
+                          key={`repo-item-${repo._id || idx}`}
+                          onClick={() => {
+                            setSelectedRepo(repo);
+                            setShowRepoDropdown(false);
+                          }}
+                          className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 ${selectedRepo?._id === repo._id ? 'bg-blue-500/20' : ''
+                            }`}
+                        >
+                          <div className="font-semibold text-white">{repo.name}</div>
+                          <div className="text-xs text-gray-400 font-mono">{repo.owner}/{repo.name}</div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="p-3 border-t border-white/10 bg-white/5">
+                      <button
+                        onClick={() => {
+                          navigate('/repo-selection');
+                          setShowRepoDropdown(false);
+                        }}
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors text-xs font-bold uppercase tracking-wider"
+                      >
+                        + Add Repository
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate('/user/settings');
+                          setShowRepoDropdown(false);
+                        }}
+                        className="w-full px-4 py-2 mt-2 bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 transition-colors text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Manage Repositories
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
 
-            {/* Total Commits Card */}
-            <div className="bg-[#e6fffa] dark:bg-[#084236]/40 border-l-4 border-green-500 shadow-sm hover:shadow-md transition-all relative group backdrop-blur-sm">
-              <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                <MoreHorizontal className="w-5 h-5" />
+              {/* Profile Icon */}
+              <button
+                onClick={() => navigate('/user/settings')}
+                className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105 group relative overflow-hidden p-[2px]"
+              >
+                <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center overflow-hidden">
+                  {user?.avatarId ? (
+                    <img
+                      src={[
+                        '',
+                        '/assets/avtar/icons8-minecraft-grass-cube-50.png',
+                        '/assets/avtar/icons8-minecraft-logo-50.png',
+                        '/assets/avtar/icons8-minecraft-main-character-50.png',
+                        '/assets/avtar/icons8-minecraft-main-character-50-2.png'
+                      ][user.avatarId] || ''}
+                      alt="avatar"
+                      className="w-full h-full object-contain p-1"
+                    />
+                  ) : (
+                    <span className="text-white font-black text-lg">{user?.username?.charAt(0).toUpperCase() || 'U'}</span>
+                  )}
+                </div>
               </button>
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 bg-green-600 rounded-lg shadow-md">
-                  <GitCommit className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-gray-500 dark:text-green-200 uppercase tracking-wider mb-1">Total Commits</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
-                  {consistencyData?.totalCommits || 0}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">In this repository</p>
-              </div>
             </div>
 
-            {/* Branches Card */}
-            <div className="bg-[#f3e8ff] dark:bg-[#341a54]/40 border-l-4 border-purple-500 shadow-sm hover:shadow-md transition-all relative group backdrop-blur-sm">
-              <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 bg-purple-600 rounded-lg shadow-md">
-                  <GitBranch className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-gray-500 dark:text-purple-200 uppercase tracking-wider mb-1">Branches</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
-                  {totalBranches}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Active branches</p>
-              </div>
-            </div>
-
-            {/* Pull Requests Card */}
-            <div className="bg-[#fff7ed] dark:bg-[#4a2412]/40 border-l-4 border-orange-500 shadow-sm hover:shadow-md transition-all relative group backdrop-blur-sm">
-              <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 bg-orange-600 rounded-lg shadow-md">
-                  <GitPullRequest className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-gray-500 dark:text-orange-200 uppercase tracking-wider mb-1">Pull Requests</p>
+            {!selectedRepo ? (
+              /* No Repository Selected */
+              <div className="flex items-center justify-center py-20 bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl mt-8">
+                <div className="text-center max-w-md">
+                  <GitBranch className="w-20 h-20 mx-auto mb-6 text-white/20 animate-pulse" />
+                  <h2 className="text-2xl font-bold text-white mb-3 tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>No Repository Connected</h2>
+                  <p className="text-gray-300 mb-8 font-medium">
+                    Connect a GitHub repository to start tracking your code consistency and viewing detailed analytics.
+                  </p>
+                  <button
+                    onClick={() => navigate('/repo-selection')}
+                    className="px-8 py-4 bg-white text-black hover:bg-gray-200 rounded-xl font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] transform hover:scale-105"
+                    style={{ fontFamily: '"Minecraftia", sans-serif' }}
+                  >
+                    Connect Repository
+                  </button>
                 </div>
               </div>
-              <div>
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
-                  {totalPRs}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Open PRs</p>
-              </div>
-            </div>
-          </div>
+            ) : (
+              <>
+                {/* A. Activity Status Card - MOST IMPORTANT */}
+                <div className={`bg-slate-900/60 backdrop-blur-2xl rounded-2xl p-8 border-l-8 ${activityStatus.color === 'green' ? 'border-green-500 shadow-green-500/20' :
+                  activityStatus.color === 'yellow' ? 'border-yellow-500 shadow-yellow-500/20' :
+                    'border-red-500 shadow-red-500/20'
+                  } border shadow-2xl relative overflow-hidden group`}>
+                  {/* Background Glow */}
+                  <div className={`absolute -right-20 -top-20 w-64 h-64 blur-[100px] opacity-20 pointer-events-none rounded-full transition-colors duration-500 ${activityStatus.color === 'green' ? 'bg-green-500' : activityStatus.color === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                    }`} />
 
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className={`p-4 rounded-2xl shadow-xl transition-transform duration-500 group-hover:scale-110 ${activityStatus.color === 'green' ? 'bg-green-500 shadow-green-500/30' :
+                          activityStatus.color === 'yellow' ? 'bg-yellow-500 shadow-yellow-500/30' :
+                            'bg-red-500 shadow-red-500/30'
+                          }`}>
+                          {activityStatus.color === 'green' ? (
+                            <CheckCircle className="w-10 h-10 text-white" />
+                          ) : (
+                            <AlertCircle className="w-10 h-10 text-white" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-1">Activity Status</div>
+                          <div className="text-5xl font-extrabold text-white tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
+                            {activityStatus.status}
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xl text-gray-200 font-medium drop-shadow-md">{activityStatus.message}</p>
+                    </div>
+                    <div className="hidden md:block text-right">
+                      <div className={`text-9xl font-black opacity-10 leading-none select-none transition-transform duration-700 group-hover:scale-125 ${activityStatus.color === 'green' ? 'text-green-500' : activityStatus.color === 'yellow' ? 'text-yellow-500' : 'text-red-500'
+                        }`}>
+                        {activityStatus.color === 'green' ? 'OK' : activityStatus.color === 'yellow' ? '!!' : 'XX'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Grid Layout - 3 Columns */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* B. Consistency Score */}
+                  <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-xl group hover:bg-slate-900/50 transition-all">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-sm font-bold text-white tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Consistency</h3>
+                      <Award className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div className="relative w-32 h-32 mx-auto mb-6">
+                      <svg className="transform -rotate-90 w-32 h-32">
+                        <circle
+                          cx="64"
+                          cy="64"
+                          r="56"
+                          stroke="rgba(255,255,255,0.1)"
+                          strokeWidth="8"
+                          fill="none"
+                        />
+                        <circle
+                          cx="64"
+                          cy="64"
+                          r="56"
+                          stroke="#8b5cf6"
+                          strokeWidth="10"
+                          fill="none"
+                          strokeDasharray={`${(consistencyData?.score || 0) * 3.51} 351`}
+                          strokeLinecap="round"
+                          className="drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="text-4xl font-extrabold text-white tracking-tighter">{consistencyData?.score || 0}</div>
+                          <div className="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Score</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className={`inline-block px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-widest border ${(consistencyData?.score || 0) >= 90 ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                        (consistencyData?.score || 0) >= 70 ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                          (consistencyData?.score || 0) >= 50 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
+                            'bg-red-500/20 text-red-400 border-red-500/30'
+                        }`}>
+                        {getScoreLabel(consistencyData?.score || 0)}
+                      </div>
+                    </div>
+                  </div>
 
-          {/* Main Content Grid - 2 Columns */}
-          {!selectedRepo ? (
-            /* No Repository Selected - Show Connect Prompt */
-            <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-gray-200 shadow-sm mt-8">
-              <div className="text-center max-w-md">
-                <GitBranch className="w-20 h-20 mx-auto mb-6 text-gray-200" />
-                <h2 className="text-2xl font-bold text-black mb-3">No Repository Connected</h2>
-                <p className="text-gray-500 mb-6">
-                  Connect a GitHub repository to start tracking your code consistency and viewing detailed analytics.
-                </p>
-                <button
-                  onClick={() => navigate('/repo-selection')}
-                  className="px-8 py-3 bg-black text-white hover:bg-gray-800 rounded-lg font-medium transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  Connect Repository
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-              {/* Left Column - Takes 2/3 width */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Commit Timeline Chart */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-6">
+                  {/* C. Last Commit Details */}
+                  <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-xl group hover:bg-slate-900/50 transition-all">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-sm font-bold text-white tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Last Commit</h3>
+                      <GitCommit className="w-5 h-5 text-blue-400" />
+                    </div>
+                    {recentCommits.length > 0 ? (
+                      <div>
+                        <div className="flex items-center gap-3 mb-4 p-4 bg-white/5 rounded-2xl border border-white/10">
+                          <Clock className="w-6 h-6 text-blue-400" />
+                          <div>
+                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Time Ago</div>
+                            <span className="text-2xl font-black text-white">
+                              {formatTimeAgo(recentCommits[0].commitDate)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="bg-white/5 rounded-2xl p-4 border border-white/10 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 p-2 opacity-5 italic font-black text-xl pointer-events-none uppercase">Msg</div>
+                          <p className="text-sm font-medium text-gray-200 mb-3 line-clamp-2 leading-relaxed">
+                            {recentCommits[0].message}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-1 bg-white/10 rounded font-mono text-[10px] text-blue-300 border border-white/5 shadow-inner">
+                              {recentCommits[0].commitSha.substring(0, 7)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-10">
+                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
+                          <GitCommit className="w-8 h-8 text-white/20" />
+                        </div>
+                        <p className="text-sm text-gray-400 font-medium">No commits yet</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* D. Quick Stats */}
+                  <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-xl group hover:bg-slate-900/50 transition-all">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-sm font-bold text-white tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Quick Stats</h3>
+                      <Activity className="w-5 h-5 text-green-400" />
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between group/stat p-2 hover:bg-white/5 rounded-xl transition-colors">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Commits</span>
+                        <span className="text-2xl font-black text-white group-hover/stat:text-blue-400 transition-colors">{consistencyData?.totalCommits || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between group/stat p-2 hover:bg-white/5 rounded-xl transition-colors">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Avg Gap (hrs)</span>
+                        <span className="text-2xl font-black text-white group-hover/stat:text-purple-400 transition-colors">{Math.round(consistencyData?.averageGap || 0)}</span>
+                      </div>
+                      <div className="flex items-center justify-between group/stat p-2 hover:bg-white/5 rounded-xl transition-colors">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Burst Commits</span>
+                        <span className="text-2xl font-black text-orange-400 group-hover/stat:scale-110 transition-transform">{consistencyData?.burstCommits || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* E. Commit Timeline Graph */}
+                <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-xl overflow-hidden relative group">
+                  {/* Decoration */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none" />
+
+                  <div className="flex items-center justify-between mb-8 relative z-10">
                     <div>
-                      <h3 className="text-lg font-bold text-black">Commit Activity</h3>
-                      <p className="text-sm text-gray-500 mt-1">Last 7 days</p>
+                      <h3 className="text-lg font-bold text-white tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Commit Timeline</h3>
+                      <p className="text-xs text-gray-400 font-bold tracking-wider uppercase mt-1">Last 7 days activity</p>
                     </div>
                     {commitTimeline.length > 0 && (
-                      <div className="text-sm font-medium text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                        {commitTimeline.reduce((sum, day) => sum + day.commits, 0)} commits
+                      <div className="text-xs font-black text-blue-400 bg-blue-500/10 px-4 py-2 rounded-xl border border-blue-500/20 shadow-lg tracking-widest uppercase">
+                        {commitTimeline.reduce((sum, day) => sum + day.commits, 0)} TOTAL COMMITS
                       </div>
                     )}
                   </div>
 
-                  {commitTimeline.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <AreaChart data={commitTimeline}>
-                        <defs>
-                          <linearGradient id="colorCommits" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#000000" stopOpacity={0.1} />
-                            <stop offset="95%" stopColor="#000000" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fill: '#6b7280', fontSize: 12 }}
-                          axisLine={{ stroke: '#e5e7eb' }}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fill: '#6b7280', fontSize: 12 }}
-                          axisLine={{ stroke: '#e5e7eb' }}
-                          tickLine={false}
-                          allowDecimals={false}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#fff',
-                            borderColor: '#e5e7eb',
-                            color: '#000',
-                            borderRadius: '8px',
-                            fontSize: '12px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="commits"
-                          stroke="#000000"
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#colorCommits)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-64 flex items-center justify-center text-gray-400">
-                      <div className="text-center">
-                        <GitCommit className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                        <p className="text-sm">No commit data available</p>
+                  <div className="relative z-10">
+                    {commitTimeline.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <LineChart data={commitTimeline}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                            axisLine={false}
+                            tickLine={false}
+                            allowDecimals={false}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                              borderColor: 'rgba(255, 255, 255, 0.1)',
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                              color: '#fff',
+                              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                              backdropFilter: 'blur(10px)'
+                            }}
+                            itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="commits"
+                            stroke="#3b82f6"
+                            strokeWidth={4}
+                            dot={{ fill: '#3b82f6', r: 6, strokeWidth: 4, stroke: 'rgba(59, 130, 246, 0.2)' }}
+                            activeDot={{ r: 8, strokeWidth: 0 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-48 flex items-center justify-center">
+                        <div className="text-center opacity-30">
+                          <TrendingUp className="w-16 h-16 mx-auto mb-4" />
+                          <p className="text-sm font-bold tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>NO DATA AVAILABLE</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                {/* Commit Messages Section */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-black">Recent Commits</h3>
-                    {recentCommits.length > 0 && (
-                      <button
-                        onClick={() => navigate('/user/activity')}
-                        className="text-sm text-gray-600 hover:text-black font-medium transition-colors"
-                      >
-                        View all →
-                      </button>
-                    )}
-                  </div>
-
-                  {recentCommits.length > 0 ? (
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                      {recentCommits.map((commit) => (
-                        <div
-                          key={commit._id}
-                          className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100"
-                        >
-                          <div className={`w-2.5 h-2.5 mt-2 rounded-full flex-shrink-0 ${commit.status === 'OK' ? 'bg-green-500' :
-                            commit.status === 'WARNING' ? 'bg-yellow-500' : 'bg-red-500'
-                            }`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
-                              {formatCommitMessage(commit.message)}
+                {/* F. Alerts/Warnings & G. Quick Tips - Side by Side */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* F. Alerts/Warnings */}
+                  <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-xl">
+                    <div className="flex items-center gap-3 mb-6">
+                      <AlertCircle className="w-6 h-6 text-orange-400" />
+                      <h3 className="text-sm font-bold text-white tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>System Alerts</h3>
+                    </div>
+                    <div className="space-y-4">
+                      {consistencyData?.warnings && consistencyData.warnings > 0 ? (
+                        <div className="flex items-start gap-3 p-4 bg-yellow-500/10 rounded-2xl border border-yellow-500/20 shadow-inner group transition-all hover:bg-yellow-500/20">
+                          <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                          <div>
+                            <p className="text-sm font-black text-yellow-500 uppercase tracking-widest">
+                              {consistencyData.warnings} WARNING{consistencyData.warnings > 1 ? 'S' : ''} DETECTED
                             </p>
-                            <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500 font-medium">
-                              <span className="py-0.5 px-2 bg-gray-100 rounded text-gray-600 font-mono">{commit.commitSha.substring(0, 7)}</span>
-                              <span>{commit.author}</span>
-                              <span>{formatTimeAgo(commit.commitDate)}</span>
-                            </div>
-                            {(commit.additions || commit.deletions) && (
-                              <div className="flex items-center gap-3 mt-2 text-xs font-bold">
-                                <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded">+{commit.additions || 0}</span>
-                                <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded">-{commit.deletions || 0}</span>
-                              </div>
-                            )}
+                            <p className="text-xs text-yellow-200/70 mt-1">Action may be required to maintain grade.</p>
                           </div>
                         </div>
-                      ))}
+                      ) : null}
+
+                      {consistencyData?.burstCommits && consistencyData.burstCommits > 5 ? (
+                        <div className="flex items-start gap-3 p-4 bg-orange-500/10 rounded-2xl border border-orange-500/20 shadow-inner group transition-all hover:bg-orange-500/20">
+                          <Zap className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                          <div>
+                            <p className="text-sm font-black text-orange-500 uppercase tracking-widest">BURST COMMITS DETECTED</p>
+                            <p className="text-xs text-orange-200/70 mt-1 font-medium">Try to spread commits more evenly across sessions.</p>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {!consistencyData?.warnings && (!consistencyData?.burstCommits || consistencyData.burstCommits <= 5) ? (
+                        <div className="flex items-start gap-3 p-4 bg-green-500/10 rounded-2xl border border-green-500/20 shadow-inner">
+                          <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-black text-green-500 uppercase tracking-widest">SYSTEM SECURE</p>
+                            <p className="text-xs text-green-200/70 mt-1 font-medium">All systems normal. Maintain your current pace!</p>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
-                  ) : (
-                    <div className="h-40 flex items-center justify-center text-gray-400">
-                      <div className="text-center">
-                        <GitCommit className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                        <p className="text-sm">No recent commits</p>
-                      </div>
+                  </div>
+
+                  {/* G. Quick Tips */}
+                  <div className="bg-gradient-to-br from-indigo-600/60 to-purple-800/60 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-2xl relative overflow-hidden group">
+                    {/* Particle Effect */}
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-1000" />
+
+                    <div className="flex items-center gap-3 mb-6 relative z-10">
+                      <Zap className="w-6 h-6 text-yellow-300" />
+                      <h3 className="text-sm font-bold text-white tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Quick Tips</h3>
                     </div>
-                  )}
+                    <ul className="space-y-4 text-xs relative z-10">
+                      <li className="flex items-start gap-3 group/tip">
+                        <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover/tip:bg-white/30 transition-colors">
+                          <span className="text-yellow-300 font-bold">1</span>
+                        </div>
+                        <span className="text-gray-100 font-semibold group-hover/tip:text-white transition-colors leading-relaxed">Commit small changes frequently for higher consistency scores.</span>
+                      </li>
+                      <li className="flex items-start gap-3 group/tip">
+                        <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover/tip:bg-white/30 transition-colors">
+                          <span className="text-yellow-300 font-bold">2</span>
+                        </div>
+                        <span className="text-gray-100 font-semibold group-hover/tip:text-white transition-colors leading-relaxed">Avoid last-minute pushes - spread your work throughout the session.</span>
+                      </li>
+                      <li className="flex items-start gap-3 group/tip">
+                        <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover/tip:bg-white/30 transition-colors">
+                          <span className="text-yellow-300 font-bold">3</span>
+                        </div>
+                        <span className="text-gray-100 font-semibold group-hover/tip:text-white transition-colors leading-relaxed">Write meaningful commit messages to help AI analysis.</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
 
-              {/* Right Column - Takes 1/3 width */}
-              <div className="space-y-6">
-                {/* Language Distribution */}
-                {languageData.length > 0 && (
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <h3 className="text-lg font-bold text-black mb-6">Languages</h3>
-
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie
-                          data={languageData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={2}
-                          dataKey="value"
-                          stroke="none"
-                        >
-                          {languageData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={['#000000', '#4b5563', '#9ca3af'][index % 3]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value) => `${value}%`}
-                          contentStyle={{
-                            backgroundColor: '#fff',
-                            borderColor: '#e5e7eb',
-                            color: '#000',
-                            borderRadius: '8px',
-                            fontSize: '12px'
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-
-                    {/* Legend */}
-                    <div className="mt-4 space-y-3">
-                      {languageData.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: ['#000000', '#4b5563', '#9ca3af'][index % 3] }}
-                            />
-                            <span className="text-gray-700 font-medium">{item.name}</span>
-                          </div>
-                          <span className="text-gray-900 font-bold">{item.value}%</span>
-                        </div>
-                      ))}
+                {/* H. Team Contribution (Optional) */}
+                {/* Uncomment when team features are ready
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users className="w-6 h-6 text-blue-600" />
+                    <h3 className="text-lg font-bold text-gray-900">Team Contribution</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600">35%</div>
+                      <div className="text-sm text-gray-600">Your Share</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-gray-900">28%</div>
+                      <div className="text-sm text-gray-600">Team Avg</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600">Alice</div>
+                      <div className="text-sm text-gray-600">Top Contributor</div>
                     </div>
                   </div>
-                )}
-
-                {/* Code Activity Stats */}
-                {activityData.length > 0 && (
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <h3 className="text-lg font-bold text-black mb-6">Code Changes</h3>
-
-                    <ResponsiveContainer width="100%" height={250}>
-                      <LineChart data={activityData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                        <XAxis
-                          dataKey="day"
-                          tick={{ fill: '#6b7280', fontSize: 11 }}
-                          axisLine={{ stroke: '#e5e7eb' }}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fill: '#6b7280', fontSize: 11 }}
-                          axisLine={{ stroke: '#e5e7eb' }}
-                          tickLine={false}
-                          allowDecimals={false}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#fff',
-                            borderColor: '#e5e7eb',
-                            color: '#000',
-                            borderRadius: '8px',
-                            fontSize: '12px'
-                          }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="additions"
-                          stroke="#10b981"
-                          strokeWidth={2}
-                          dot={{ fill: '#10b981', r: 3 }}
-                          name="Additions"
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="deletions"
-                          stroke="#ef4444"
-                          strokeWidth={2}
-                          dot={{ fill: '#ef4444', r: 3 }}
-                          name="Deletions"
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-
-                    {/* Summary */}
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      <div className="bg-green-50 rounded-xl p-3 border border-green-100">
-                        <p className="text-xs text-green-800 font-medium mb-1">Added</p>
-                        <p className="text-lg font-bold text-green-700">
-                          +{activityData.reduce((sum, day) => sum + day.additions, 0)}
-                        </p>
-                      </div>
-                      <div className="bg-red-50 rounded-xl p-3 border border-red-100">
-                        <p className="text-xs text-red-800 font-medium mb-1">Deleted</p>
-                        <p className="text-lg font-bold text-red-700">
-                          -{activityData.reduce((sum, day) => sum + day.deletions, 0)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Repository Selection */}
-                {repositories.length > 1 && (
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <h3 className="text-lg font-bold text-black mb-4">Switch Repository</h3>
-                    <select
-                      value={selectedRepo?._id || ''}
-                      onChange={(e) => {
-                        const repo = repositories.find(r => r._id === e.target.value);
-                        setSelectedRepo(repo || null);
-                      }}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none font-medium appearance-none"
-                    >
-                      {repositories.map((repo) => (
-                        <option key={repo._id || repo.name} value={repo._id}>
-                          {repo.owner}/{repo.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </main>
-      </div >
-    </div >
+                </div>
+                */}
+              </>
+            )}
+          </main>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -7,6 +7,23 @@ export interface User {
   role: 'USER' | 'ADMIN';
   createdAt: Date;
   updatedAt: Date;
+  // Profile fields
+  fullName?: string;
+  teamName?: string;
+  avatarId?: number;
+  coins?: number;
+  settings?: {
+    inactivityAlert: boolean;
+    burstCommitWarning: boolean;
+    emailNotifications: boolean;
+    dailySummary?: boolean;
+  };
+  notifications?: { // Keep for backward compatibility if needed, but prefer settings
+    inactivityAlert: boolean;
+    burstCommitWarning: boolean;
+    emailNotifications: boolean;
+    dailySummary: boolean;
+  };
   // Admin monitoring fields
   selectedRepo?: string;
   totalCommits?: number;

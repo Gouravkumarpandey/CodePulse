@@ -10,6 +10,7 @@ export interface Repository {
   language?: string;
   isPrivate: boolean;
   isConnected: boolean;
+  isActive?: boolean;
   webhookId?: string;
   lastSync?: Date;
   createdAt: Date;

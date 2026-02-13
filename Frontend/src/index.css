@@ -167,6 +167,28 @@
     background-color: #3b2d23;
   }
 
+  /* Admin Panel GitHub Background */
+  .admin-github-bg {
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+      url('/72bac918-d295-477e-8a5a-aa4891fcab13.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  /* User Dashboard Background */
+  .user-dashboard-bg {
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+      url('/userdashboard.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
   .mc-panel {
     background-color: #c6c6c6;
     border: 8px solid #000;
