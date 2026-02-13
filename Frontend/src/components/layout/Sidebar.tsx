@@ -195,7 +195,7 @@ export default function Sidebar({ role }: SidebarProps) {
                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">{isAdmin ? 'Administrator' : 'Contributor'}</span>
                     {!isAdmin && (
                       <div className="flex items-center gap-1 bg-yellow-500/10 px-1.5 py-0.5 rounded-full border border-yellow-500/20">
-                        <img src="/assets/avtar/icons8-minecraft-coin-48.png" className="w-3 h-3" alt="coins" />
+                        <img src="/coin-svgrepo-com.svg" className="w-3 h-3 invert dark:invert-0" alt="coins" />
                         <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400">{user?.coins || 0}</span>
                       </div>
                     )}

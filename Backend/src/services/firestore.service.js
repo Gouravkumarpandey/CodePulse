@@ -383,6 +383,79 @@ class FirestoreService {
       throw error;
     }
   }
+  /**
+   * Get user by Email
+   * @param {string} email - User email
+   * @returns {Promise<Object|null>} - User data
+   */
+  static async getUserByEmail(email) {
+    try {
+      const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+      if (snapshot.empty) return null;
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      logger.error('Error fetching user by email:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user by GitHub ID
+   * @param {string} githubId - GitHub User ID
+   * @returns {Promise<Object|null>} - User data
+   */
+  static async getUserByGithubId(githubId) {
+    try {
+      // Ensure githubId is treated consistently (string/number)
+      const snapshot = await db.collection('users').where('githubId', '==', githubId.toString()).limit(1).get();
+      if (snapshot.empty) return null;
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      logger.error('Error fetching user by GitHub ID:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Add coins to user balance (Atomic increment)
+   * @param {string} userId - User ID
+   * @param {number} amount - Amount to add
+   */
+  static async addCoins(userId, amount) {
+    try {
+      const userRef = db.collection('users').doc(userId);
+      const admin = require('firebase-admin');
+      await userRef.update({
+        coins: admin.firestore.FieldValue.increment(amount)
+      });
+      logger.info(`Added ${amount} coins to user ${userId}`);
+    } catch (error) {
+      logger.error('Error adding coins:', error);
+      // Fallback for missing field or document
+      if (error.code === 5) { // NOT_FOUND
+        // Handle gracefully if needed
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Record a coin transaction
+   * @param {Object} transaction - Transaction data
+   */
+  static async addCoinTransaction(transaction) {
+    try {
+      await db.collection('coin_transactions').add({
+        ...transaction,
+        createdAt: new Date()
+      });
+    } catch (error) {
+      logger.error('Error adding coin transaction:', error);
+      // Non-blocking error usually
+    }
+  }
 }
 
 module.exports = FirestoreService;

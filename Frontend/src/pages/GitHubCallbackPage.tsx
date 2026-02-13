@@ -68,16 +68,41 @@ export default function GitHubCallbackPage() {
         console.log('GitHub authentication successful');
 
         // Save GitHub access token to sessionStorage
-        sessionStorage.setItem('github_token', callbackData.data.githubAccessToken);
+        // Check if backend returned it at root of data or inside user
+        const ghToken = callbackData.data.githubAccessToken || callbackData.data.user?.githubAccessToken;
+        sessionStorage.setItem('github_token', ghToken);
         console.log('GitHub authentication successful - Token saved to sessionStorage');
-        console.log('GitHub token (first 20 chars):', callbackData.data.githubAccessToken?.substring(0, 20));
 
+        // CHECK IF LOGIN WAS SUCCESSFUL (Backend returned JWT)
+        if (callbackData.data.token) {
+          console.log('Login successful via GitHub Callback');
+          sessionStorage.setItem('token', callbackData.data.token);
+          const userData = callbackData.data.user;
+          sessionStorage.setItem('user', JSON.stringify(userData));
+
+          if (login) {
+            login(userData, callbackData.data.token);
+          }
+
+          // Initializing coins check or other setup if needed
+
+          setStatus('success');
+          setMessage('Logged in successfully! Redirecting...');
+          setTimeout(() => navigate('/dashboard'), 1500);
+          return;
+        }
+
+        // IF NO TOKEN, PROCEED TO LINKING (Legacy/Manual Flow)
         // Now link the GitHub account to the current user
         setMessage('Linking GitHub account...');
 
         const token = sessionStorage.getItem('token');
 
         if (!token) {
+          // If we are here, it means backend didn't log us in, and we don't have a local token.
+          // This implies a failure in backend logic or a new user flow that requires manual step?
+          // But backend `githubCallback` should handle signup/login.
+          // So this block might be unreachable if backend is correct, but safe to keep for "Connect" scenarios from Settings page.
           console.error('No JWT token found in sessionStorage');
           throw new Error('You must be logged in to link your GitHub account. Please log in first.');
         }
@@ -92,8 +117,8 @@ export default function GitHubCallbackPage() {
             'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
-            githubAccessToken: callbackData.data.githubAccessToken,
-            githubUser: callbackData.data.githubUser,
+            githubAccessToken: ghToken,
+            githubUser: callbackData.data.githubUser || {}, // Use what backend returned if available
           }),
         });
 
@@ -116,9 +141,9 @@ export default function GitHubCallbackPage() {
         const currentUser = JSON.parse(sessionStorage.getItem('user') || '{}');
         const updatedUser = {
           ...currentUser,
-          githubAccessToken: callbackData.data.githubAccessToken,
-          githubId: callbackData.data.githubUser?.githubId,
-          username: callbackData.data.githubUser?.username || currentUser.username,
+          githubAccessToken: ghToken,
+          githubId: callbackData.data.githubUser?.id || currentUser.githubId, // normalized?
+          // username: ... 
         };
 
         sessionStorage.setItem('user', JSON.stringify(updatedUser));

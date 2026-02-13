@@ -54,7 +54,8 @@ const UserActivityPage = () => {
       setRepos(repositories);
       if (repositories.length > 0) {
         const activeRepo = repositories.find((r: any) => r.isActive);
-        setSelectedRepo(activeRepo ? activeRepo._id : repositories[0]._id);
+        const repo = activeRepo || repositories[0];
+        setSelectedRepo(repo._id || repo.id);
       }
     } catch (error) {
       console.error('Failed to load repositories:', error);
@@ -98,7 +99,7 @@ const UserActivityPage = () => {
 
             {selectedRepo && (
               <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-700 dark:text-blue-300 font-semibold">
-                Repository: {repos.find(r => r._id === selectedRepo)?.name || 'Selected'}
+                Repository: {repos.find((r: any) => (r._id === selectedRepo || r.id === selectedRepo))?.name || 'Selected'}
               </div>
             )}
           </div>

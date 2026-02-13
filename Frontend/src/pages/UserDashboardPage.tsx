@@ -8,7 +8,6 @@ import {
   CheckCircle,
   Clock,
   Activity,
-  Users,
   ChevronDown,
   Settings,
   Award,
@@ -30,8 +29,8 @@ export default function UserDashboardPage() {
   const { isAuthenticated, loading, user } = useAuth();
   const { collapsed } = useSidebar();
   const [consistencyData, setConsistencyData] = useState<ConsistencyAnalysis | null>(null);
-  const [selectedRepo, setSelectedRepo] = useState<{ _id: string; name: string; owner?: string; isActive?: boolean; lastSync?: string; language?: string } | null>(null);
-  const [repositories, setRepositories] = useState<Array<{ _id: string; name: string; owner?: string; isActive?: boolean; lastSync?: string; language?: string }>>([]);
+  const [selectedRepo, setSelectedRepo] = useState<{ _id?: string; id?: string; name: string; owner?: string; isActive?: boolean; lastSync?: string; language?: string } | null>(null);
+  const [repositories, setRepositories] = useState<Array<{ _id?: string; id?: string; name: string; owner?: string; isActive?: boolean; lastSync?: string; language?: string }>>([]);
   const [commitTimeline, setCommitTimeline] = useState<Array<{ date: string; commits: number }>>([]);
   const [recentCommits, setRecentCommits] = useState<Commit[]>([]);
   const [showRepoDropdown, setShowRepoDropdown] = useState(false);
@@ -49,10 +48,11 @@ export default function UserDashboardPage() {
   }, [isAuthenticated]);
 
   const loadRepositoryAnalysis = useCallback(async () => {
-    if (!selectedRepo?._id) return;
+    const repoId = selectedRepo?._id || selectedRepo?.id;
+    if (!repoId) return;
 
     try {
-      const response = await api.get(`/user/activity/${selectedRepo._id}`);
+      const response = await api.get(`/user/activity/${repoId}`);
       const summary = response.data.data?.summary || response.data.summary;
       const commits = response.data.data?.commits || response.data.commits || [];
 
@@ -70,10 +70,10 @@ export default function UserDashboardPage() {
           warnings: summary.warnings || 0,
           aiInsights: summary.aiInsights || 'Loading insights...',
           suggestions: summary.suggestions || [],
-          distribution: summary.distribution?.segments?.reduce((acc: Record<string, number>, seg: { commits?: number }, idx: number) => {
+          distribution: (summary.distribution?.segments?.reduce((acc: any, seg: { commits?: number }, idx: number) => {
             acc[`quarter${idx + 1}`] = seg.commits || 0;
             return acc;
-          }, {}) || { quarter1: 0, quarter2: 0, quarter3: 0, quarter4: 0 },
+          }, {} as any)) || { quarter1: 0, quarter2: 0, quarter3: 0, quarter4: 0 },
         });
       }
 
@@ -102,7 +102,7 @@ export default function UserDashboardPage() {
       const repos = response.data.data?.repositories || response.data.repositories || [];
       setRepositories(repos);
       if (repos.length > 0) {
-        const activeRepo = repos.find(r => r.isActive);
+        const activeRepo = repos.find((r: any) => r.isActive);
         setSelectedRepo(activeRepo || repos[0]);
       } else {
         setSelectedRepo(null);
@@ -181,6 +181,8 @@ export default function UserDashboardPage() {
     return null;
   }
 
+  const currentRepoId = selectedRepo?._id || selectedRepo?.id;
+
   return (
     <div className="min-h-screen user-dashboard-bg flex font-sans text-white overflow-x-hidden">
       <Sidebar role="user" />
@@ -218,20 +220,23 @@ export default function UserDashboardPage() {
                       <h3 className="font-bold text-white text-xs tracking-widest uppercase" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Your Repositories</h3>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
-                      {repositories.map((repo, idx) => (
-                        <button
-                          key={`repo-item-${repo._id || idx}`}
-                          onClick={() => {
-                            setSelectedRepo(repo);
-                            setShowRepoDropdown(false);
-                          }}
-                          className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 ${selectedRepo?._id === repo._id ? 'bg-blue-500/20' : ''
-                            }`}
-                        >
-                          <div className="font-semibold text-white">{repo.name}</div>
-                          <div className="text-xs text-gray-400 font-mono">{repo.owner}/{repo.name}</div>
-                        </button>
-                      ))}
+                      {repositories.map((repo, idx) => {
+                        const rId = repo._id || repo.id;
+                        return (
+                          <button
+                            key={`repo-item-${rId || idx}`}
+                            onClick={() => {
+                              setSelectedRepo(repo);
+                              setShowRepoDropdown(false);
+                            }}
+                            className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 ${currentRepoId === rId ? 'bg-blue-500/20' : ''
+                              }`}
+                          >
+                            <div className="font-semibold text-white">{repo.name}</div>
+                            <div className="text-xs text-gray-400 font-mono">{repo.owner}/{repo.name}</div>
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="p-3 border-t border-white/10 bg-white/5">
                       <button
@@ -258,29 +263,37 @@ export default function UserDashboardPage() {
                 )}
               </div>
 
-              {/* Profile Icon */}
-              <button
-                onClick={() => navigate('/user/settings')}
-                className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105 group relative overflow-hidden p-[2px]"
-              >
-                <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center overflow-hidden">
-                  {user?.avatarId ? (
-                    <img
-                      src={[
-                        '',
-                        '/assets/avtar/icons8-minecraft-grass-cube-50.png',
-                        '/assets/avtar/icons8-minecraft-logo-50.png',
-                        '/assets/avtar/icons8-minecraft-main-character-50.png',
-                        '/assets/avtar/icons8-minecraft-main-character-50-2.png'
-                      ][user.avatarId] || ''}
-                      alt="avatar"
-                      className="w-full h-full object-contain p-1"
-                    />
-                  ) : (
-                    <span className="text-white font-black text-lg">{user?.username?.charAt(0).toUpperCase() || 'U'}</span>
-                  )}
+              {/* Profile Section & Coins */}
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={() => navigate('/user/settings')}
+                  className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105 group relative overflow-hidden p-[2px]"
+                >
+                  <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center overflow-hidden">
+                    {(user?.avatarId !== undefined) ? (
+                      <img
+                        src={[
+                          '',
+                          '/assets/avtar/icons8-minecraft-grass-cube-50.png',
+                          '/assets/avtar/icons8-minecraft-logo-50.png',
+                          '/assets/avtar/icons8-minecraft-main-character-50.png',
+                          '/assets/avtar/icons8-minecraft-main-character-50-2.png'
+                        ][user.avatarId]}
+                        alt="avatar"
+                        className="w-full h-full object-contain p-1"
+                      />
+                    ) : (
+                      <span className="text-white font-black text-lg">{user?.username?.charAt(0).toUpperCase() || 'U'}</span>
+                    )}
+                  </div>
+                </button>
+
+                {/* Coin Badge */}
+                <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-full border border-yellow-500/30 shadow-lg backdrop-blur-md hover:bg-slate-800 transition-colors cursor-default animate-in fade-in slide-in-from-top-1 duration-500">
+                  <img src="/coin-svgrepo-com.svg" className="w-3.5 h-3.5 invert dark:invert-0 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" alt="coins" />
+                  <span className="text-[10px] font-black text-yellow-400 tracking-wider shadow-black drop-shadow-md">{user?.coins || 0}</span>
                 </div>
-              </button>
+              </div>
             </div>
 
             {!selectedRepo ? (
