@@ -35,6 +35,7 @@ const AdminDashboardPage = () => {
   const [liveFeed, setLiveFeed] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [hackathonStatus, setHackathonStatus] = useState<any>({ isActive: false, startTime: null });
 
   // Icon mapping helper
   const getIcon = (iconName: string) => {
@@ -46,10 +47,15 @@ const AdminDashboardPage = () => {
     const fetchData = async () => {
       try {
         setIsLoadingData(true);
-        const [statsRes, usersRes] = await Promise.all([
+        const [statsRes, usersRes, statusRes] = await Promise.all([
           api.get('/admin/dashboard-stats'),
-          api.get('/admin/users?limit=100')
+          api.get('/admin/users?limit=100'),
+          api.get('/admin/hackathon/status')
         ]);
+
+        if (statusRes.data.success) {
+          setHackathonStatus(statusRes.data.data);
+        }
 
         if (statsRes.data.success) {
           const { stats: apiStats, liveFeed: apiFeed, chartData: apiChart } = statsRes.data.data;
@@ -142,14 +148,44 @@ const AdminDashboardPage = () => {
                 Hackathon Monitoring Command Center
               </p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
+              {/* Hackathon Control */}
+              <button
+                onClick={async () => {
+                  try {
+                    const endpoint = hackathonStatus.isActive ? '/admin/hackathon/end' : '/admin/hackathon/start';
+                    const res = await api.post(endpoint);
+                    if (res.data.success) {
+                      setHackathonStatus({
+                        isActive: res.data.data.isActive,
+                        startTime: res.data.data.startTime
+                      });
+                    }
+                  } catch (err) {
+                    console.error('Failed to toggle hackathon', err);
+                  }
+                }}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg uppercase tracking-wider text-xs border ${hackathonStatus.isActive
+                  ? 'bg-red-500/20 border-red-500 text-red-500 hover:bg-red-500/30 animate-pulse'
+                  : 'bg-green-600/90 border-green-500 text-white hover:bg-green-500'
+                  }`}
+              >
+                {hackathonStatus.isActive ? (
+                  <>
+                    <Ban className="w-4 h-4" />
+                    End Hackathon
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4" />
+                    Start Hackathon
+                  </>
+                )}
+              </button>
+
               <button className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl uppercase tracking-wider text-xs">
                 <RefreshCw className="w-4 h-4" />
                 Sync Data
-              </button>
-              <button className="flex items-center gap-2 px-6 py-3 bg-blue-600/90 hover:bg-blue-500 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-0.5 uppercase tracking-wider text-xs">
-                <Zap className="w-4 h-4" />
-                Actions
               </button>
             </div>
           </div>

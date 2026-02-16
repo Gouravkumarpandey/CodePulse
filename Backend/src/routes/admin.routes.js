@@ -35,4 +35,9 @@ router.post('/actions/observation', adminController.setObservation);
 router.post('/actions/disqualify', adminController.disqualifyUser);
 router.post('/actions/reactivate', adminController.reactivateUser);
 
+// Hackathon Management
+router.post('/hackathon/start', adminController.startHackathon);
+router.post('/hackathon/end', adminController.endHackathon);
+router.get('/hackathon/status', adminController.getHackathonStatus);
+
 module.exports = router;

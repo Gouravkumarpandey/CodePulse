@@ -313,6 +313,34 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+// Hackathon Management
+const startHackathon = async (req, res) => {
+  try {
+    const result = await FirestoreService.startHackathon();
+    response.success(res, result, 'Hackathon started successfully');
+  } catch (error) {
+    response.error(res, error.message, 500);
+  }
+};
+
+const endHackathon = async (req, res) => {
+  try {
+    const result = await FirestoreService.endHackathon();
+    response.success(res, result, 'Hackathon ended successfully');
+  } catch (error) {
+    response.error(res, error.message, 500);
+  }
+};
+
+const getHackathonStatus = async (req, res) => {
+  try {
+    const status = await FirestoreService.getHackathonStatus();
+    response.success(res, status);
+  } catch (error) {
+    response.error(res, error.message, 500);
+  }
+};
+
 module.exports = {
   getAdminSettings,
   updateAdminSettings,
@@ -325,4 +353,7 @@ module.exports = {
   reactivateUser,
   getActivityViolations,
   getDashboardStats,
+  startHackathon,
+  endHackathon,
+  getHackathonStatus
 };

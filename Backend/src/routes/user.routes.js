@@ -37,4 +37,7 @@ router.get('/dashboard', userController.getDashboardSummary);
 // Rules (read-only)
 router.get('/rules', userController.getAdminRules);
 
+// Hackathon Status
+router.get('/hackathon/status', userController.getHackathonStatus);
+
 module.exports = router;

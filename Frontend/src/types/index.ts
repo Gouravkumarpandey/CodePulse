@@ -54,13 +54,32 @@ export interface ConsistencyAnalysis {
   timelineSpan: number;
   violations: number;
   warnings: number;
-  aiInsights: string;
+  aiInsights: string | string[];
   suggestions: string[];
   distribution: {
     quarter1: number;
     quarter2: number;
     quarter3: number;
     quarter4: number;
+  };
+  contributors?: Array<{
+    name: string;
+    email: string;
+    commits: number;
+    rank: number;
+    percentage: string;
+  }>;
+  badges?: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
+  health?: {
+    commitMessageScore: number;
+    prCount: number;
+    bugFixRatio: string;
+    featureRatio: string;
+    refactorRatio: string;
   };
 }
 

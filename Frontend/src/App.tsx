@@ -38,6 +38,11 @@ function App() {
 
               {/* User Routes */}
               <Route path="/user" element={<UserDashboardPage />} />
+              <Route path="/user/profilecard" element={<UserDashboardPage />} />
+              <Route path="/user/hackathon" element={<UserDashboardPage />} />
+              <Route path="/user/team" element={<UserDashboardPage />} />
+              <Route path="/user/achievements" element={<UserDashboardPage />} />
+              <Route path="/user/reports" element={<UserDashboardPage />} />
               <Route path="/user/activity" element={<UserActivityPage />} />
               <Route path="/user/warnings" element={<UserWarningsPage />} />
               <Route path="/user/settings" element={<UserSettingsPage />} />

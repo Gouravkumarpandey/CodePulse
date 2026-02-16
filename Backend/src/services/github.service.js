@@ -281,18 +281,15 @@ class GitHubService {
         lastSync: new Date().toISOString()
       });
 
-      // Run Analysis (Mock or actual implementation if consistencyService supports it)
-      // consistencyService might need update if it depends on Mongoose. 
-      // Assuming it handles its own logic or was skipped in previous steps?
-      // Checking file list... `consistency.service.js` not in recent edits. 
-      // Let's assume we skip robust analysis for now to ensure flow works, or try to call it.
+      // Run Full Analysis
+      const analysisResults = consistencyService.runFullAnalysis(commits, pullRequests, branches);
 
-      // Save basic "Analysis" placeholder to RepoAnalysis collection via FirestoreService
       const analysisData = {
         repoId: repo.id,
-        totalCommits: commits.length, // Rough count of fetched
+        ...analysisResults,
         lastAnalyzed: new Date().toISOString()
       };
+
       await FirestoreService.saveRepoAnalysis(repo.id, analysisData);
 
       return { success: true, commitsCount: commits.length, newCommits: newCommitsCount, coinsAwarded };

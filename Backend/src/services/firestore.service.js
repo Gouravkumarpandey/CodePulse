@@ -568,6 +568,62 @@ class FirestoreService {
       throw error;
     }
   }
+
+  /**
+   * Start a global Hackathon
+   * @returns {Promise<Object>} - Updated settings
+   */
+  static async startHackathon() {
+    try {
+      const settingsRef = db.collection('settings').doc('hackathon');
+      const startTime = new Date().toISOString();
+      await settingsRef.set({
+        isActive: true,
+        startTime: startTime,
+        endTime: null,
+        updatedAt: startTime
+      }, { merge: true });
+      return { isActive: true, startTime };
+    } catch (error) {
+      logger.error('Error starting hackathon:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * End the global Hackathon
+   * @returns {Promise<Object>} - Updated settings
+   */
+  static async endHackathon() {
+    try {
+      const settingsRef = db.collection('settings').doc('hackathon');
+      const endTime = new Date().toISOString();
+      await settingsRef.update({
+        isActive: false,
+        endTime: endTime,
+        updatedAt: endTime
+      });
+      return { isActive: false, endTime };
+    } catch (error) {
+      logger.error('Error ending hackathon:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current Hackathon status
+   * @returns {Promise<Object>} - Status object
+   */
+  static async getHackathonStatus() {
+    try {
+      const doc = await db.collection('settings').doc('hackathon').get();
+      if (!doc.exists) return { isActive: false, startTime: null };
+      return doc.data();
+    } catch (error) {
+      logger.error('Error fetching hackathon status:', error);
+      return { isActive: false, startTime: null };
+    }
+  }
 }
 
 module.exports = FirestoreService;

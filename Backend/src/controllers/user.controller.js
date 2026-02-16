@@ -403,6 +403,16 @@ const getAdminRules = async (req, res) => {
   }
 };
 
+const getHackathonStatus = async (req, res) => {
+  try {
+    const status = await FirestoreService.getHackathonStatus();
+    response.success(res, status);
+  } catch (error) {
+    console.error('getHackathonStatus error:', error);
+    response.error(res, error.message, 500);
+  }
+};
+
 module.exports = {
   getUserProfile,
   getActiveRepository,
@@ -417,4 +427,5 @@ module.exports = {
   getWarningsAndViolations,
   getDashboardSummary,
   getAdminRules,
+  getHackathonStatus
 };

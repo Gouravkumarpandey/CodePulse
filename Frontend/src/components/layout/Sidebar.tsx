@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   ChevronRight, ChevronLeft, LayoutDashboard,
-  Users, Settings, Activity, Menu, X
+  Users, Settings, Activity, Menu, X,
+  GitBranch, Zap, Award, FileText, Bell, Timer
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/context/SidebarContext';
@@ -26,16 +27,12 @@ export default function Sidebar({ role }: SidebarProps) {
 
   const userLinks = [
     { href: '/user', icon: LayoutDashboard, label: 'Dashboard' },
-    {
-      label: 'GitHub Connection',
-      icon: '/image/integration_9888476.png',
-      isHeader: true,
-      children: [
-        { href: '/connect-github', icon: Activity, label: 'GitHub Account' },
-        { href: '/repo-selection', icon: Activity, label: 'Repo Settings' },
-      ]
-    },
-    { href: '/user/warnings', icon: '/image/alert_11540777.png', label: 'Alerts' },
+    { href: '/repo-selection', icon: GitBranch, label: 'My Repositories' },
+    { href: '/user/hackathon', icon: Timer, label: 'Hackathon Mode' },
+    { href: '/user/team', icon: Users, label: 'Team Analytics' },
+    { href: '/user/achievements', icon: Award, label: 'Achievements' },
+
+    { href: '/user/warnings', icon: Bell, label: 'Notifications' },
     { href: '/user/settings', icon: Settings, label: 'Settings' },
   ];
 
