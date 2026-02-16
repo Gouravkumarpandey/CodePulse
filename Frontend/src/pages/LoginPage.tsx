@@ -114,12 +114,9 @@ export default function LoginPage() {
           navigate('/user');
         }
       }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Login failed. Please check your credentials.');
-      }
+    } catch (err: any) {
+      const message = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
+      setError(message);
     } finally {
       setLoading(false);
     }

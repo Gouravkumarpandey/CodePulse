@@ -1,5 +1,6 @@
 export interface Repository {
-  _id: string;
+  id?: string;
+  _id?: string;
   userId: string;
   githubRepoId: number;
   name: string;

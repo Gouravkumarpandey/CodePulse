@@ -74,17 +74,17 @@ export default function Sidebar({ role }: SidebarProps) {
         />
       )}
 
-      <aside className={`fixed left-0 top-0 h-screen bg-white/90 dark:bg-[#0d1117]/90 backdrop-blur-2xl border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-2xl transition-all duration-500 ease-in-out z-[60] 
+      <aside className={`fixed left-0 top-0 h-screen bg-[#0d1117]/95 backdrop-blur-2xl border-r border-white/10 flex flex-col shadow-2xl transition-all duration-500 ease-in-out z-[60] 
         ${collapsed ? 'w-20' : 'w-72'} 
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Brand Logo */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 flex items-center justify-between">
+        <div className="p-6 border-b border-white/10 flex-shrink-0 flex items-center justify-between">
           <Link to={isAdmin ? "/admin" : "/user"} className="flex items-center gap-3">
             <img src="/logo.jpg" alt="Logo" className="w-10 h-10 object-contain rounded-xl shadow-lg border border-white/20" />
             {!collapsed && (
               <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500">
-                <span className="text-xl font-black text-gray-900 dark:text-white tracking-tight">CodePulse</span>
+                <span className="text-xl font-black text-white tracking-tight" style={{ fontFamily: '"Minecraftia", sans-serif' }}>CodePulse</span>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-0.5">{isAdmin ? 'Admin Panel' : 'Contributor'}</span>
               </div>
             )}
@@ -105,7 +105,7 @@ export default function Sidebar({ role }: SidebarProps) {
                 return (
                   <div key={`header-${idx}`} className="mt-6 mb-2 px-1 lg:px-4">
                     <div className="flex items-center gap-2 mb-2">
-                      {renderIcon(link.icon, "w-4 h-4")}
+                      {renderIcon(link.icon, "w-4 h-4 text-gray-400")}
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{link.label}</p>
                     </div>
                     <div className="mt-2 space-y-1">
@@ -114,12 +114,12 @@ export default function Sidebar({ role }: SidebarProps) {
                           key={`c-${child.href}-${cIdx}`}
                           to={child.href}
                           className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 ${pathname === child.href
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                            : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 font-bold'
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white font-medium'
                             }`}
                         >
                           {renderIcon(child.icon, "w-4 h-4")}
-                          <span className="text-sm font-bold">{child.label}</span>
+                          <span className="text-sm">{child.label}</span>
                         </Link>
                       ))}
                     </div>
@@ -136,7 +136,7 @@ export default function Sidebar({ role }: SidebarProps) {
                         to={child.href}
                         className={`flex items-center justify-center w-12 h-12 mx-auto rounded-xl transition-all duration-300 mb-1 ${pathname === child.href
                           ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                          : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
+                          : 'text-gray-400 hover:bg-white/5 hover:text-white'
                           }`}
                         title={child.label}
                       >
@@ -147,20 +147,20 @@ export default function Sidebar({ role }: SidebarProps) {
                 );
               }
 
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || (link.href !== '/user' && link.href !== '/admin' && pathname.startsWith(link.href));
               return (
                 <Link
                   key={`link-${link.href || idx}`}
                   to={link.href}
                   className={`flex items-center ${collapsed ? 'justify-center w-12 h-12 mx-auto' : 'gap-3 px-4 py-3'} rounded-xl transition-all duration-300 group/item ${isActive
-                    ? 'bg-black dark:bg-white text-white dark:text-black shadow-xl scale-[1.02]'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-black dark:hover:text-white'
+                    ? 'bg-white text-black shadow-xl scale-[1.02] font-bold'
+                    : 'text-gray-400 hover:bg-white/5 hover:text-white font-medium'
                     }`}
                 >
-                  <div className={`${isActive ? 'text-current' : 'text-gray-400 group-hover/item:text-current'}`}>
+                  <div className={`${isActive ? 'text-black' : 'text-gray-400 group-hover/item:text-white'}`}>
                     {renderIcon(link.icon, "w-5 h-5")}
                   </div>
-                  {!collapsed && <span className="text-sm font-bold">{link.label}</span>}
+                  {!collapsed && <span className="text-sm">{link.label}</span>}
                 </Link>
               );
             })}
@@ -171,7 +171,7 @@ export default function Sidebar({ role }: SidebarProps) {
             <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''} mb-4`}>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-[2px] shadow-lg">
                 <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center text-white overflow-hidden">
-                  {user?.avatarId ? (
+                  {user?.avatarId !== undefined ? (
                     <img
                       src={[
                         '',
@@ -179,7 +179,7 @@ export default function Sidebar({ role }: SidebarProps) {
                         '/assets/avtar/icons8-minecraft-logo-50.png',
                         '/assets/avtar/icons8-minecraft-main-character-50.png',
                         '/assets/avtar/icons8-minecraft-main-character-50-2.png'
-                      ][user.avatarId] || ''}
+                      ][user.avatarId || 1] || ''}
                       alt="avatar"
                       className="w-full h-full object-contain p-1"
                     />
@@ -194,9 +194,9 @@ export default function Sidebar({ role }: SidebarProps) {
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">{isAdmin ? 'Administrator' : 'Contributor'}</span>
                     {!isAdmin && (
-                      <div className="flex items-center gap-1 bg-yellow-500/10 px-1.5 py-0.5 rounded-full border border-yellow-500/20">
-                        <img src="/coin-svgrepo-com.svg" className="w-3 h-3 invert dark:invert-0" alt="coins" />
-                        <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400">{user?.coins || 0}</span>
+                      <div className="flex items-center gap-2 bg-yellow-500/10 px-2.5 py-1 rounded-full border border-yellow-500/20">
+                        <img src="/coin-svgrepo-com.svg" className="w-5 h-5 invert dark:invert-0" alt="coins" />
+                        <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400">{user?.coins || 0}</span>
                       </div>
                     )}
                   </div>

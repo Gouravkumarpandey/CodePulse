@@ -289,9 +289,9 @@ export default function UserDashboardPage() {
                 </button>
 
                 {/* Coin Badge */}
-                <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-full border border-yellow-500/30 shadow-lg backdrop-blur-md hover:bg-slate-800 transition-colors cursor-default animate-in fade-in slide-in-from-top-1 duration-500">
-                  <img src="/coin-svgrepo-com.svg" className="w-3.5 h-3.5 invert dark:invert-0 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" alt="coins" />
-                  <span className="text-[10px] font-black text-yellow-400 tracking-wider shadow-black drop-shadow-md">{user?.coins || 0}</span>
+                <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-yellow-500/30 shadow-lg backdrop-blur-md hover:bg-slate-800 transition-colors cursor-default animate-in fade-in slide-in-from-top-1 duration-500">
+                  <img src="/coin-svgrepo-com.svg" className="w-5 h-5 invert dark:invert-0 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" alt="coins" />
+                  <span className="text-xs font-black text-yellow-400 tracking-wider shadow-black drop-shadow-md">{user?.coins || 0}</span>
                 </div>
               </div>
             </div>

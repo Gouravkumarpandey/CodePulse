@@ -116,11 +116,11 @@ const githubCallback = async (req, res) => {
     }
 
     // Fetch user data from GitHub
-    const userResponse = await axios.get('https://api.github.com/user', {
+    const userRes = await axios.get('https://api.github.com/user', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    const githubUser = userResponse.data;
+    const githubUser = userRes.data;
     const githubId = githubUser.id.toString();
 
     // 1. Try to find by GitHub ID
@@ -128,20 +128,18 @@ const githubCallback = async (req, res) => {
 
     // 2. If not found, try to find by Email (Account Linking)
     if (!user && githubUser.email) {
-      user = await FirestoreService.getUserByEmail(githubUser.email);
-      if (user) {
-        console.log(`Linking GitHub account ${githubId} to existing user ${user.email}`);
-        await FirestoreService.updateUser(user.id, {
+      const existingUser = await FirestoreService.getUserByEmail(githubUser.email);
+      if (existingUser) {
+        console.log(`Linking GitHub account ${githubId} to existing user ${existingUser.email}`);
+        await FirestoreService.updateUser(existingUser.id, {
           githubId: githubId,
           githubAccessToken: accessToken,
-          username: user.username || githubUser.login, // Keep existing or update
-          avatar: user.avatar || githubUser.avatar_url,
+          // meaningful updates
           lastLogin: new Date().toISOString(),
           isActive: true
         });
         // Update local object
-        user.githubId = githubId;
-        user.githubAccessToken = accessToken;
+        user = { ...existingUser, githubId, githubAccessToken: accessToken };
       }
     }
 
@@ -149,7 +147,6 @@ const githubCallback = async (req, res) => {
     if (!user) {
       const crypto = require('crypto');
       const userId = crypto.randomUUID();
-
       const email = githubUser.email || `${githubId}@github.temp`;
 
       const userData = {
@@ -167,9 +164,11 @@ const githubCallback = async (req, res) => {
       };
 
       await FirestoreService.saveUser(userId, userData);
-      user = { id: userId, ...userData };
+      user = { id: userId, ...userData }; // Properly assign user
     } else {
       // Exists (either found by ID or Linked), just update token/login time
+      // If user was just linked above, user object is set. If found by ID, it's set.
+      // We should update the token if it changed.
       if (user.githubAccessToken !== accessToken) {
         await FirestoreService.updateUser(user.id, {
           githubAccessToken: accessToken,
@@ -181,18 +180,20 @@ const githubCallback = async (req, res) => {
 
     const token = generateJWT(user.id);
     const userResponseData = { ...user };
-    delete userResponseData.password;
+    if (userResponseData.password) delete userResponseData.password;
 
     // Return JSON response as expected by frontend fetch
-    response.success(res, {
-      status: 'SUCCESS', // Explicit status for frontend check
-      user: userResponseData,
+    // Note: The structure must match what frontend expects
+    return response.success(res, {
       token,
-      githubAccessToken: accessToken,
-      githubUser: { // Pass back minimal github user info if needed
-        id: githubId,
-        username: githubUser.login
-      }
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar || user.avatarId,
+      },
+      githubAccessToken: accessToken
     }, 'GitHub authentication successful');
 
   } catch (error) {

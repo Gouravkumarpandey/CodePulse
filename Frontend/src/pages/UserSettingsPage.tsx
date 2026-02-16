@@ -358,7 +358,7 @@ const UserSettingsPage = () => {
                 ) : repos.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {repos.map((repo) => (
-                      <div key={repo._id} className="p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between group hover:border-white/30 transition-all">
+                      <div key={repo.id || repo._id} className="p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between group hover:border-white/30 transition-all">
                         <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${repo.isActive ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-gray-500'}`}>
                             <Github className="w-5 h-5" />

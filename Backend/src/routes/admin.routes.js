@@ -18,6 +18,9 @@ router.use(roleMiddleware.requireAdmin);
 router.get('/settings', adminController.getAdminSettings);
 router.put('/settings', adminController.updateAdminSettings);
 
+// Dashboard Stats
+router.get('/dashboard-stats', adminController.getDashboardStats);
+
 // User Management
 router.get('/users', adminController.getAllUsers);
 router.get('/users/:userId', adminController.getUserDetail);

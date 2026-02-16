@@ -35,13 +35,19 @@ class FirestoreService {
    * @param {number} limit - Maximum number of commits to fetch
    * @returns {Promise<Array>} - Array of commits
    */
+
   static async getCommitsByRepo(repoId, limit = 100) {
     try {
+      // Without composite index, we can't sort by date on server.
+      // We fetch more documents (up to 500) to increase chance of getting recent ones,
+      // then sort in memory and slice to requested limit.
+      const fetchLimit = Math.max(limit, 500);
+
       const snapshot = await db
         .collection('commits')
         .where('repoId', '==', repoId)
-        .orderBy('commitDate', 'desc')
-        .limit(limit)
+        // .orderBy('commitDate', 'desc') // Removed to avoid index error
+        .limit(fetchLimit)
         .get();
 
       const commits = [];
@@ -49,7 +55,10 @@ class FirestoreService {
         commits.push({ id: doc.id, ...doc.data() });
       });
 
-      return commits;
+      // Sort in memory
+      commits.sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
+
+      return commits.slice(0, limit);
     } catch (error) {
       logger.error('Error fetching commits from Firestore:', error);
       throw error;
@@ -302,7 +311,7 @@ class FirestoreService {
         .collection('commits')
         .where('repoId', 'in', repoIds)
         .where('status', '==', status)
-        .orderBy('commitDate', 'desc')
+        // .orderBy('commitDate', 'desc') // Removed to avoid index error
         .limit(limit)
         .get();
 
@@ -310,6 +319,9 @@ class FirestoreService {
       snapshot.forEach(doc => {
         commits.push({ id: doc.id, ...doc.data() });
       });
+
+      // Sort in memory
+      commits.sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
 
       return commits;
     } catch (error) {
@@ -454,6 +466,106 @@ class FirestoreService {
     } catch (error) {
       logger.error('Error adding coin transaction:', error);
       // Non-blocking error usually
+    }
+  }
+  /**
+   * Get all users
+   * @returns {Promise<Array>} - Array of all users
+   */
+  static async getAllUsers() {
+    try {
+      const snapshot = await db.collection('users').get();
+      const users = [];
+      snapshot.forEach(doc => {
+        users.push({ id: doc.id, ...doc.data() });
+      });
+      return users;
+    } catch (error) {
+      logger.error('Error fetching all users:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user by GitHub access token
+   * @param {string} token - GitHub access token
+   * @returns {Promise<Object|null>} - User data
+   */
+  static async getUserByGithubAccessToken(token) {
+    try {
+      const snapshot = await db.collection('users').where('githubAccessToken', '==', token).limit(1).get();
+      if (snapshot.empty) return null;
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      logger.error('Error fetching user by GitHub token:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get global recent activity (commits)
+   * @param {number} limit - Max number of activities
+   * @returns {Promise<Array>} - Array of commits
+   */
+  static async getGlobalRecentActivity(limit = 20) {
+    try {
+      // Note: This requires a composite index on commitDate DESC.
+      // If index is missing, we might need to fetch more and sort in memory, similar to other methods.
+      // For now, attempting direct query. If it fails, we fall back to in-memory sort.
+      let snapshot;
+      try {
+        snapshot = await db.collection('commits')
+          .orderBy('commitDate', 'desc')
+          .limit(limit)
+          .get();
+      } catch (indexError) {
+        if (indexError.code === 5 || indexError.message.includes('index')) {
+          // Fallback: Fetch latest 500 and sort
+          snapshot = await db.collection('commits').limit(500).get();
+        } else {
+          throw indexError;
+        }
+      }
+
+      const activities = [];
+      snapshot.forEach(doc => {
+        activities.push({ id: doc.id, ...doc.data() });
+      });
+
+      // Ensure sorted if fallback was used
+      activities.sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
+
+      return activities.slice(0, limit);
+    } catch (error) {
+      logger.error('Error fetching global activity:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get global violations
+   * @param {number} limit - Max number of violations
+   * @returns {Promise<Array>} - Array of violation commits
+   */
+  static async getGlobalViolations(limit = 20) {
+    try {
+      const snapshot = await db.collection('commits')
+        .where('status', 'in', ['VIOLATION', 'WARNING'])
+        // .orderBy('commitDate', 'desc') // Avoid index issues
+        .limit(100) // Increase fetch to sort in memory
+        .get();
+
+      const violations = [];
+      snapshot.forEach(doc => {
+        violations.push({ id: doc.id, ...doc.data() });
+      });
+
+      violations.sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
+      return violations.slice(0, limit);
+    } catch (error) {
+      logger.error('Error fetching global violations:', error);
+      throw error;
     }
   }
 }
