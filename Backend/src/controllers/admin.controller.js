@@ -265,7 +265,12 @@ const getDashboardStats = async (req, res) => {
     const recentActivity = await FirestoreService.getGlobalRecentActivity(100);
     const violations = await FirestoreService.getGlobalViolations(100);
 
-    const activeNow = users.filter(u => u.status === 'ACTIVE').length; // Simplify active definition
+    const activeNow = users.filter(u => u.status === 'ACTIVE').length;
+
+    // Calculate average score (coins) across all users
+    const avgScore = users.length > 0
+      ? Math.round(users.reduce((sum, u) => sum + (u.coins || 0), 0) / users.length)
+      : 0;
 
     // Count commits today
     const now = new Date();
@@ -277,13 +282,13 @@ const getDashboardStats = async (req, res) => {
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = d.toLocaleDateString('en-US', { weekday: 'short' }); // e.g., "Mon"
-      const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+      const dateStr = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
 
       const count = recentActivity.filter(a => {
         const commitDate = new Date(a.commitDate);
-        return commitDate >= startOfDay && commitDate < endOfDay;
+        return commitDate >= dayStart && commitDate < dayEnd;
       }).length;
 
       chartData.push({ name: dateStr, commits: count });
