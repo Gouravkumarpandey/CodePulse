@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   GitBranch, GitCommit, TrendingUp, AlertCircle, CheckCircle, Clock,
   Activity, ChevronDown, Settings, Award, Zap, Users, Shield,
-  Timer, Trophy, Star, FileText, Share2, X, Download, Linkedin, Copy, Check, Link as LinkIcon, ExternalLink
+  Timer, Trophy, Star, FileText, Share2, X, Download, Linkedin, Copy, Check, Link as LinkIcon, ExternalLink,
+  Github, ArrowRight
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -228,6 +230,37 @@ export default function UserDashboardPage() {
                 </div>
               </div>
             </div>
+
+            {/* GitHub Connection Prompt for users who skipped */}
+            {!sessionStorage.getItem('github_token') && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-orange-500/20 via-orange-600/20 to-red-500/20 border-2 border-orange-500/50 rounded-2xl p-6 backdrop-blur-xl"
+              >
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                      <Github className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-1">Connect Your GitHub Account</h3>
+                      <p className="text-gray-300 text-sm">
+                        Link your GitHub to track commits, analyze activity, and unlock full dashboard features
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate('/connect-github')}
+                    className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Github className="w-5 h-5" />
+                    Connect Now
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
 
             {!selectedRepo ? (
               <div className="py-20 text-center bg-white/5 rounded-3xl border border-white/10 backdrop-blur-xl">

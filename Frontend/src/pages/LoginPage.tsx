@@ -70,8 +70,15 @@ export default function LoginPage() {
       const data = await response.json();
       if (response.ok && data.data) {
         login(data.data.user, data.data.token);
+
+        // Store GitHub token if user has it connected
+        if (data.data.githubAccessToken) {
+          sessionStorage.setItem('github_token', data.data.githubAccessToken);
+          console.log('GitHub token restored from Google login');
+        }
+
         // Check if user has GitHub connected
-        const githubToken = sessionStorage.getItem('github_token');
+        const githubToken = data.data.githubAccessToken || sessionStorage.getItem('github_token');
         if (data.data.user.role === 'ADMIN') {
           navigate('/admin');
         } else if (!githubToken) {
@@ -103,11 +110,17 @@ export default function LoginPage() {
 
       login(response.user, response.token);
 
+      // Store GitHub token if user has it connected
+      if (response.githubAccessToken) {
+        sessionStorage.setItem('github_token', response.githubAccessToken);
+        console.log('GitHub token restored from login');
+      }
+
       if (response.user.role === 'ADMIN') {
         navigate('/admin');
       } else {
         // Check if user has GitHub connected
-        const githubToken = sessionStorage.getItem('github_token');
+        const githubToken = response.githubAccessToken || sessionStorage.getItem('github_token');
         if (!githubToken) {
           navigate('/connect-github');
         } else {
@@ -166,7 +179,7 @@ export default function LoginPage() {
         >
           <div className="mb-8">
             <div className="flex flex-col items-center mb-6">
-              <img src="/logo.jpg" alt="Codepulse Logo" className="w-800000 h-80000 object-contain mb-4" />
+              <img src="/logo.jpg" alt="Codepulse Logo" className="w-32 h-32 object-contain mb-4" />
               {/* <h2 className="text-3xl font-bold text-black dark:text-white mb-1">Sign in</h2> */}
               <p className="text-black dark:text-white text-lg">Welcome back! Please sign in to continue</p>
             </div>
@@ -280,3 +293,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

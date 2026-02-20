@@ -303,13 +303,13 @@ function RepositorySelectionPage() {
     <div className="min-h-screen user-dashboard-bg relative">
       <Sidebar role="user" />
       {/* Logo at the top */}
-      <div className="w-full flex justify-center items-center py-6 relative z-10">
-        <img src="/logo.jpg" alt="Codepulse Logo" className="h-20 w-auto" style={{ maxHeight: '80px' }} />
+      <div className="w-full flex justify-center items-center py-2 relative z-10">
+        <img src="/logo.jpg" alt="Codepulse Logo" className="h-24 w-auto" style={{ maxHeight: '96px' }} />
       </div>
       <div className={`min-h-screen relative z-10 transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
         <main>
 
-          <div className="max-w-5xl mx-auto px-6 py-12">
+          <div className="max-w-5xl mx-auto px-6 py-4">
             {showRepoList && repositories.length > 0 ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -574,3 +574,5 @@ function RepositorySelectionPage() {
 }
 
 export default RepositorySelectionPage;
+
+

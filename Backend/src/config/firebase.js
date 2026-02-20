@@ -1,18 +1,44 @@
 /**
  * Firebase Admin SDK Configuration
  * Initializes Firebase Admin for Firestore database access
+ *
+ * In production (Render), credentials are loaded from environment variables.
+ * In local development, falls back to firebase-credentials.json.
  */
 
 const admin = require('firebase-admin');
-const path = require('path');
 
-// Initialize Firebase Admin with service account
-const serviceAccount = require('./firebase-credentials.json');
+let serviceAccount;
+
+// Production: credentials stored as env vars on Render dashboard
+if (process.env.FIREBASE_PRIVATE_KEY) {
+  serviceAccount = {
+    type: 'service_account',
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+    private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    client_id: process.env.FIREBASE_CLIENT_ID,
+    auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+    token_uri: 'https://oauth2.googleapis.com/token',
+    auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+    client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL,
+    universe_domain: 'googleapis.com',
+  };
+} else {
+  // Local development: load from JSON file (gitignored)
+  try {
+    serviceAccount = require('./firebase-credentials.json');
+  } catch (e) {
+    console.error('❌ Firebase credentials not found. Set FIREBASE_PRIVATE_KEY env var or provide firebase-credentials.json');
+    process.exit(1);
+  }
+}
 
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    projectId: 'codepulse-483719',
+    projectId: process.env.FIREBASE_PROJECT_ID || 'codepulse-483719',
   });
 }
 

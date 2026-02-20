@@ -78,7 +78,7 @@ export default function Sidebar({ role }: SidebarProps) {
         {/* Brand Logo */}
         <div className="p-6 border-b border-white/10 flex-shrink-0 flex items-center justify-between">
           <Link to={isAdmin ? "/admin" : "/user"} className="flex items-center gap-3">
-            <img src="/logo.jpg" alt="Logo" className="w-10 h-10 object-contain rounded-xl shadow-lg border border-white/20" />
+            <img src="/logo.jpg" alt="Logo" className="w-16 h-16 object-contain rounded-xl shadow-lg border border-white/20" />
             {!collapsed && (
               <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500">
                 <span className="text-xl font-black text-white tracking-tight" style={{ fontFamily: '"Minecraftia", sans-serif' }}>CodePulse</span>
@@ -222,3 +222,4 @@ export default function Sidebar({ role }: SidebarProps) {
     </>
   );
 }
+

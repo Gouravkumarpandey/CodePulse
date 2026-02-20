@@ -33,9 +33,9 @@ export default function GitHubCallbackPage() {
     // Prevent code reuse by checking if we've already processed this code
     const processedCode = sessionStorage.getItem('github_code_processed');
     if (processedCode === code) {
-      setStatus('error');
-      setMessage('This authorization code has already been used');
-      setTimeout(() => navigate('/repo-selection'), 3000);
+      setStatus('success');
+      setMessage('GitHub already connected! Redirecting to repository selection...');
+      setTimeout(() => navigate('/repo-selection'), 1500);
       return;
     }
 
@@ -167,7 +167,9 @@ export default function GitHubCallbackPage() {
         console.error('GitHub authentication error:', err);
         setStatus('error');
         setMessage(err.message || 'Authentication failed');
-        setTimeout(() => navigate('/repo-selection'), 3000);
+        // Clear the processed code marker on error
+        sessionStorage.removeItem('github_code_processed');
+        setTimeout(() => navigate('/connect-github'), 3000);
       }
     };
 

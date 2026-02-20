@@ -81,7 +81,13 @@ const login = async (req, res) => {
     const userResponse = { ...user };
     delete userResponse.password;
 
-    response.success(res, { user: userResponse, token }, 'Login successful');
+    // Include githubAccessToken in response if user has GitHub connected
+    const responseData = { user: userResponse, token };
+    if (user.githubAccessToken) {
+      responseData.githubAccessToken = user.githubAccessToken;
+    }
+
+    response.success(res, responseData, 'Login successful');
   } catch (error) {
     console.error('Login error:', error);
     response.error(res, error.message, 500);
@@ -287,12 +293,18 @@ const googleCallback = async (req, res) => {
     const userResponseData = { ...user };
     delete userResponseData.password;
 
-    // Return success
-    response.success(res, {
+    // Include githubAccessToken in response if user has GitHub connected
+    const responseData = {
       status: 'SUCCESS',
       user: userResponseData,
       token
-    }, 'Google authentication successful');
+    };
+    if (user.githubAccessToken) {
+      responseData.githubAccessToken = user.githubAccessToken;
+    }
+
+    // Return success
+    response.success(res, responseData, 'Google authentication successful');
 
   } catch (error) {
     console.error('Google OAuth callback error:', error.message);
