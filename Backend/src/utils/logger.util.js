@@ -19,7 +19,21 @@ const getTimestamp = () => {
 
 const log = (level, message, data = null) => {
   const logMessage = `[${getTimestamp()}] [${level}] ${message}`;
-  const logEntry = data ? `${logMessage} ${JSON.stringify(data)}` : logMessage;
+
+  let dataStr = '';
+  if (data) {
+    if (data instanceof Error) {
+      dataStr = ` ${data.message} ${data.stack}`;
+    } else {
+      try {
+        dataStr = ` ${JSON.stringify(data)}`;
+      } catch (e) {
+        dataStr = ' [Circular or non-serializable data]';
+      }
+    }
+  }
+
+  const logEntry = logMessage + dataStr;
 
   console.log(logEntry);
 

@@ -42,8 +42,8 @@ export default function SignupPage() {
         navigate('/admin');
       } else {
         // Check if user has GitHub connected
-        const githubToken = sessionStorage.getItem('github_token');
-        if (!githubToken) {
+        const hasGithub = user?.githubId || user?.githubAccessToken;
+        if (!hasGithub) {
           navigate('/connect-github');
         } else {
           navigate('/user');
@@ -190,10 +190,9 @@ export default function SignupPage() {
             </div>
           </div>
 
-          {/* Google Signup */}
-          <div className="w-full mb-6 flex justify-center">
+          {/* Google Signup COMMENTED OUT FOR NOW */}
+          {/* <div className="w-full mb-6 flex justify-center">
             <div style={{ position: 'relative', display: 'inline-block' }}>
-              {/* Visual Minecraft-styled layer */}
               <div
                 style={{
                   fontFamily: '"Minecraftia", sans-serif',
@@ -220,7 +219,6 @@ export default function SignupPage() {
                 <span style={{ fontWeight: 700, fontSize: '1.05rem', letterSpacing: '0.5px' }}>Sign up with Google</span>
               </div>
 
-              {/* Invisible actual Google button (handles click/auth) */}
               <div style={{ position: 'absolute', inset: 0, opacity: 0 }}>
                 <GoogleLogin
                   onSuccess={handleGoogleSignupSuccess}
@@ -240,7 +238,7 @@ export default function SignupPage() {
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-white dark:bg-black text-black dark:text-white">Or create with email</span>
             </div>
-          </div>
+          </div> */}
 
           {/* Error */}
           {error && (

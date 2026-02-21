@@ -15,12 +15,13 @@ const getAdminSettings = async (req, res) => {
     if (!settings) {
       // Default settings if not in DB
       settings = {
-        maxInactivityGapHours: 24,
-        gracePeriodHours: 12,
-        warningThresholdHours: 20
+        maxInactivityGapHours: 2, // Default to 2 hours as requested
+        gracePeriodHours: 1,
+        warningThresholdHours: 1.5,
+        totalHackathonDurationHours: 48,
       };
-      // Optionally save defaults:
-      // await FirestoreService.saveAdminSettings(settings);
+      // Save defaults to avoid null on next call
+      await FirestoreService.saveAdminSettings(settings);
     }
 
     response.success(res, { settings });
@@ -32,17 +33,18 @@ const getAdminSettings = async (req, res) => {
 // Update admin settings
 const updateAdminSettings = async (req, res) => {
   try {
-    const { maxInactivityGapHours, gracePeriodHours, warningThresholdHours } = req.body;
+    const { maxInactivityGapHours, gracePeriodHours, warningThresholdHours, totalHackathonDurationHours } = req.body;
 
-    // In a real app, you'd update specific fields.
-    // For now, assume a single settings doc or collection.
-    // We'll mock the update or implement a Firestore method if needed.
-    // Since getAdminSettings is used, let's assume we can rely on defaults or implement save.
+    const newSettings = {
+      maxInactivityGapHours: parseFloat(maxInactivityGapHours) || 24,
+      gracePeriodHours: parseFloat(gracePeriodHours) || 12,
+      warningThresholdHours: parseFloat(warningThresholdHours) || 20,
+      totalHackathonDurationHours: parseFloat(totalHackathonDurationHours) || 48,
+    };
 
-    // Placeholder for actual update logic
-    // await FirestoreService.updateAdminSettings({ ... });
+    const savedSettings = await FirestoreService.saveAdminSettings(newSettings);
 
-    response.success(res, { settings: req.body }, 'Settings updated successfully');
+    response.success(res, { settings: savedSettings }, 'Settings updated successfully');
   } catch (error) {
     response.error(res, error.message, 500);
   }

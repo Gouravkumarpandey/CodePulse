@@ -34,6 +34,8 @@ export default function UserDashboardPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'rules'>('overview');
+  const [adminRules, setAdminRules] = useState<any>(null);
 
   // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -60,6 +62,20 @@ export default function UserDashboardPage() {
     checkHackathonStatus();
     const interval = setInterval(checkHackathonStatus, 30000); // Poll every 30s
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const fetchRules = async () => {
+      try {
+        const res = await api.get('/user/rules');
+        if (res.data.success) {
+          setAdminRules(res.data.data.rules);
+        }
+      } catch (err) {
+        console.error('Failed to fetch rules');
+      }
+    };
+    fetchRules();
   }, []);
 
   useEffect(() => {
@@ -165,9 +181,12 @@ export default function UserDashboardPage() {
 
   const getActivityStatus = () => {
     if (!recentCommits.length) return { status: 'Inactive', color: 'red', message: 'No commits detected' };
+
+    const maxGap = adminRules?.maxInactivityGapHours || 2;
     const hoursSince = (new Date().getTime() - new Date(recentCommits[0].commitDate).getTime()) / 3600000;
-    if (hoursSince < 24) return { status: 'Active', color: 'green', message: `Last commit ${formatTimeAgo(recentCommits[0].commitDate)}` };
-    if (hoursSince < 72) return { status: 'At Risk', color: 'yellow', message: 'Warning: Inactivity detected' };
+
+    if (hoursSince < maxGap) return { status: 'Active', color: 'green', message: `Last commit ${formatTimeAgo(recentCommits[0].commitDate)}` };
+    if (hoursSince < maxGap * 1.5) return { status: 'At Risk', color: 'yellow', message: 'Warning: Inactivity detected' };
     return { status: 'Inactive', color: 'red', message: 'High inactivity gap' };
   };
 
@@ -231,8 +250,26 @@ export default function UserDashboardPage() {
               </div>
             </div>
 
-            {/* GitHub Connection Prompt for users who skipped */}
-            {!sessionStorage.getItem('github_token') && (
+            {/* Tab Switcher */}
+            <div className="flex items-center gap-1 p-1 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl w-fit">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+              >
+                <Activity className="w-4 h-4" />
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('rules')}
+                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'rules' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+              >
+                <Shield className="w-4 h-4" />
+                Rules & Guidelines
+              </button>
+            </div>
+
+            {/* GitHub Connection Prompt for users who haven't connected GitHub */}
+            {user && !user.githubId && !user.githubAccessToken && (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -267,6 +304,83 @@ export default function UserDashboardPage() {
                 <GitBranch className="w-20 h-20 text-white/20 mx-auto mb-6" />
                 <h2 className="text-2xl font-bold text-white mb-4">No Repository Selected</h2>
                 <button onClick={() => navigate('/repo-selection')} className="bg-blue-600 px-8 py-3 rounded-xl font-bold hover:bg-blue-500 transition">Connect Repo</button>
+              </div>
+            ) : activeTab === 'rules' ? (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Committing Rule */}
+                  <div className="bg-slate-900/40 border border-white/10 rounded-3xl p-8 backdrop-blur-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-32 bg-blue-600/5 blur-[100px] rounded-full pointer-events-none" />
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="p-4 bg-blue-500/20 rounded-2xl border border-blue-500/30">
+                        <GitCommit className="w-8 h-8 text-blue-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-white uppercase tracking-tight">Commit Frequency</h3>
+                        <p className="text-blue-400 font-bold text-sm">Mandatory requirement</p>
+                      </div>
+                    </div>
+                    <div className="space-y-6 relative z-10">
+                      <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
+                        <p className="text-gray-300 leading-relaxed">
+                          To maintain your activity status and avoid disqualification, you MUST commit your changes at least once every <span className="text-blue-400 font-black text-xl">{adminRules?.maxInactivityGapHours || 2} hours</span>.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-400 bg-blue-950/20 p-4 rounded-xl border border-blue-900/30">
+                        <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                        <p>Failing to commit within this window will trigger a <b>Security Violation</b> and deduction of coins.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hackathon Duration */}
+                  <div className="bg-slate-900/40 border border-white/10 rounded-3xl p-8 backdrop-blur-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-32 bg-orange-600/5 blur-[100px] rounded-full pointer-events-none" />
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="p-4 bg-orange-500/20 rounded-2xl border border-orange-500/30">
+                        <Timer className="w-8 h-8 text-orange-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-white uppercase tracking-tight">Session Duration</h3>
+                        <p className="text-orange-400 font-bold text-sm">Total Hackathon Time</p>
+                      </div>
+                    </div>
+                    <div className="space-y-6 relative z-10">
+                      <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+                        <div className="text-5xl font-black text-white mb-2">{adminRules?.totalHackathonDurationHours || 48}</div>
+                        <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">HOURS TOTAL</div>
+                      </div>
+                      <p className="text-gray-300 text-sm leading-relaxed px-2">
+                        The current hackathon event is scheduled for a total of {adminRules?.totalHackathonDurationHours || 48} hours. Consistency scoring is calculated based on this timeline.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Rules */}
+                <div className="bg-slate-900/40 border border-white/10 rounded-3xl p-8 backdrop-blur-xl">
+                  <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <Shield className="w-6 h-6 text-green-400" />
+                    Fair Play Guidelines
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 font-bold border border-green-500/20 mb-4">1</div>
+                      <h4 className="font-bold text-white">Authentic Commits</h4>
+                      <p className="text-sm text-gray-400">Avoid "dummy" or empty commits. AI analysis detects meaningful progress.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 font-bold border border-green-500/20 mb-4">2</div>
+                      <h4 className="font-bold text-white">Continuous Pulse</h4>
+                      <p className="text-sm text-gray-400">Try to stay within the {adminRules?.maxInactivityGapHours || 2}hr limit even during late hours for badge rewards.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 font-bold border border-green-500/20 mb-4">3</div>
+                      <h4 className="font-bold text-white">No Repo Hopping</h4>
+                      <p className="text-sm text-gray-400">Switching active repositories during a hackathon may reset your consistency streak.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <>

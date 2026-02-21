@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShieldCheck, Clock, Bell, Info, Save } from 'lucide-react';
+import { ShieldCheck, Clock, Bell, Info, Save, Timer } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface AdminSettings {
@@ -7,6 +7,7 @@ interface AdminSettings {
   gracePeriodHours: number;
   warningThresholdHours: number;
   enableNotifications: boolean;
+  totalHackathonDurationHours?: number;
 }
 
 interface RulesFormProps {
@@ -105,6 +106,29 @@ const RulesForm: React.FC<RulesFormProps> = ({ initialSettings, onSave }) => {
           </p>
         </div>
 
+        {/* Hackathon Duration */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20 shadow-lg shadow-purple-500/10">
+              <Timer className="w-6 h-6 text-purple-400" />
+            </div>
+            <label className="text-sm font-bold text-gray-300 uppercase tracking-widest leading-none">
+              Hackathon Duration (HR)
+            </label>
+          </div>
+          <input
+            type="number"
+            min="1"
+            value={settings.totalHackathonDurationHours || 48}
+            onChange={(e) => handleChange('totalHackathonDurationHours', parseInt(e.target.value))}
+            className="w-full p-4 bg-slate-800/50 hover:bg-slate-800 border border-white/10 rounded-xl text-2xl font-bold text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none transition-all placeholder-gray-500 shadow-inner"
+            required
+          />
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-relaxed ml-1">
+            The total length of the hackathon event.
+          </p>
+        </div>
+
         {/* Notifications Toggle */}
         <div className="p-8 bg-slate-800/50 rounded-2xl border border-white/10 flex items-center justify-between shadow-lg hover:bg-slate-800 transition-all">
           <div className="flex items-center gap-6">
@@ -149,11 +173,12 @@ const RulesForm: React.FC<RulesFormProps> = ({ initialSettings, onSave }) => {
       </div>
 
       {/* Logic Summary Display */}
-      <div className="bg-slate-900/40 rounded-xl border border-white/10 p-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="bg-slate-900/40 rounded-xl border border-white/10 p-8 grid grid-cols-2 md:grid-cols-5 gap-8">
         {[
           { label: 'Base Gap', value: `${settings.maxInactivityGapHours}hr`, color: 'text-blue-400' },
           { label: 'Grace', value: `${settings.gracePeriodHours}hr`, color: 'text-green-400' },
           { label: 'Radar', value: `${settings.warningThresholdHours}hr`, color: 'text-yellow-400' },
+          { label: 'Session', value: `${settings.totalHackathonDurationHours || 48}hr`, color: 'text-purple-400' },
           { label: 'Timeout', value: `${settings.maxInactivityGapHours + settings.gracePeriodHours}hr`, color: 'text-red-400' },
         ].map((item) => (
           <div key={item.label} className="text-center">

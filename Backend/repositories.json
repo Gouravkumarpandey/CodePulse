@@ -1,0 +1,18 @@
+[
+  {
+    "id": "repo_72fdc56917e0e974cca64cbb9c1d0d26_1121910580_1771669571716",
+    "userId": "72fdc56917e0e974cca64cbb9c1d0d26",
+    "githubRepoId": "1121910580",
+    "name": "CodePulse",
+    "fullName": "Gouravkumarpandey/CodePulse",
+    "owner": "Gouravkumarpandey",
+    "isPrivate": false,
+    "language": "HTML",
+    "description": "CodePulse monitors GitHub repository push activity to ensure fair and continuous development during hackathons.(under development mode)",
+    "isConnected": true,
+    "isActive": true,
+    "lastSync": "2026-02-21T10:26:11.716Z",
+    "createdAt": "2026-02-21T10:26:11.716Z",
+    "updatedAt": "2026-02-21T10:26:12.433Z"
+  }
+]

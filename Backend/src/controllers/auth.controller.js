@@ -1,13 +1,17 @@
 const FirestoreService = require('../services/firestore.service');
 const { generateJWT } = require('../utils/jwt.util');
 const response = require('../utils/response.util');
+const logger = require('../utils/logger.util');
 const axios = require('axios');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const GITHUB_CONFIG = require('../config/github');
 
 // Email/Password Signup
 const signup = async (req, res) => {
   try {
     const { email, password, username, role } = req.body;
+    logger.info(`Starting signup for user: ${email}`);
 
     if (!email || !password || !username) {
       return response.error(res, 'Email, password, and username are required', 400);
@@ -19,21 +23,20 @@ const signup = async (req, res) => {
       return response.error(res, 'User with this email already exists', 400);
     }
 
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Create new user
-    // Note: We use email as ID or auto-generated ID? FirestoreService.saveUser takes userId.
-    // Let's generate a unique ID (or use email sanitized?). 
-    // Best practice: Auto-gen ID. But FirestoreService.saveUser expects an ID.
-    // Let's use a UUID or similar. Or just use the email as key? No, email can change.
-    // Let's use a random string.
-    const crypto = require('crypto');
-    const userId = crypto.randomUUID();
+    const userId = crypto.randomBytes(16).toString('hex');
+    logger.info(`Generated userId: ${userId}`);
 
     const userData = {
       email,
-      password, // Storing plain text as requested/legacy behavior. ideally hash it.
+      password: hashedPassword, // Now storing hashed password
       username,
       role: role || 'USER',
-      coins: 0, // Initial coins
+      coins: 0,
       avatarId: 1,
       isActive: true,
       createdAt: new Date().toISOString(),
@@ -48,8 +51,12 @@ const signup = async (req, res) => {
 
     response.success(res, { user: userResponse, token }, 'User created successfully', 201);
   } catch (error) {
-    console.error('Signup error:', error);
-    response.error(res, error.message, 500);
+    logger.error('Signup error:', {
+      message: error.message,
+      stack: error.stack,
+      email: req.body.email
+    });
+    response.error(res, `Signup failed: ${error.message}`, 500);
   }
 };
 
@@ -67,7 +74,25 @@ const login = async (req, res) => {
       return response.error(res, 'Invalid email or password', 401);
     }
 
-    if (user.password !== password) {
+    // Check password - handle both hashed (new) and plain text (legacy)
+    let isMatch = false;
+    if (user.password && user.password.startsWith('$2')) {
+      // Hashed password
+      isMatch = await bcrypt.compare(password, user.password);
+    } else {
+      // Legacy plain text password
+      isMatch = (user.password === password);
+
+      // Upgrade plain text password to hashed one if it matches
+      if (isMatch) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        await FirestoreService.updateUser(user.id, { password: hashedPassword });
+        console.log(`Upgraded password for user: ${email}`);
+      }
+    }
+
+    if (!isMatch) {
       return response.error(res, 'Invalid email or password', 401);
     }
 
@@ -89,8 +114,12 @@ const login = async (req, res) => {
 
     response.success(res, responseData, 'Login successful');
   } catch (error) {
-    console.error('Login error:', error);
-    response.error(res, error.message, 500);
+    logger.error('Login error:', {
+      message: error.message,
+      stack: error.stack,
+      email: req.body.email
+    });
+    response.error(res, `Login failed: ${error.message}`, 500);
   }
 };
 

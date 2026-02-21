@@ -30,8 +30,8 @@ export default function LoginPage() {
         navigate('/admin');
       } else {
         // Check if user has GitHub connected
-        const githubToken = sessionStorage.getItem('github_token');
-        if (!githubToken) {
+        const hasGithub = user?.githubId || user?.githubAccessToken;
+        if (!hasGithub) {
           // First time user - go to connect GitHub
           navigate('/connect-github');
         } else {
@@ -179,16 +179,15 @@ export default function LoginPage() {
         >
           <div className="mb-8">
             <div className="flex flex-col items-center mb-6">
-              <img src="/logo.jpg" alt="Codepulse Logo" className="w-32 h-32 object-contain mb-4" />
+              <img src="/logo.jpg" alt="Codepulse Logo" className="w-8000 h-8000 object-contain mb-4" />
               {/* <h2 className="text-3xl font-bold text-black dark:text-white mb-1">Sign in</h2> */}
               <p className="text-black dark:text-white text-lg">Welcome back! Please sign in to continue</p>
             </div>
           </div>
 
-          {/* GOOGLE LOGIN */}
-          <div className="w-full mb-6 flex justify-center">
+          {/* GOOGLE LOGIN COMMENTED OUT FOR NOW */}
+          {/* <div className="w-full mb-6 flex justify-center">
             <div style={{ position: 'relative', display: 'inline-block' }}>
-              {/* Visual Minecraft-styled layer */}
               <div
                 style={{
                   fontFamily: '"Minecraftia", sans-serif',
@@ -215,7 +214,6 @@ export default function LoginPage() {
                 <span style={{ fontWeight: 700, fontSize: '1.05rem', letterSpacing: '0.5px' }}>Sign in with Google</span>
               </div>
 
-              {/* Invisible actual Google button (handles click/auth) */}
               <div style={{ position: 'absolute', inset: 0, opacity: 0 }}>
                 <GoogleLogin
                   onSuccess={handleGoogleLoginSuccess}
@@ -226,7 +224,7 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* ERROR */}
           {error && (

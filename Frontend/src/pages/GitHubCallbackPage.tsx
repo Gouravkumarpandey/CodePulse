@@ -142,8 +142,8 @@ export default function GitHubCallbackPage() {
         const updatedUser = {
           ...currentUser,
           githubAccessToken: ghToken,
-          githubId: callbackData.data.githubUser?.id || currentUser.githubId, // normalized?
-          // username: ... 
+          githubId: callbackData.data.githubUser?.githubId || currentUser.githubId,
+          githubUsername: callbackData.data.githubUser?.username || currentUser.githubUsername,
         };
 
         sessionStorage.setItem('user', JSON.stringify(updatedUser));
@@ -155,6 +155,7 @@ export default function GitHubCallbackPage() {
         }
 
         // Set flag for repository selection page
+        sessionStorage.setItem('github_token', ghToken);
         sessionStorage.setItem('github_authenticated', 'true');
 
         // Clear the processed code marker on success

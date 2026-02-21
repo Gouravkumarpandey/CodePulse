@@ -390,10 +390,10 @@ const getAdminRules = async (req, res) => {
     // Mock or fetch from Firestore adminSettings
     const settings = await FirestoreService.getAdminSettings();
     const rules = settings || {
-      maxInactivityGapHours: 24,
-      gracePeriodHours: 12,
-      warningThresholdHours: 20,
-      totalAllowedGap: 36,
+      maxInactivityGapHours: 2,
+      gracePeriodHours: 1,
+      warningThresholdHours: 1.5,
+      totalHackathonDurationHours: 48,
     };
 
     response.success(res, { rules });

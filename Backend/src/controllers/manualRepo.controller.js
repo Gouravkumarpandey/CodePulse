@@ -4,13 +4,21 @@ const response = require('../utils/response.util');
 
 const addManualRepository = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user?._id || req.user?.id;
+    if (!userId) {
+      return response.error(res, 'User ID not found in request', 401);
+    }
+
     const { name, owner, url, language, description } = req.body;
     if (!name || !owner || !url) {
       return response.error(res, 'Repository name, owner, and URL are required', 400);
     }
-    // Create a new repo doc with a generated ID
+
+    // Generate a unique ID for the repository
+    const repoId = `manual_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
     const repoData = {
+      id: repoId,
       userId,
       name,
       owner,
@@ -18,15 +26,16 @@ const addManualRepository = async (req, res) => {
       language: language || '',
       description: description || '',
       isActive: false,
-      isConnected: false, // Not connected via OAuth
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      isConnected: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    // Add to Firestore (auto-ID)
-    const db = require('../config/firebase').db;
-    const docRef = await db.collection('repositories').add(repoData);
-    return response.success(res, { id: docRef.id }, 'Repository added successfully');
+
+    const savedRepo = await FirestoreService.saveRepository(repoId, repoData);
+
+    return response.success(res, { id: savedRepo.id }, 'Repository added successfully');
   } catch (error) {
+    console.error('addManualRepository error:', error);
     return response.error(res, error.message || 'Failed to add repository', 500);
   }
 };

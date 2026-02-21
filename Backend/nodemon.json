@@ -1,0 +1,10 @@
+{
+    "ignore": [
+        "*.json",
+        "logs/*.log",
+        "node_modules"
+    ],
+    "watch": [
+        "src"
+    ]
+}

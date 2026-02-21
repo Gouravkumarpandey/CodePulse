@@ -30,19 +30,47 @@ if (process.env.FIREBASE_PRIVATE_KEY) {
   try {
     serviceAccount = require('./firebase-credentials.json');
   } catch (e) {
-    console.error('❌ Firebase credentials not found. Set FIREBASE_PRIVATE_KEY env var or provide firebase-credentials.json');
-    process.exit(1);
+    console.warn('⚠️ Firebase credentials not found. Falling back to local JSON storage for all operations.');
+    // Don't exit, let the app run with local fallbacks
+    serviceAccount = null;
   }
 }
 
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: process.env.FIREBASE_PROJECT_ID || 'codepulse-483719',
-  });
+  try {
+    if (serviceAccount) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        projectId: process.env.FIREBASE_PROJECT_ID || 'codepulse-483719',
+      });
+    } else {
+      console.warn('⚠️ Firebase Admin not initialized (no credentials).');
+    }
+  } catch (initError) {
+    console.error('❌ Failed to initialize Firebase Admin:', initError.message);
+  }
 }
 
-const db = admin.firestore();
+// Create a safe db object
+let db;
+try {
+  if (admin.apps.length) {
+    db = admin.firestore();
+  } else {
+    // Return a proxy that throws on every access to trigger catches in service
+    db = new Proxy({}, {
+      get: () => {
+        throw new Error('Firestore not initialized');
+      }
+    });
+  }
+} catch (e) {
+  db = new Proxy({}, {
+    get: () => {
+      throw new Error('Firestore not initialized');
+    }
+  });
+}
 
 // Export both admin and db
 module.exports = {

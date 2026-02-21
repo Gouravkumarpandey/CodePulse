@@ -5,6 +5,151 @@
 
 const { db } = require('../config/firebase');
 const logger = require('../utils/logger.util');
+const fs = require('fs');
+const path = require('path');
+
+const USERS_FILE = path.join(__dirname, '../../users.json');
+const REPOS_FILE = path.join(__dirname, '../../repositories.json');
+const COMMITS_FILE = path.join(__dirname, '../../commits.json');
+const ANALYSIS_FILE = path.join(__dirname, '../../repo_analysis.json');
+const ADMIN_SETTINGS_FILE = path.join(__dirname, '../../admin_settings.json');
+const HACKATHON_FILE = path.join(__dirname, '../../hackathon_status.json');
+
+const getLocalUsers = () => {
+  try {
+    if (!fs.existsSync(USERS_FILE)) return [];
+    const data = fs.readFileSync(USERS_FILE, 'utf8');
+    if (!data.trim()) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    logger.error('Error reading local users:', error.message);
+    return [];
+  }
+};
+
+const saveLocalUsers = (users) => {
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    return true;
+  } catch (error) {
+    logger.error('Error saving local users:', error);
+    return false;
+  }
+};
+
+const getLocalRepos = () => {
+  try {
+    if (!fs.existsSync(REPOS_FILE)) return [];
+    const data = fs.readFileSync(REPOS_FILE, 'utf8');
+    if (!data.trim()) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    logger.error('Error reading local repos:', error.message);
+    return [];
+  }
+};
+
+const saveLocalRepos = (repos) => {
+  try {
+    fs.writeFileSync(REPOS_FILE, JSON.stringify(repos, null, 2));
+    return true;
+  } catch (error) {
+    logger.error('Error saving local repos:', error);
+    return false;
+  }
+};
+
+const getLocalCommits = () => {
+  try {
+    if (!fs.existsSync(COMMITS_FILE)) return [];
+    const data = fs.readFileSync(COMMITS_FILE, 'utf8');
+    if (!data.trim()) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    logger.error('Error reading local commits:', error.message);
+    return [];
+  }
+};
+
+const saveLocalCommits = (commits) => {
+  try {
+    // Keep only last 2000 commits globally to avoid huge files
+    const limited = commits.slice(-2000);
+    fs.writeFileSync(COMMITS_FILE, JSON.stringify(limited, null, 2));
+    return true;
+  } catch (error) {
+    logger.error('Error saving local commits:', error);
+    return false;
+  }
+};
+
+const getLocalAnalysis = () => {
+  try {
+    if (!fs.existsSync(ANALYSIS_FILE)) return [];
+    const data = fs.readFileSync(ANALYSIS_FILE, 'utf8');
+    if (!data.trim()) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    logger.error('Error reading local analysis:', error.message);
+    return [];
+  }
+};
+
+const saveLocalAnalysis = (analysisList) => {
+  try {
+    fs.writeFileSync(ANALYSIS_FILE, JSON.stringify(analysisList, null, 2));
+    return true;
+  } catch (error) {
+    logger.error('Error saving local analysis:', error);
+    return false;
+  }
+};
+
+const getLocalAdminSettings = () => {
+  try {
+    if (!fs.existsSync(ADMIN_SETTINGS_FILE)) return null;
+    const data = fs.readFileSync(ADMIN_SETTINGS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    logger.error('Error reading local admin settings:', error);
+    return null;
+  }
+};
+
+const saveLocalAdminSettings = (settings) => {
+  try {
+    fs.writeFileSync(ADMIN_SETTINGS_FILE, JSON.stringify(settings, null, 2));
+    return true;
+  } catch (error) {
+    logger.error('Error saving local admin settings:', error);
+    return false;
+  }
+};
+
+const getLocalHackathonStatus = () => {
+  try {
+    if (!fs.existsSync(HACKATHON_FILE)) return { isActive: false, startTime: null };
+    const data = fs.readFileSync(HACKATHON_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    logger.error('Error reading local hackathon status:', error);
+    return { isActive: false, startTime: null };
+  }
+};
+
+const saveLocalHackathonStatus = (status) => {
+  try {
+    fs.writeFileSync(HACKATHON_FILE, JSON.stringify(status, null, 2));
+    return true;
+  } catch (error) {
+    logger.error('Error saving local hackathon status:', error);
+    return false;
+  }
+};
 
 class FirestoreService {
   /**
@@ -24,8 +169,24 @@ class FirestoreService {
       logger.info(`Commit saved to Firestore: ${commitData.commitSha}`);
       return { id: commitRef.id, ...commitData };
     } catch (error) {
-      logger.error('Error saving commit to Firestore:', error);
-      throw error;
+      logger.error('Error saving commit to Firestore, checking local:', error.message);
+      const commits = getLocalCommits();
+      const existingIdx = commits.findIndex(c => c.commitSha === commitData.commitSha);
+      const newCommit = {
+        id: commitData.commitSha,
+        ...commitData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (existingIdx >= 0) {
+        commits[existingIdx] = { ...commits[existingIdx], ...newCommit };
+      } else {
+        commits.push(newCommit);
+      }
+
+      saveLocalCommits(commits);
+      return newCommit;
     }
   }
 
@@ -39,14 +200,11 @@ class FirestoreService {
   static async getCommitsByRepo(repoId, limit = 100) {
     try {
       // Without composite index, we can't sort by date on server.
-      // We fetch more documents (up to 500) to increase chance of getting recent ones,
-      // then sort in memory and slice to requested limit.
       const fetchLimit = Math.max(limit, 500);
 
       const snapshot = await db
         .collection('commits')
         .where('repoId', '==', repoId)
-        // .orderBy('commitDate', 'desc') // Removed to avoid index error
         .limit(fetchLimit)
         .get();
 
@@ -60,8 +218,11 @@ class FirestoreService {
 
       return commits.slice(0, limit);
     } catch (error) {
-      logger.error('Error fetching commits from Firestore:', error);
-      throw error;
+      logger.error('Error fetching commits from Firestore, checking local:', error.message);
+      const allCommits = getLocalCommits();
+      const repoCommits = allCommits.filter(c => c.repoId === repoId);
+      repoCommits.sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
+      return repoCommits.slice(0, limit);
     }
   }
 
@@ -80,8 +241,9 @@ class FirestoreService {
 
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      logger.error('Error fetching commit from Firestore:', error);
-      throw error;
+      logger.error('Error fetching commit from Firestore, checking local:', error.message);
+      const allCommits = getLocalCommits();
+      return allCommits.find(c => c.commitSha === commitSha) || null;
     }
   }
 
@@ -103,8 +265,19 @@ class FirestoreService {
       logger.info(`Repository analysis saved to Firestore: ${repoId}`);
       return { id: analysisRef.id, ...analysis };
     } catch (error) {
-      logger.error('Error saving analysis to Firestore:', error);
-      throw error;
+      logger.error('Error saving analysis to Firestore, checking local:', error.message);
+      const allAnalysis = getLocalAnalysis();
+      const existingIdx = allAnalysis.findIndex(a => a.id === repoId);
+      const newAnalysis = { id: repoId, ...analysis, updatedAt: new Date().toISOString() };
+
+      if (existingIdx >= 0) {
+        allAnalysis[existingIdx] = { ...allAnalysis[existingIdx], ...newAnalysis };
+      } else {
+        allAnalysis.push(newAnalysis);
+      }
+
+      saveLocalAnalysis(allAnalysis);
+      return newAnalysis;
     }
   }
 
@@ -123,8 +296,9 @@ class FirestoreService {
 
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      logger.error('Error fetching analysis from Firestore:', error);
-      throw error;
+      logger.error('Error fetching analysis from Firestore, checking local:', error.message);
+      const allAnalysis = getLocalAnalysis();
+      return allAnalysis.find(a => a.id === repoId) || null;
     }
   }
 
@@ -144,8 +318,21 @@ class FirestoreService {
 
       return { id: userRef.id, ...userData };
     } catch (error) {
-      logger.error('Error saving user to Firestore:', error);
-      throw error;
+      logger.error('Error saving user to Firestore, falling back to local storage:', error.message);
+
+      // Local Fallback
+      const users = getLocalUsers();
+      const existingIdx = users.findIndex(u => u.id === userId || u.email === userData.email);
+      const newUser = { id: userId, ...userData, updatedAt: new Date().toISOString() };
+
+      if (existingIdx >= 0) {
+        users[existingIdx] = { ...users[existingIdx], ...newUser };
+      } else {
+        users.push(newUser);
+      }
+
+      saveLocalUsers(users);
+      return newUser;
     }
   }
 
@@ -159,13 +346,15 @@ class FirestoreService {
       const doc = await db.collection('users').doc(userId).get();
 
       if (!doc.exists) {
-        return null;
+        const localUsers = getLocalUsers();
+        return localUsers.find(u => u.id === userId) || null;
       }
 
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      logger.error('Error fetching user from Firestore:', error);
-      throw error;
+      logger.error('Error fetching user from Firestore, checking local:', error.message);
+      const localUsers = getLocalUsers();
+      return localUsers.find(u => u.id === userId) || null;
     }
   }
 
@@ -201,7 +390,14 @@ class FirestoreService {
       logger.info(`User updated in Firestore: ${userId}`);
       return { id: userId, ...updateData };
     } catch (error) {
-      logger.error('Error updating user in Firestore:', error);
+      logger.error('Error updating user in Firestore, checking local:', error.message);
+      const users = getLocalUsers();
+      const idx = users.findIndex(u => u.id === userId);
+      if (idx >= 0) {
+        users[idx] = { ...users[idx], ...updateData, updatedAt: new Date().toISOString() };
+        saveLocalUsers(users);
+        return users[idx];
+      }
       throw error;
     }
   }
@@ -222,8 +418,19 @@ class FirestoreService {
 
       return { id: repoRef.id, ...repoData };
     } catch (error) {
-      logger.error('Error saving repository to Firestore:', error);
-      throw error;
+      logger.error('Error saving repository to Firestore, checking local:', error.message);
+      const repos = getLocalRepos();
+      const existingIdx = repos.findIndex(r => r.id === repoId);
+      const newRepo = { id: repoId, ...repoData, updatedAt: new Date().toISOString() };
+
+      if (existingIdx >= 0) {
+        repos[existingIdx] = { ...repos[existingIdx], ...newRepo };
+      } else {
+        repos.push(newRepo);
+      }
+
+      saveLocalRepos(repos);
+      return newRepo;
     }
   }
 
@@ -237,8 +444,10 @@ class FirestoreService {
       await db.collection('repositories').doc(repoId).delete();
       logger.info(`Repository deleted from Firestore: ${repoId}`);
     } catch (error) {
-      logger.error('Error deleting repository from Firestore:', error);
-      throw error;
+      logger.error('Error deleting repository from Firestore, checking local:', error.message);
+      const repos = getLocalRepos();
+      const filtered = repos.filter(r => r.id !== repoId);
+      saveLocalRepos(filtered);
     }
   }
 
@@ -264,9 +473,9 @@ class FirestoreService {
       console.log('Found repositories:', repos.length);
       return repos;
     } catch (error) {
-      logger.error('Error fetching repositories from Firestore:', error);
-      console.error('Detailed error:', error.message, error.stack);
-      throw error;
+      logger.error('Error fetching repositories from Firestore, checking local:', error.message);
+      const allRepos = getLocalRepos();
+      return allRepos.filter(r => r.userId === userId);
     }
   }
 
@@ -293,8 +502,44 @@ class FirestoreService {
       await batch.commit();
       logger.info(`Batch operation completed: ${operations.length} operations`);
     } catch (error) {
-      logger.error('Error in batch write:', error);
-      throw error;
+      logger.error('Error in batch write, attempting local fallback:', error.message);
+
+      // Basic local fallback for common collections
+      for (const op of operations) {
+        try {
+          if (op.collection === 'repositories') {
+            const repos = getLocalRepos();
+            const idx = repos.findIndex(r => r.id === op.docId);
+            if (op.type === 'set' || op.type === 'update') {
+              if (idx >= 0) {
+                repos[idx] = { ...repos[idx], ...op.data, updatedAt: new Date().toISOString() };
+              } else if (op.type === 'set') {
+                repos.push({ id: op.docId, ...op.data, updatedAt: new Date().toISOString() });
+              }
+              saveLocalRepos(repos);
+            } else if (op.type === 'delete' && idx >= 0) {
+              repos.splice(idx, 1);
+              saveLocalRepos(repos);
+            }
+          } else if (op.collection === 'users') {
+            const users = getLocalUsers();
+            const idx = users.findIndex(u => u.id === op.docId);
+            if (op.type === 'set' || op.type === 'update') {
+              if (idx >= 0) {
+                users[idx] = { ...users[idx], ...op.data, updatedAt: new Date().toISOString() };
+              } else if (op.type === 'set') {
+                users.push({ id: op.docId, ...op.data, updatedAt: new Date().toISOString() });
+              }
+              saveLocalUsers(users);
+            } else if (op.type === 'delete' && idx >= 0) {
+              users.splice(idx, 1);
+              saveLocalUsers(users);
+            }
+          }
+        } catch (localErr) {
+          logger.error(`Local fallback failed for ${op.collection}:`, localErr.message);
+        }
+      }
     }
   }
 
@@ -325,8 +570,11 @@ class FirestoreService {
 
       return commits;
     } catch (error) {
-      logger.error('Error fetching commits by status from Firestore:', error);
-      throw error;
+      logger.error('Error fetching commits by status from Firestore, checking local:', error.message);
+      const allCommits = getLocalCommits();
+      const filtered = allCommits.filter(c => repoIds.includes(c.repoId) && c.status === status);
+      filtered.sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
+      return filtered.slice(0, limit);
     }
   }
 
@@ -345,8 +593,9 @@ class FirestoreService {
 
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      logger.error('Error fetching repository from Firestore:', error);
-      throw error;
+      logger.error('Error fetching repository from Firestore, checking local:', error.message);
+      const allRepos = getLocalRepos();
+      return allRepos.find(r => r.id === repoId) || null;
     }
   }
 
@@ -371,8 +620,9 @@ class FirestoreService {
       const doc = snapshot.docs[0];
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      logger.error('Error fetching active repository from Firestore:', error);
-      throw error;
+      logger.error('Error fetching active repository from Firestore, checking local:', error.message);
+      const allRepos = getLocalRepos();
+      return allRepos.find(r => r.userId === userId && r.isActive) || null;
     }
   }
 
@@ -385,14 +635,44 @@ class FirestoreService {
       const snapshot = await db.collection('adminSettings').limit(1).get();
 
       if (snapshot.empty) {
-        return null;
+        return getLocalAdminSettings();
       }
 
       const doc = snapshot.docs[0];
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      logger.error('Error fetching admin settings from Firestore:', error);
-      throw error;
+      logger.error('Error fetching admin settings from Firestore, checking local:', error.message);
+      return getLocalAdminSettings();
+    }
+  }
+
+  /**
+   * Save admin settings
+   * @param {Object} settings - Admin settings
+   * @returns {Promise<Object>} - Saved settings
+   */
+  static async saveAdminSettings(settings) {
+    try {
+      const snapshot = await db.collection('adminSettings').limit(1).get();
+      let settingsRef;
+
+      if (snapshot.empty) {
+        settingsRef = db.collection('adminSettings').doc();
+      } else {
+        settingsRef = snapshot.docs[0].ref;
+      }
+
+      await settingsRef.set({
+        ...settings,
+        updatedAt: new Date(),
+      }, { merge: true });
+
+      logger.info('Admin settings saved to Firestore');
+      return { id: settingsRef.id, ...settings };
+    } catch (error) {
+      logger.error('Error saving admin settings to Firestore, checking local:', error.message);
+      saveLocalAdminSettings(settings);
+      return settings;
     }
   }
   /**
@@ -403,12 +683,17 @@ class FirestoreService {
   static async getUserByEmail(email) {
     try {
       const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
-      if (snapshot.empty) return null;
+      if (snapshot.empty) {
+        // Even if empty in Firestore, check local if Firestore didn't error but query returned nothing
+        const localUsers = getLocalUsers();
+        return localUsers.find(u => u.email === email) || null;
+      };
       const doc = snapshot.docs[0];
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      logger.error('Error fetching user by email:', error);
-      throw error;
+      logger.error('Error fetching user by email from Firestore, checking local:', error.message);
+      const localUsers = getLocalUsers();
+      return localUsers.find(u => u.email === email) || null;
     }
   }
 
@@ -425,8 +710,9 @@ class FirestoreService {
       const doc = snapshot.docs[0];
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      logger.error('Error fetching user by GitHub ID:', error);
-      throw error;
+      logger.error('Error fetching user by GitHub ID from Firestore, checking local:', error.message);
+      const allUsers = getLocalUsers();
+      return allUsers.find(u => u.githubId === githubId.toString()) || null;
     }
   }
 
@@ -481,8 +767,8 @@ class FirestoreService {
       });
       return users;
     } catch (error) {
-      logger.error('Error fetching all users:', error);
-      throw error;
+      logger.error('Error fetching all users from Firestore, checking local:', error);
+      return getLocalUsers();
     }
   }
 
@@ -498,8 +784,9 @@ class FirestoreService {
       const doc = snapshot.docs[0];
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      logger.error('Error fetching user by GitHub token:', error);
-      throw error;
+      logger.error('Error fetching user by GitHub token from Firestore, checking local:', error.message);
+      const allUsers = getLocalUsers();
+      return allUsers.find(u => u.githubAccessToken === token) || null;
     }
   }
 
@@ -538,8 +825,10 @@ class FirestoreService {
 
       return activities.slice(0, limit);
     } catch (error) {
-      logger.error('Error fetching global activity:', error);
-      throw error;
+      logger.error('Error fetching global activity from Firestore, checking local:', error);
+      const allCommits = getLocalCommits();
+      allCommits.sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
+      return allCommits.slice(0, limit);
     }
   }
 
@@ -564,8 +853,11 @@ class FirestoreService {
       violations.sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
       return violations.slice(0, limit);
     } catch (error) {
-      logger.error('Error fetching global violations:', error);
-      throw error;
+      logger.error('Error fetching global violations from Firestore, checking local:', error);
+      const allCommits = getLocalCommits();
+      const filtered = allCommits.filter(c => ['VIOLATION', 'WARNING'].includes(c.status));
+      filtered.sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
+      return filtered.slice(0, limit);
     }
   }
 

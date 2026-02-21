@@ -4,6 +4,7 @@ import { User } from '@/types/user';
 interface AuthResponse {
   user: User;
   token: string;
+  githubAccessToken?: string;
 }
 
 interface LoginCredentials {

@@ -1,12 +1,15 @@
 export interface User {
+  id: string; // Add id as alias for _id
   _id: string;
-  githubId: string;
+  githubId?: string;
+  githubUsername?: string;
+  githubAccessToken?: string;
   username: string;
   email?: string;
   avatar?: string;
   role: 'USER' | 'ADMIN';
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string | Date;
+  updatedAt: string | Date;
   // Profile fields
   fullName?: string;
   teamName?: string;
