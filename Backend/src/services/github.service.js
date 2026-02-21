@@ -5,8 +5,7 @@
 
 const axios = require('axios');
 const GITHUB_CONFIG = require('../config/github');
-const Commit = require('../models/Commit');
-const RepoAnalysis = require('../models/RepoAnalysis');
+const FirestoreService = require('./firestore.service');
 const consistencyService = require('./consistency.service');
 const ruleEngineService = require('./ruleEngine.service');
 const aiService = require('./ai.service');
@@ -162,8 +161,6 @@ class GitHubService {
   static async fetchAndAnalyzeCommits(repo, accessToken) {
     try {
       console.log(`Fetching commits for ${repo.fullName}...`);
-
-      const FirestoreService = require('../services/firestore.service');
 
       // Parse owner and repo name from fullName (assuming repo has field fullName)
       // If repo is from Firestore, it might have owner/name separate

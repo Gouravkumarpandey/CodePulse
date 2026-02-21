@@ -3,8 +3,7 @@
  * Handles inactivity gap logic and violation detection
  */
 
-const Commit = require('../models/Commit');
-const AdminSettings = require('../models/AdminSettings');
+const FirestoreService = require('./firestore.service');
 const timeUtil = require('../utils/time.util');
 
 class RuleEngine {
@@ -15,7 +14,7 @@ class RuleEngine {
    * @returns {Object} { gap, status, isViolation }
    */
   static async checkInactivityViolation(lastCommitDate, currentCommitDate) {
-    const settings = await AdminSettings.findOne();
+    const settings = await FirestoreService.getAdminSettings();
 
     const gap = timeUtil.getGapInHours(lastCommitDate, currentCommitDate);
     const maxGap = settings?.maxInactivityGapHours || 24;
@@ -75,18 +74,18 @@ class RuleEngine {
    */
   static async evaluateRules(repoId) {
     try {
-      const commits = await Commit.find({ repoId }).sort({ commitDate: 1 });
-      const settings = await AdminSettings.findOne();
-      
+      const commits = await FirestoreService.getCommitsByRepo(repoId);
+      const settings = await FirestoreService.getAdminSettings();
+
       const maxGap = settings?.maxInactivityGapHours || 24;
       const warningThreshold = settings?.warningThresholdHours || 20;
-      
+
       const violations = [];
       const warnings = [];
-      
+
       for (let i = 1; i < commits.length; i++) {
         const gap = timeUtil.getGapInHours(commits[i - 1].commitDate, commits[i].commitDate);
-        
+
         if (gap > maxGap) {
           violations.push({
             type: 'INACTIVITY_GAP',
@@ -103,17 +102,17 @@ class RuleEngine {
           });
         }
       }
-      
+
       // Check for burst commits (many commits in short time)
       const burstThreshold = 10; // 10+ commits in 1 hour
       const oneHour = 1;
-      
+
       for (let i = 0; i < commits.length; i++) {
         const commitsInHour = commits.filter(c => {
           const gap = timeUtil.getGapInHours(commits[i].commitDate, c.commitDate);
           return Math.abs(gap) <= oneHour;
         });
-        
+
         if (commitsInHour.length > burstThreshold) {
           violations.push({
             type: 'BURST_COMMITS',
@@ -124,7 +123,7 @@ class RuleEngine {
           break; // Only report once
         }
       }
-      
+
       return {
         violations,
         warnings,
