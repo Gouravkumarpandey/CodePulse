@@ -16,6 +16,9 @@ import AdminDashboardPage from '@/pages/AdminDashboardPage';
 import AdminUsersPage from '@/pages/AdminUsersPage';
 import AdminUserDetailPage from '@/pages/AdminUserDetailPage';
 import AdminSettingsPage from '@/pages/AdminSettingsPage';
+import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
+import TermsOfServicePage from '@/pages/TermsOfServicePage';
+import PublicLayout from '@/components/layouts/PublicLayout';
 
 import { SidebarProvider } from '@/context/SidebarContext';
 
@@ -26,7 +29,14 @@ function App() {
         <SidebarProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<HomePage />} />
+              {/* Public Routes with Persistent Navbar */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms" element={<TermsOfServicePage />} />
+              </Route>
+
+              {/* Auth Routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/connect-github" element={<ConnectGitHubPage />} />
