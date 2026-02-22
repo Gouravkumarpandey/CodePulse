@@ -14,5 +14,19 @@
     "lastSync": "2026-02-21T10:26:11.716Z",
     "createdAt": "2026-02-21T10:26:11.716Z",
     "updatedAt": "2026-02-21T10:26:12.433Z"
+  },
+  {
+    "id": "manual_1771771346638_x7099",
+    "userId": "f6ec0aaa34b02302cffcf4e615967ea8",
+    "name": "CodePulse",
+    "owner": "Gouravkumarpandey",
+    "url": "https://github.com/Gouravkumarpandey/CodePulse",
+    "language": "",
+    "description": "",
+    "accessToken": "ghp_sampletoken123",
+    "isActive": false,
+    "isConnected": true,
+    "createdAt": "2026-02-22T14:42:26.643Z",
+    "updatedAt": "2026-02-22T14:42:27.148Z"
   }
 ]

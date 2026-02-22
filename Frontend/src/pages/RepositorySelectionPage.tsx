@@ -7,93 +7,6 @@ import { unlinkGithubAccount } from '@/services/github.service';
 
 
 import Sidebar from '@/components/layout/Sidebar';
-// ManualRepoInlineForm component for manual repo connection
-function ManualRepoInlineForm() {
-  const [repoUrl, setRepoUrl] = useState('');
-  const [accessToken, setAccessToken] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
-
-  const handleManualSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setSuccess('');
-    setError('');
-    try {
-      const response = await api.post('/user/manual-repo', {
-        url: repoUrl,
-        accessToken,
-      });
-      if (response.data.success) {
-        setSuccess('Repository added successfully!');
-        setRepoUrl('');
-        setAccessToken('');
-      } else {
-        setError(response.data.message || 'Failed to add repository.');
-      }
-    } catch (err) {
-      // @ts-expect-error: Ignore error for dynamic error object from axios
-      setError(err.response?.data?.message || err.message || 'Failed to add repository.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-2xl mx-auto"
-    >
-      <form onSubmit={handleManualSubmit} className="bg-white dark:bg-github-canvas-subtle border border-gray-200 dark:border-github-border rounded-lg p-8">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-github-text mb-4">
-          Manual Repository Configuration
-        </h3>
-        <p className="text-gray-600 dark:text-github-text-secondary mb-6">
-          Manually configure webhook settings and provide repository access.
-        </p>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-github-text mb-2">
-              Repository URL
-            </label>
-            <input
-              type="text"
-              placeholder="https://github.com/username/repository"
-              value={repoUrl}
-              onChange={e => setRepoUrl(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-github-border rounded-lg bg-white dark:bg-github-canvas-inset text-gray-900 dark:text-github-text focus:ring-2 focus:ring-blue-500 dark:focus:ring-github-accent-emphasis focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-github-text mb-2">
-              Access Token
-            </label>
-            <input
-              type="password"
-              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-              value={accessToken}
-              onChange={e => setAccessToken(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-github-border rounded-lg bg-white dark:bg-github-canvas-inset text-gray-900 dark:text-github-text focus:ring-2 focus:ring-blue-500 dark:focus:ring-github-accent-emphasis focus:border-transparent"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Connecting...' : 'Connect Repository'}
-          </button>
-          {success && <div className="text-green-600 mt-2">{success}</div>}
-          {error && <div className="text-red-600 mt-2">{error}</div>}
-        </div>
-      </form>
-    </motion.div>
-  );
-}
 
 
 import { useAuth } from '@/hooks/useAuth';
@@ -151,7 +64,6 @@ function RepositorySelectionPage() {
     }
   }, [user]);
   // Removed unused selectedPlatform state
-  const [selectedMode, setSelectedMode] = useState<'auto' | 'manual'>('auto');
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [repoLoading, setRepoLoading] = useState(true); // Start as true for initial load
   const [showRepoList, setShowRepoList] = useState(false);
@@ -429,122 +341,85 @@ function RepositorySelectionPage() {
                   </p>
                 </div>
 
-                <div className="flex border-b border-gray-200 dark:border-github-border mb-12">
-                  <button
-                    onClick={() => setSelectedMode('auto')}
-                    className={`px-6 py-3 border-b-2 font-medium transition-colors ${selectedMode === 'auto'
-                      ? 'border-gray-900 dark:border-github-text text-gray-900 dark:text-github-text'
-                      : 'border-transparent text-gray-600 dark:text-github-text-secondary hover:text-gray-900 dark:hover:text-github-text'
-                      }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Zap className="w-4 h-4" />
-                      Auto Integration
-                      <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded">
-                        Recommended
-                      </span>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center rounded-xl p-8 bg-white/50 dark:bg-[#161b22]/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800"
+                >
+                  {repoLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Loader2 className="w-12 h-12 text-github-accent animate-spin mb-4" />
+                      <p className="text-gray-600 dark:text-github-text-secondary">
+                        Loading repositories...
+                      </p>
                     </div>
-                  </button>
-                  <button
-                    onClick={() => setSelectedMode('manual')}
-                    className={`px-6 py-3 border-b-2 font-medium transition-colors ${selectedMode === 'manual'
-                      ? 'border-gray-900 dark:border-github-text text-gray-900 dark:text-github-text'
-                      : 'border-transparent text-gray-600 dark:text-github-text-secondary hover:text-gray-900 dark:hover:text-github-text'
-                      }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                        <line x1="9" y1="3" x2="9" y2="21" />
-                      </svg>
-                      Manual Integration
-                    </div>
-                  </button>
-                </div>
-                {selectedMode === 'auto' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center rounded-xl p-8 bg-white/50 dark:bg-[#161b22]/50 backdrop-blur-sm border border-gray-200 dark:border-gray-800"
-                  >
-                    {repoLoading ? (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <Loader2 className="w-12 h-12 text-github-accent animate-spin mb-4" />
-                        <p className="text-gray-600 dark:text-github-text-secondary">
-                          Loading repositories...
-                        </p>
+                  ) : needsAuth ? (
+                    <>
+                      <div className="flex items-center justify-center gap-8 mb-12">
+                        <div className="w-24 h-24 rounded-full bg-amber-600 flex items-center justify-center">
+                          <GitBranch className="w-12 h-12 text-white" />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                          <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                          <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                          <CheckCircle className="w-6 h-6 text-green-500" />
+                          <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                          <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                          <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                        </div>
+                        <div className="w-24 h-24 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center border-2 border-gray-200 dark:border-gray-700">
+                          <img
+                            src="https://cdn.worldvectorlogo.com/logos/github-icon-2.svg"
+                            alt="GitHub"
+                            className="w-16 h-16"
+                          />
+                        </div>
                       </div>
-                    ) : needsAuth ? (
-                      <>
-                        <div className="flex items-center justify-center gap-8 mb-12">
-                          <div className="w-24 h-24 rounded-full bg-amber-600 flex items-center justify-center">
-                            <GitBranch className="w-12 h-12 text-white" />
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
-                            <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
-                            <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
-                            <CheckCircle className="w-6 h-6 text-green-500" />
-                            <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
-                            <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
-                            <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
-                          </div>
-                          <div className="w-24 h-24 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center border-2 border-gray-200 dark:border-gray-700">
-                            <img
-                              src="https://cdn.worldvectorlogo.com/logos/github-icon-2.svg"
-                              alt="GitHub"
-                              className="w-16 h-16"
-                            />
-                          </div>
-                        </div>
-                        <div className="max-w-md mx-auto mb-8">
-                          <h3 className="text-2xl font-semibold text-gray-900 dark:text-github-text mb-3">
-                            Connect with GitHub
-                          </h3>
-                          <p className="text-gray-600 dark:text-github-text-secondary">
-                            Authorize CodePulse to access your repositories. We'll automatically set up webhooks and handle all the configuration.
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            sessionStorage.setItem('showDashboardToast', '1');
-                            handleConnect();
-                          }}
-                          className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
-                        >
+                      <div className="max-w-md mx-auto mb-8">
+                        <h3 className="text-2xl font-semibold text-gray-900 dark:text-github-text mb-3">
                           Connect with GitHub
-                        </button>
-                        <div className="flex items-center justify-center gap-2 mt-6 text-sm text-gray-500 dark:text-github-text-secondary">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>Secure OAuth authentication</span>
-                        </div>
-                      </>
-                    ) : githubLinked ? (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <div className="flex items-center gap-3 mb-4">
-                          <img src="https://cdn.worldvectorlogo.com/logos/github-icon-2.svg" alt="GitHub" className="w-10 h-10" />
-                          <span className="text-lg font-semibold text-gray-900 dark:text-white">GitHub Connected</span>
-                        </div>
-                        <button
-                          onClick={handleUnlinkGithub}
-                          className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm"
-                        >
-                          Unlink GitHub Account
-                        </button>
-                        <p className="text-gray-600 dark:text-github-text-secondary mt-4">You can unlink your GitHub account at any time.</p>
-                      </div>
-                    ) : (
-                      <div className="text-center py-12">
+                        </h3>
                         <p className="text-gray-600 dark:text-github-text-secondary">
-                          Checking for GitHub connection...
+                          Authorize CodePulse to access your repositories. We'll automatically set up webhooks and handle all the configuration.
                         </p>
                       </div>
-                    )}
-                  </motion.div>
-                )}
-                {selectedMode === 'manual' && (
-                  <ManualRepoInlineForm />
-                )}
+                      <button
+                        onClick={() => {
+                          sessionStorage.setItem('showDashboardToast', '1');
+                          handleConnect();
+                        }}
+                        className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
+                      >
+                        Connect with GitHub
+                      </button>
+                      <div className="flex items-center justify-center gap-2 mt-6 text-sm text-gray-500 dark:text-github-text-secondary">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Secure OAuth authentication</span>
+                      </div>
+                    </>
+                  ) : githubLinked ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="flex items-center gap-3 mb-4">
+                        <img src="https://cdn.worldvectorlogo.com/logos/github-icon-2.svg" alt="GitHub" className="w-10 h-10" />
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">GitHub Connected</span>
+                      </div>
+                      <button
+                        onClick={handleUnlinkGithub}
+                        className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+                      >
+                        Unlink GitHub Account
+                      </button>
+                      <p className="text-gray-600 dark:text-github-text-secondary mt-4">You can unlink your GitHub account at any time.</p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600 dark:text-github-text-secondary">
+                        Checking for GitHub connection...
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
 
                 <motion.div
                   initial={{ opacity: 0 }}

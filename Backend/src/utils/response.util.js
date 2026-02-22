@@ -5,6 +5,7 @@
 
 const success = (res, data, message = 'Success', statusCode = 200) => {
   return res.status(statusCode).json({
+    success: true,
     status: 'SUCCESS',
     message,
     data,
@@ -14,6 +15,7 @@ const success = (res, data, message = 'Success', statusCode = 200) => {
 
 const error = (res, message, statusCode = 500, data = null) => {
   return res.status(statusCode).json({
+    success: false,
     status: 'ERROR',
     message,
     data,
@@ -23,6 +25,7 @@ const error = (res, message, statusCode = 500, data = null) => {
 
 const paginated = (res, items, pagination, message = 'Success', statusCode = 200) => {
   return res.status(statusCode).json({
+    success: true,
     status: 'SUCCESS',
     message,
     data: items,

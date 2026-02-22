@@ -7,13 +7,9 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user.controller');
-const manualRepoController = require('../controllers/manualRepo.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 // All user routes require authentication
 router.use(authMiddleware.verifyToken);
-
-// Manual repository creation
-router.post('/manual-repo', manualRepoController.addManualRepository);
 
 // User profile
 router.get('/profile', userController.getUserProfile);

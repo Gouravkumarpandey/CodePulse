@@ -1,4 +1,4 @@
-const { db, admin } = require('../src/config/firebase');
+const FirestoreService = require('../src/services/firestore.service');
 
 async function createAdmin(email) {
     if (!email) {
@@ -9,21 +9,18 @@ async function createAdmin(email) {
 
     try {
         console.log(`Searching for user with email: ${email}...`);
-        const usersSnapshot = await db.collection('users').where('email', '==', email).get();
+        const user = await FirestoreService.getUserByEmail(email);
 
-        if (usersSnapshot.empty) {
+        if (!user) {
             console.error(`User with email ${email} not found.`);
             console.log('You must sign up first before promoting to admin.');
             process.exit(1);
         }
 
-        const userDoc = usersSnapshot.docs[0];
-        const userData = userDoc.data();
+        console.log(`Found user: ${user.username} (${user.id})`);
+        console.log(`Current Role: ${user.role}`);
 
-        console.log(`Found user: ${userData.username} (${userDoc.id})`);
-        console.log(`Current Role: ${userData.role}`);
-
-        await userDoc.ref.update({
+        await FirestoreService.updateUser(user.id, {
             role: 'ADMIN',
             updatedAt: new Date().toISOString()
         });

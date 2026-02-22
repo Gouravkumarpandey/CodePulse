@@ -1,0 +1,16 @@
+--- Testing Admin Flow ---
+1. Signing up admin user...
+Admin user already exists.
+2. Promoting to ADMIN via script...
+Promotion Output: Searching for user with email: admin@example.com...
+[2026-02-22T14:37:59.969Z] [ERROR] Error fetching user by email from Firestore, checking local: "Firestore not initialized"
+Found user: admin (fdd1f3c24268ec8cd3561e514ded71d5)
+Current Role: USER
+[2026-02-22T14:37:59.973Z] [ERROR] Error updating user in Firestore, checking local: "Firestore not initialized"
+✅ Successfully promoted user to ADMIN.
+You can now log in to the admin dashboard.
+
+3. Logging in as Admin...
+Login Success! Role: ADMIN
+4. Testing admin endpoint: list users...
+Admin Success! Found undefined users.
