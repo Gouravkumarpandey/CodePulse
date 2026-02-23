@@ -48,8 +48,8 @@ export const authService = {
   },
 
   // Google OAuth
-  async googleAuth(credential: string): Promise<AuthResponse> {
-    const response = await api.post<{ data: AuthResponse }>('/auth/google/callback', { credential });
+  async googleAuth(accessToken: string): Promise<AuthResponse> {
+    const response = await api.post<{ data: AuthResponse }>('/auth/google/callback', { accessToken });
     return response.data.data;
   },
 

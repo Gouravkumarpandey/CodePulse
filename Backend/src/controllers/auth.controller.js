@@ -248,44 +248,52 @@ const githubAuth = async (req, res) => {
 
 const googleCallback = async (req, res) => {
   try {
-    const { credential } = req.body;
+    const { credential, accessToken } = req.body;
 
-    if (!credential) {
-      return response.error(res, 'Google credential token is required', 400);
+    if (!credential && !accessToken) {
+      return response.error(res, 'Google credential token or access token is required', 400);
     }
 
-    // Verify the Google ID Token
-    // We use the tokeninfo endpoint as we don't have google-auth-library installed on backend
-    // Valid for low-volume verification
-    const verifyResponse = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    let payload;
+    if (accessToken) {
+      // Verify via userinfo endpoint using access token
+      const verifyResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      payload = verifyResponse.data;
+    } else {
+      // Verify via tokeninfo endpoint using ID token (credential)
+      const verifyResponse = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+      payload = verifyResponse.data;
+    }
 
-    if (verifyResponse.status !== 200 || !verifyResponse.data) {
+    if (!payload) {
       throw new Error('Invalid Google Token');
     }
 
-    const payload = verifyResponse.data;
-    const googleId = payload.sub;
+    const googleId = payload.sub || payload.id;
     const email = payload.email;
     const name = payload.name;
     const picture = payload.picture;
+
+    if (!email) {
+      throw new Error('Google account must have an email address');
+    }
 
     // 1. Try to find by Email (Primary)
     let user = await DatabaseService.getUserByEmail(email);
 
     // 2. If existing user, verify/link Google ID
     if (user) {
-      // If Google ID isn't linked, link it now? Or just log them in?
-      // Let's link it to be consistent with GitHub flow
       if (!user.googleId) {
         await DatabaseService.updateUser(user.id, {
           googleId: googleId,
-          avatar: user.avatar || picture, // Keep existing if present
+          avatar: user.avatar || picture,
           lastLogin: new Date().toISOString(),
           isActive: true
         });
         user.googleId = googleId;
       } else {
-        // Just update login time
         await DatabaseService.updateUser(user.id, {
           lastLogin: new Date().toISOString()
         });
@@ -299,12 +307,12 @@ const googleCallback = async (req, res) => {
 
       const userData = {
         email,
-        username: name || email.split('@')[0], // Fallback username
+        username: name || email.split('@')[0],
         googleId: googleId,
         avatar: picture,
         role: 'USER',
         coins: 0,
-        avatarId: 1, // Default Minecraft avatar
+        avatarId: 1,
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -316,9 +324,8 @@ const googleCallback = async (req, res) => {
 
     const token = generateJWT(user.id);
     const userResponseData = { ...user };
-    delete userResponseData.password;
+    if (userResponseData.password) delete userResponseData.password;
 
-    // Include githubAccessToken in response if user has GitHub connected
     const responseData = {
       status: 'SUCCESS',
       user: userResponseData,
@@ -328,7 +335,6 @@ const googleCallback = async (req, res) => {
       responseData.githubAccessToken = user.githubAccessToken;
     }
 
-    // Return success
     response.success(res, responseData, 'Google authentication successful');
 
   } catch (error) {
