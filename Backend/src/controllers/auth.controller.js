@@ -317,20 +317,31 @@ const googleCallback = async (req, res) => {
       user = { id: userId, ...userData };
     }
 
-    const token = generateJWT(user.id);
-    const userResponseData = { ...user };
-    if (userResponseData.password) delete userResponseData.password;
+    const userIdForJWT = user._id || user.id;
+    const token = generateJWT(userIdForJWT);
+
+    const userResponse = user.toObject ? user.toObject() : { ...user };
+    if (userResponse.password) delete userResponse.password;
+
+    // Standardize user object for frontend
+    const standardizedUser = {
+      id: userResponse._id || userResponse.id,
+      username: userResponse.username,
+      email: userResponse.email,
+      role: userResponse.role,
+      avatar: userResponse.avatar || userResponse.avatarId,
+    };
 
     const responseData = {
-      status: 'SUCCESS',
-      user: userResponseData,
+      user: standardizedUser,
       token
     };
+
     if (user.githubAccessToken) {
       responseData.githubAccessToken = user.githubAccessToken;
     }
 
-    response.success(res, responseData, 'Google authentication successful');
+    return response.success(res, responseData, 'Google authentication successful');
 
   } catch (error) {
     console.error('Google OAuth callback error:', error.message);

@@ -33,9 +33,15 @@ export default function ConnectGitHubPage() {
         }
         setShowError(false);
         setConnecting(true);
-        const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'your-github-client-id';
-        const redirectUri = encodeURIComponent(import.meta.env.VITE_GITHUB_REDIRECT_URI || 'http://localhost:5173/github/callback');
+
+        const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'Ov23li4CIJ8ocjZkYyFd';
+        // Ensure redirect URI matches exactly what is in GitHub Developer Settings
+        const redirectUri = encodeURIComponent(import.meta.env.VITE_GITHUB_REDIRECT_URI || `${window.location.origin}/github/callback`);
         const scope = encodeURIComponent('repo user');
+
+        console.log('Connecting to GitHub with Client ID:', clientId);
+        console.log('Redirect URI:', decodeURIComponent(redirectUri));
+
         window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
     };
 
