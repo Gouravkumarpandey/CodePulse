@@ -61,7 +61,7 @@ const repoAnalysisSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-repoAnalysisSchema.index({ repoId: 1 });
+// Note: repoId already has a unique index via `unique: true` in the field definition
 repoAnalysisSchema.index({ userId: 1 });
 
 module.exports = mongoose.model('RepoAnalysis', repoAnalysisSchema);
