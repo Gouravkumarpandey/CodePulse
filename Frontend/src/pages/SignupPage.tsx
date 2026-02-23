@@ -2,6 +2,7 @@ import { useState, useContext, useEffect, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowLeft, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { authService } from '../services/auth.service';
 import { AuthContext } from '../context/AuthContext';
 
@@ -98,6 +99,33 @@ export default function SignupPage() {
       } else {
         setError('Signup failed. Please try again.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      setError('Google sign up failed. No credential returned.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const response = await authService.googleAuth(credentialResponse.credential);
+      login(response.user, response.token);
+      if (response.githubAccessToken) {
+        sessionStorage.setItem('github_token', response.githubAccessToken);
+      }
+      if (response.user.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        const githubToken = response.githubAccessToken || sessionStorage.getItem('github_token');
+        navigate(githubToken ? '/user' : '/connect-github');
+      }
+    } catch (err: any) {
+      const message = err.response?.data?.message || err.message || 'Google sign up failed.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -263,7 +291,28 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-black dark:text-white">
+          {/* DIVIDER */}
+          <div className="flex items-center my-6">
+            <div className="flex-1 h-px bg-black dark:bg-white opacity-20" />
+            <span className="mx-4 text-xs text-black dark:text-white opacity-60 font-medium uppercase tracking-widest">or</span>
+            <div className="flex-1 h-px bg-black dark:bg-white opacity-20" />
+          </div>
+
+          {/* GOOGLE SIGNUP */}
+          <div className="flex justify-center mb-4">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google sign up failed. Please try again.')}
+              useOneTap={false}
+              theme="outline"
+              size="large"
+              text="signup_with"
+              shape="rectangular"
+              width="400"
+            />
+          </div>
+
+          <p className="mt-4 text-center text-sm text-black dark:text-white">
             Already have an account?{' '}
             <button
               onClick={() => navigate('/login')}

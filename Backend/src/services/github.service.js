@@ -5,7 +5,7 @@
 
 const axios = require('axios');
 const GITHUB_CONFIG = require('../config/github');
-const FirestoreService = require('./firestore.service');
+const DatabaseService = require('./mongo.service');
 const consistencyService = require('./consistency.service');
 const ruleEngineService = require('./ruleEngine.service');
 const aiService = require('./ai.service');
@@ -26,6 +26,7 @@ class GitHubService {
           client_id: GITHUB_CONFIG.clientID,
           client_secret: GITHUB_CONFIG.clientSecret,
           code,
+          redirect_uri: GITHUB_CONFIG.redirectURL,
         },
         {
           headers: { Accept: 'application/json' },
@@ -210,7 +211,7 @@ class GitHubService {
         const commitSha = commit.sha;
 
         // Check existence
-        const existing = await FirestoreService.getCommitBySha(commitSha);
+        const existing = await DatabaseService.getCommitBySha(commitSha);
 
         if (!existing) {
           // It's new
@@ -232,7 +233,7 @@ class GitHubService {
             deletions: 0
           };
 
-          await FirestoreService.saveCommit(commitData);
+          await DatabaseService.saveCommit(commitData);
 
           // === COIN REWARD LOGIC ===
           const lowerMsg = commit.commit.message.toLowerCase();
@@ -264,15 +265,15 @@ class GitHubService {
 
       // Process Coins
       if (coinsAwarded > 0) {
-        await FirestoreService.addCoins(repo.userId, coinsAwarded);
+        await DatabaseService.addCoins(repo.userId, coinsAwarded);
         for (const tx of coinTransactions) {
-          await FirestoreService.addCoinTransaction(tx);
+          await DatabaseService.addCoinTransaction(tx);
         }
         console.log(`Awarded ${coinsAwarded} coins`);
       }
 
       // Update Repository Metadata
-      await FirestoreService.saveRepository(repo.id, {
+      await DatabaseService.saveRepository(repo.id, {
         branchCount: branches.length,
         openPRCount: pullRequests.length,
         lastSync: new Date().toISOString()
@@ -287,7 +288,7 @@ class GitHubService {
         lastAnalyzed: new Date().toISOString()
       };
 
-      await FirestoreService.saveRepoAnalysis(repo.id, analysisData);
+      await DatabaseService.saveRepoAnalysis(repo.id, analysisData);
 
       return { success: true, commitsCount: commits.length, newCommits: newCommitsCount, coinsAwarded };
 

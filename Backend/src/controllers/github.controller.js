@@ -4,7 +4,7 @@
  */
 
 const githubService = require('../services/github.service');
-const FirestoreService = require('../services/firestore.service');
+const DatabaseService = require('../services/mongo.service');
 const response = require('../utils/response.util');
 const { generateJWT } = require('../utils/jwt.util');
 
@@ -76,7 +76,7 @@ const linkGitHubAccount = async (req, res) => {
       updateData.email = githubUser.email;
     }
 
-    await FirestoreService.updateUser(userId, updateData);
+    await DatabaseService.updateUser(userId, updateData);
 
     // Generate new JWT token with updated user info
     const token = generateJWT(userId);
@@ -134,7 +134,7 @@ const connectRepository = async (req, res) => {
     }
 
     // Get all user repositories from Firestore
-    const userRepos = await FirestoreService.getUserRepositories(userId);
+    const userRepos = await DatabaseService.getUserRepositories(userId);
 
     // Check if repository already exists
     const existingRepo = userRepos.find(r => r.githubRepoId === repoId.toString());
@@ -158,7 +158,7 @@ const connectRepository = async (req, res) => {
       // Deactivate all other repos for this user
       for (const repo of userRepos) {
         if (repo.isActive) {
-          await FirestoreService.saveRepository(repo.id, {
+          await DatabaseService.saveRepository(repo.id, {
             ...repo,
             isActive: false,
           });
@@ -168,14 +168,14 @@ const connectRepository = async (req, res) => {
       // Create new repository in Firestore with auto-generated ID
       repoDocId = `repo_${userId}_${repoId}_${Date.now()}`;
       repoData.createdAt = new Date();
-      await FirestoreService.saveRepository(repoDocId, repoData);
+      await DatabaseService.saveRepository(repoDocId, repoData);
     } else {
       repoDocId = existingRepo.id;
 
       // Deactivate all other repos
       for (const repo of userRepos) {
         if (repo.id !== repoDocId && repo.isActive) {
-          await FirestoreService.saveRepository(repo.id, {
+          await DatabaseService.saveRepository(repo.id, {
             ...repo,
             isActive: false,
           });
@@ -183,7 +183,7 @@ const connectRepository = async (req, res) => {
       }
 
       // Update existing repository
-      await FirestoreService.saveRepository(repoDocId, repoData);
+      await DatabaseService.saveRepository(repoDocId, repoData);
     }
 
     // Start background commit fetching and analysis

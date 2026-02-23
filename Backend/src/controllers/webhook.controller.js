@@ -3,7 +3,7 @@
  * Handles GitHub push webhooks
  */
 
-const FirestoreService = require('../services/firestore.service');
+const DatabaseService = require('../services/mongo.service');
 const activityService = require('../services/activity.service');
 const response = require('../utils/response.util');
 
@@ -14,7 +14,7 @@ const handlePushEvent = async (req, res) => {
     const { repository, commits, pusher } = payload;
 
     // Find repository
-    const repos = await FirestoreService.getUserRepositories();
+    const repos = await DatabaseService.getUserRepositories();
     const repo = repos.find(r => r.githubRepoId === repository.id);
     if (!repo) {
       return response.error(res, 'Repository not found', 404);
@@ -32,7 +32,7 @@ const handlePushEvent = async (req, res) => {
     }
 
     // Update last sync time
-    await FirestoreService.saveRepository(repo.id, {
+    await DatabaseService.saveRepository(repo.id, {
       ...repo,
       lastSync: new Date(),
     });

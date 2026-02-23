@@ -3,7 +3,7 @@
  * Handles commit processing and storage with consistency analysis
  */
 
-const FirestoreService = require('./firestore.service');
+const DatabaseService = require('./mongo.service');
 const ruleEngine = require('./ruleEngine.service');
 const ConsistencyService = require('./consistency.service');
 const AIInsightsService = require('./ai.service');
@@ -15,13 +15,13 @@ class ActivityService {
   static async processCommit(repoId, userId, commitData) {
     try {
       // Check if commit already exists
-      const existingCommit = await FirestoreService.getCommitBySha(commitData.id);
+      const existingCommit = await DatabaseService.getCommitBySha(commitData.id);
       if (existingCommit) {
         return existingCommit;
       }
 
       // Get previous commit for gap calculation
-      const commits = await FirestoreService.getCommitsByRepo(repoId, 1);
+      const commits = await DatabaseService.getCommitsByRepo(repoId, 1);
       const previousCommit = commits.length > 0 ? commits[0] : null;
 
       // Validate against rules
@@ -48,7 +48,7 @@ class ActivityService {
         isViolation: validation.isValid === false,
       };
 
-      await FirestoreService.saveCommit(commit);
+      await DatabaseService.saveCommit(commit);
 
       return commit;
     } catch (error) {
@@ -62,7 +62,7 @@ class ActivityService {
    */
   static async getRepositoryActivitySummary(repoId) {
     try {
-      const commits = await FirestoreService.getCommitsByRepo(repoId, 100);
+      const commits = await DatabaseService.getCommitsByRepo(repoId, 100);
 
       if (commits.length === 0) {
         return {

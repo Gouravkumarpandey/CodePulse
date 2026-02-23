@@ -1,4 +1,4 @@
-const FirestoreService = require('../services/firestore.service');
+const DatabaseService = require('../services/mongo.service');
 const response = require('../utils/response.util');
 const crypto = require('crypto');
 
@@ -16,7 +16,7 @@ const getGapInHours = (date1, date2) => {
 // Get user profile
 const getUserProfile = async (req, res) => {
   try {
-    const user = await FirestoreService.getUser(req.user.id);
+    const user = await DatabaseService.getUser(req.user.id);
 
     if (!user) {
       return response.error(res, 'User not found', 404);
@@ -38,14 +38,14 @@ const getUserProfile = async (req, res) => {
 // Get active repository with overview
 const getActiveRepository = async (req, res) => {
   try {
-    const activeRepo = await FirestoreService.getActiveRepository(req.user.id);
+    const activeRepo = await DatabaseService.getActiveRepository(req.user.id);
 
     if (!activeRepo) {
       return response.success(res, { repository: null }, 'No active repository');
     }
 
     // Get last commit
-    const commits = await FirestoreService.getCommitsByRepo(activeRepo.id, 1);
+    const commits = await DatabaseService.getCommitsByRepo(activeRepo.id, 1);
     const lastCommit = commits.length > 0 ? commits[0] : null;
 
     // Default settings
@@ -91,7 +91,7 @@ const getActiveRepository = async (req, res) => {
 // Get user repositories
 const getUserRepositories = async (req, res) => {
   try {
-    const repos = await FirestoreService.getUserRepositories(req.user.id);
+    const repos = await DatabaseService.getUserRepositories(req.user.id);
     // Sort by createdAt desc locally since Firestore sorting might need composite index
     repos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     response.success(res, { repositories: repos });
@@ -108,13 +108,13 @@ const setActiveRepository = async (req, res) => {
     const userId = req.user.id;
 
     // Verify repo ownership
-    const repo = await FirestoreService.getRepository(repoId);
+    const repo = await DatabaseService.getRepository(repoId);
     if (!repo || repo.userId !== userId) {
       return response.error(res, 'Repository not found or unauthorized', 404);
     }
 
     // Deactivate all repos for this user first
-    const allRepos = await FirestoreService.getUserRepositories(userId);
+    const allRepos = await DatabaseService.getUserRepositories(userId);
     const batchOps = [];
 
     allRepos.forEach(r => {
@@ -141,11 +141,11 @@ const setActiveRepository = async (req, res) => {
     });
 
     if (batchOps.length > 0) {
-      await FirestoreService.batchWrite(batchOps);
+      await DatabaseService.batchWrite(batchOps);
     }
 
     // Refetch to return fresh state
-    const updatedRepo = await FirestoreService.getRepository(repoId);
+    const updatedRepo = await DatabaseService.getRepository(repoId);
 
     response.success(res, { repository: updatedRepo }, 'Active repository updated');
   } catch (error) {
@@ -160,13 +160,13 @@ const deleteRepository = async (req, res) => {
     const { repoId } = req.params;
     const userId = req.user.id;
 
-    const repo = await FirestoreService.getRepository(repoId);
+    const repo = await DatabaseService.getRepository(repoId);
     if (!repo || repo.userId !== userId) {
       return response.error(res, 'Repository not found or unauthorized', 404);
     }
 
     // Delete repo
-    await FirestoreService.deleteRepository(repoId);
+    await DatabaseService.deleteRepository(repoId);
 
     // Note: Deleting all commits for a repo in Firestore is expensive (read then delete).
     // For now, we might leave them orphaned or delete them if critical.
@@ -193,7 +193,7 @@ const updateUserProfile = async (req, res) => {
 
     // Handle settings
     let currentSettings = {};
-    const user = await FirestoreService.getUser(userId);
+    const user = await DatabaseService.getUser(userId);
     if (user && user.settings) currentSettings = { ...user.settings };
 
     if (updateData.settings) {
@@ -212,7 +212,7 @@ const updateUserProfile = async (req, res) => {
       return response.success(res, { user }, 'No changes detected');
     }
 
-    const updatedUser = await FirestoreService.updateUser(userId, allowedUpdates);
+    const updatedUser = await DatabaseService.updateUser(userId, allowedUpdates);
     delete updatedUser.password;
 
     response.success(res, { user: updatedUser }, 'Profile updated successfully');
@@ -226,12 +226,12 @@ const updateUserProfile = async (req, res) => {
 const sendOtp = async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await FirestoreService.getUser(userId);
+    const user = await DatabaseService.getUser(userId);
 
     const otp = crypto.randomInt(100000, 999999).toString();
     const otpExpires = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes
 
-    await FirestoreService.updateUser(userId, { otp, otpExpires });
+    await DatabaseService.updateUser(userId, { otp, otpExpires });
 
     await sendEmail(user.email, 'Security Verification OTP', `Your OTP is: ${otp}. It expires in 5 minutes.`);
 
@@ -247,7 +247,7 @@ const deactivateAccount = async (req, res) => {
   try {
     const { otp } = req.body;
     const userId = req.user.id;
-    const user = await FirestoreService.getUser(userId);
+    const user = await DatabaseService.getUser(userId);
 
     const now = new Date();
     const expires = new Date(user.otpExpires);
@@ -256,7 +256,7 @@ const deactivateAccount = async (req, res) => {
       return response.error(res, 'Invalid or expired OTP', 400);
     }
 
-    await FirestoreService.updateUser(userId, {
+    await DatabaseService.updateUser(userId, {
       isActive: false,
       otp: null,
       otpExpires: null
@@ -274,7 +274,7 @@ const deleteUserAccount = async (req, res) => {
   try {
     const { otp } = req.body;
     const userId = req.user.id;
-    const user = await FirestoreService.getUser(userId);
+    const user = await DatabaseService.getUser(userId);
 
     const now = new Date();
     const expires = new Date(user.otpExpires);
@@ -284,7 +284,7 @@ const deleteUserAccount = async (req, res) => {
     }
 
     // Soft delete / Mark inactive
-    await FirestoreService.updateUser(userId, {
+    await DatabaseService.updateUser(userId, {
       isDeleted: true,
       isActive: false,
       otp: null,
@@ -307,10 +307,10 @@ const getRepositoryActivity = async (req, res) => {
     // Verify ownership/access if strictly private
     // For now we assume repoId knowledge implies access or it's public enough for the user context
 
-    const commits = await FirestoreService.getCommitsByRepo(repoId, limit);
+    const commits = await DatabaseService.getCommitsByRepo(repoId, limit);
 
     // Get analysis from Firestore
-    const analysis = await FirestoreService.getRepoAnalysis(repoId);
+    const analysis = await DatabaseService.getRepoAnalysis(repoId);
 
     response.success(res, {
       commits: commits,
@@ -326,7 +326,7 @@ const getRepositoryActivity = async (req, res) => {
 const getWarningsAndViolations = async (req, res) => {
   try {
     const userId = req.user.id;
-    const repos = await FirestoreService.getUserRepositories(userId);
+    const repos = await DatabaseService.getUserRepositories(userId);
     const repoIds = repos.map(r => r.id);
 
     if (repoIds.length === 0) {
@@ -337,8 +337,8 @@ const getWarningsAndViolations = async (req, res) => {
     // For MVP/Demo, we take top 10 most recent repos
     const targetRepoIds = repoIds.slice(0, 10);
 
-    const warnings = await FirestoreService.getCommitsByStatus(targetRepoIds, 'WARNING', 50);
-    const violations = await FirestoreService.getCommitsByStatus(targetRepoIds, 'VIOLATION', 50);
+    const warnings = await DatabaseService.getCommitsByStatus(targetRepoIds, 'WARNING', 50);
+    const violations = await DatabaseService.getCommitsByStatus(targetRepoIds, 'VIOLATION', 50);
 
     response.success(res, { warnings, violations });
   } catch (error) {
@@ -351,8 +351,8 @@ const getWarningsAndViolations = async (req, res) => {
 const getDashboardSummary = async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await FirestoreService.getUser(userId);
-    const repos = await FirestoreService.getUserRepositories(userId);
+    const user = await DatabaseService.getUser(userId);
+    const repos = await DatabaseService.getUserRepositories(userId);
 
     // Calculate stats
     // Note: without aggregation queries in Firestore (which are newer/expensive or require specific indexes),
@@ -388,7 +388,7 @@ const getDashboardSummary = async (req, res) => {
 const getAdminRules = async (req, res) => {
   try {
     // Mock or fetch from Firestore adminSettings
-    const settings = await FirestoreService.getAdminSettings();
+    const settings = await DatabaseService.getAdminSettings();
     const rules = settings || {
       maxInactivityGapHours: 2,
       gracePeriodHours: 1,
@@ -405,7 +405,7 @@ const getAdminRules = async (req, res) => {
 
 const getHackathonStatus = async (req, res) => {
   try {
-    const status = await FirestoreService.getHackathonStatus();
+    const status = await DatabaseService.getHackathonStatus();
     response.success(res, status);
   } catch (error) {
     console.error('getHackathonStatus error:', error);

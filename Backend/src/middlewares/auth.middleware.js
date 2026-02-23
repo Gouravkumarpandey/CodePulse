@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const response = require('../utils/response.util');
-const FirestoreService = require('../services/firestore.service');
+const DatabaseService = require('../services/mongo.service');
 
 const verifyToken = async (req, res, next) => {
   try {
@@ -18,7 +18,7 @@ const verifyToken = async (req, res, next) => {
 
     // Check if this is a GitHub token (not a JWT)
     if (token.startsWith('gho_') || token.startsWith('ghp_') || token.startsWith('ghu_') || token.startsWith('ghs_') || token.startsWith('github_pat_')) {
-      const user = await FirestoreService.getUserByGithubAccessToken?.(token); // Need to implement this or assume generic
+      const user = await DatabaseService.getUserByGithubAccessToken?.(token); // Need to implement this or assume generic
       // For now, if we don't have a lookup by token, we might fall back to basic user obj
       req.user = { githubAccessToken: token };
       next();
@@ -28,7 +28,7 @@ const verifyToken = async (req, res, next) => {
     // JWT Verification
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await FirestoreService.getUser(decoded.userId);
+    const user = await DatabaseService.getUser(decoded.userId);
 
     if (!user) {
       return response.error(res, 'User not found', 401);

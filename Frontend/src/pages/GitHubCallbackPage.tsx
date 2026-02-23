@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Github, Loader2, CheckCircle2, XCircle } from 'lucide-react';
@@ -11,17 +11,23 @@ export default function GitHubCallbackPage() {
   const { login } = useContext(AuthContext);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Authenticating with GitHub...');
+  const calledRef = useRef(false);
 
   useEffect(() => {
     const code = searchParams.get('code');
     const error = searchParams.get('error');
 
     if (error) {
+      if (calledRef.current) return;
+      calledRef.current = true;
       setStatus('error');
       setMessage('GitHub authentication was cancelled or failed');
       setTimeout(() => navigate('/login'), 3000);
       return;
     }
+
+    if (!code || calledRef.current) return;
+    calledRef.current = true;
 
     if (!code) {
       setStatus('error');

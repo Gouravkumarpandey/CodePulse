@@ -3,14 +3,14 @@
  * Handles admin dashboard and global rules
  */
 
-const FirestoreService = require('../services/firestore.service');
+const DatabaseService = require('../services/mongo.service');
 const response = require('../utils/response.util');
 const timeUtil = require('../utils/time.util');
 
 // Get admin settings
 const getAdminSettings = async (req, res) => {
   try {
-    let settings = await FirestoreService.getAdminSettings();
+    let settings = await DatabaseService.getAdminSettings();
 
     if (!settings) {
       // Default settings if not in DB
@@ -21,7 +21,7 @@ const getAdminSettings = async (req, res) => {
         totalHackathonDurationHours: 48,
       };
       // Save defaults to avoid null on next call
-      await FirestoreService.saveAdminSettings(settings);
+      await DatabaseService.saveAdminSettings(settings);
     }
 
     response.success(res, { settings });
@@ -42,7 +42,7 @@ const updateAdminSettings = async (req, res) => {
       totalHackathonDurationHours: parseFloat(totalHackathonDurationHours) || 48,
     };
 
-    const savedSettings = await FirestoreService.saveAdminSettings(newSettings);
+    const savedSettings = await DatabaseService.saveAdminSettings(newSettings);
 
     response.success(res, { settings: savedSettings }, 'Settings updated successfully');
   } catch (error) {
@@ -57,7 +57,7 @@ const getAllUsers = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
 
     // Fetch all users from Firestore
-    const users = await FirestoreService.getAllUsers();
+    const users = await DatabaseService.getAllUsers();
 
     // Basic in-memory pagination for now (scalable enough for < 1000 users)
     const startIndex = (page - 1) * limit;
@@ -67,10 +67,10 @@ const getAllUsers = async (req, res) => {
     // Enrich with activity data if possible (e.g., last pulse)
     const enrichedUsers = await Promise.all(paginatedUsers.map(async (user) => {
       // Get fetch active repo or last commit for last pulse
-      const activeRepo = await FirestoreService.getActiveRepository(user.id);
+      const activeRepo = await DatabaseService.getActiveRepository(user.id);
       let lastCommitDate = null;
       if (activeRepo) {
-        const recentCommits = await FirestoreService.getCommitsByRepo(activeRepo.id, 1);
+        const recentCommits = await DatabaseService.getCommitsByRepo(activeRepo.id, 1);
         if (recentCommits.length > 0) {
           lastCommitDate = recentCommits[0].commitDate;
         }
@@ -101,10 +101,10 @@ const getAllUsers = async (req, res) => {
 const getUserActivityMonitoring = async (req, res) => {
   try {
     // Fetch all users (mocking for now as getAllUsers not in service)
-    // const users = await FirestoreService.getAllUsers(); 
+    // const users = await DatabaseService.getAllUsers(); 
     const users = []; // Empty for safety until method exists
 
-    const settings = await FirestoreService.getAdminSettings();
+    const settings = await DatabaseService.getAdminSettings();
     const maxGap = settings?.maxInactivityGapHours || 24;
 
     const activityData = [];
@@ -121,17 +121,17 @@ const getUserDetail = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await FirestoreService.getUser(userId);
+    const user = await DatabaseService.getUser(userId);
     if (!user) {
       return response.error(res, 'User not found', 404);
     }
 
     // Get active repository
-    const activeRepo = await FirestoreService.getActiveRepository(userId);
+    const activeRepo = await DatabaseService.getActiveRepository(userId);
 
     // Get all commits
     const commits = activeRepo
-      ? await FirestoreService.getCommitsByRepo(activeRepo.id, 100)
+      ? await DatabaseService.getCommitsByRepo(activeRepo.id, 100)
       : [];
 
     // Admin Actions - would need a new collection/service method
@@ -162,7 +162,7 @@ const issueWarning = async (req, res) => {
   try {
     const { userId, reason, commitId } = req.body;
 
-    const user = await FirestoreService.getUser(userId);
+    const user = await DatabaseService.getUser(userId);
     if (!user) {
       return response.error(res, 'User not found', 404);
     }
@@ -174,10 +174,10 @@ const issueWarning = async (req, res) => {
       status: user.status === 'ACTIVE' ? 'WARNING' : user.status
     };
 
-    await FirestoreService.updateUser(userId, updates);
+    await DatabaseService.updateUser(userId, updates);
 
     // Log action - need service method
-    // await FirestoreService.logUserAction({...});
+    // await DatabaseService.logUserAction({...});
 
     response.success(res, { user: { ...user, ...updates } }, 'Warning issued successfully');
   } catch (error) {
@@ -189,12 +189,12 @@ const setObservation = async (req, res) => {
   try {
     const { userId, isUnderObservation, notes } = req.body;
 
-    const user = await FirestoreService.getUser(userId);
+    const user = await DatabaseService.getUser(userId);
     if (!user) {
       return response.error(res, 'User not found', 404);
     }
 
-    await FirestoreService.updateUser(userId, { isUnderObservation });
+    await DatabaseService.updateUser(userId, { isUnderObservation });
 
     response.success(res, { user: { ...user, isUnderObservation } }, 'Observation status updated');
   } catch (error) {
@@ -206,7 +206,7 @@ const disqualifyUser = async (req, res) => {
   try {
     const { userId, reason } = req.body;
 
-    const user = await FirestoreService.getUser(userId);
+    const user = await DatabaseService.getUser(userId);
     if (!user) {
       return response.error(res, 'User not found', 404);
     }
@@ -217,7 +217,7 @@ const disqualifyUser = async (req, res) => {
       disqualificationReason: reason
     };
 
-    await FirestoreService.updateUser(userId, updates);
+    await DatabaseService.updateUser(userId, updates);
 
     response.success(res, { user: { ...user, ...updates } }, 'User disqualified successfully');
   } catch (error) {
@@ -229,7 +229,7 @@ const reactivateUser = async (req, res) => {
   try {
     const { userId, notes } = req.body;
 
-    const user = await FirestoreService.getUser(userId);
+    const user = await DatabaseService.getUser(userId);
     if (!user) {
       return response.error(res, 'User not found', 404);
     }
@@ -242,7 +242,7 @@ const reactivateUser = async (req, res) => {
       violationCount: 0
     };
 
-    await FirestoreService.updateUser(userId, updates);
+    await DatabaseService.updateUser(userId, updates);
 
     response.success(res, { user: { ...user, ...updates } }, 'User reactivated successfully');
   } catch (error) {
@@ -253,7 +253,7 @@ const reactivateUser = async (req, res) => {
 // Get activity violations
 const getActivityViolations = async (req, res) => {
   try {
-    const violations = await FirestoreService.getGlobalViolations(50);
+    const violations = await DatabaseService.getGlobalViolations(50);
     response.success(res, { violations });
   } catch (error) {
     response.error(res, error.message, 500);
@@ -263,9 +263,9 @@ const getActivityViolations = async (req, res) => {
 // Get Dashboard Stats (New Endpoint)
 const getDashboardStats = async (req, res) => {
   try {
-    const users = await FirestoreService.getAllUsers();
-    const recentActivity = await FirestoreService.getGlobalRecentActivity(100);
-    const violations = await FirestoreService.getGlobalViolations(100);
+    const users = await DatabaseService.getAllUsers();
+    const recentActivity = await DatabaseService.getGlobalRecentActivity(100);
+    const violations = await DatabaseService.getGlobalViolations(100);
 
     const activeNow = users.filter(u => u.status === 'ACTIVE').length;
 
@@ -323,7 +323,7 @@ const getDashboardStats = async (req, res) => {
 // Hackathon Management
 const startHackathon = async (req, res) => {
   try {
-    const result = await FirestoreService.startHackathon();
+    const result = await DatabaseService.startHackathon();
     response.success(res, result, 'Hackathon started successfully');
   } catch (error) {
     response.error(res, error.message, 500);
@@ -332,7 +332,7 @@ const startHackathon = async (req, res) => {
 
 const endHackathon = async (req, res) => {
   try {
-    const result = await FirestoreService.endHackathon();
+    const result = await DatabaseService.endHackathon();
     response.success(res, result, 'Hackathon ended successfully');
   } catch (error) {
     response.error(res, error.message, 500);
@@ -341,7 +341,7 @@ const endHackathon = async (req, res) => {
 
 const getHackathonStatus = async (req, res) => {
   try {
-    const status = await FirestoreService.getHackathonStatus();
+    const status = await DatabaseService.getHackathonStatus();
     response.success(res, status);
   } catch (error) {
     response.error(res, error.message, 500);

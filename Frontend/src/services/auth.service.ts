@@ -27,13 +27,6 @@ interface GitHubAuthData {
   accessToken: string;
 }
 
-interface GoogleAuthData {
-  googleId: string;
-  username: string;
-  email: string;
-  avatar?: string;
-  accessToken: string;
-}
 
 export const authService = {
   // Email/Password Login
@@ -55,8 +48,8 @@ export const authService = {
   },
 
   // Google OAuth
-  async googleAuth(data: GoogleAuthData): Promise<AuthResponse> {
-    const response = await api.post<{ data: AuthResponse }>('/auth/google', data);
+  async googleAuth(credential: string): Promise<AuthResponse> {
+    const response = await api.post<{ data: AuthResponse }>('/auth/google/callback', { credential });
     return response.data.data;
   },
 

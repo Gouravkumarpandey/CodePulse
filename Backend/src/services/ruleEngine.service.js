@@ -3,7 +3,7 @@
  * Handles inactivity gap logic and violation detection
  */
 
-const FirestoreService = require('./firestore.service');
+const DatabaseService = require('./mongo.service');
 const timeUtil = require('../utils/time.util');
 
 class RuleEngine {
@@ -14,7 +14,7 @@ class RuleEngine {
    * @returns {Object} { gap, status, isViolation }
    */
   static async checkInactivityViolation(lastCommitDate, currentCommitDate) {
-    const settings = await FirestoreService.getAdminSettings();
+    const settings = await DatabaseService.getAdminSettings();
 
     const gap = timeUtil.getGapInHours(lastCommitDate, currentCommitDate);
     const maxGap = settings?.maxInactivityGapHours || 24;
@@ -74,8 +74,8 @@ class RuleEngine {
    */
   static async evaluateRules(repoId) {
     try {
-      const commits = await FirestoreService.getCommitsByRepo(repoId);
-      const settings = await FirestoreService.getAdminSettings();
+      const commits = await DatabaseService.getCommitsByRepo(repoId);
+      const settings = await DatabaseService.getAdminSettings();
 
       const maxGap = settings?.maxInactivityGapHours || 24;
       const warningThreshold = settings?.warningThresholdHours || 20;

@@ -1,4 +1,4 @@
-const FirestoreService = require('../services/firestore.service');
+const DatabaseService = require('../services/mongo.service');
 const { generateJWT } = require('../utils/jwt.util');
 const response = require('../utils/response.util');
 const logger = require('../utils/logger.util');
@@ -18,7 +18,7 @@ const signup = async (req, res) => {
     }
 
     // Check if user exists
-    const existingUser = await FirestoreService.getUserByEmail(email);
+    const existingUser = await DatabaseService.getUserByEmail(email);
     if (existingUser) {
       return response.error(res, 'User with this email already exists', 400);
     }
@@ -28,25 +28,21 @@ const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create new user
-    const userId = crypto.randomBytes(16).toString('hex');
-    logger.info(`Generated userId: ${userId}`);
-
     const userData = {
       email,
-      password: hashedPassword, // Now storing hashed password
+      password: hashedPassword,
       username,
       role: role || 'USER',
       coins: 0,
       avatarId: 1,
       isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
     };
 
-    await FirestoreService.saveUser(userId, userData);
+    const user = await DatabaseService.saveUser(null, userData);
+    const userId = user._id;
 
     const token = generateJWT(userId);
-    const userResponse = { id: userId, ...userData };
+    const userResponse = user.toObject();
     delete userResponse.password;
 
     response.success(res, { user: userResponse, token }, 'User created successfully', 201);
@@ -69,7 +65,7 @@ const login = async (req, res) => {
       return response.error(res, 'Email and password are required', 400);
     }
 
-    const user = await FirestoreService.getUserByEmail(email);
+    const user = await DatabaseService.getUserByEmail(email);
     if (!user) {
       return response.error(res, 'Invalid email or password', 401);
     }
@@ -87,7 +83,7 @@ const login = async (req, res) => {
       if (isMatch) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        await FirestoreService.updateUser(user.id, { password: hashedPassword });
+        await DatabaseService.updateUser(user.id, { password: hashedPassword });
         console.log(`Upgraded password for user: ${email}`);
       }
     }
@@ -100,7 +96,7 @@ const login = async (req, res) => {
       return response.error(res, 'Account is deactivated. Please contact support.', 403);
     }
 
-    await FirestoreService.updateUser(user.id, { lastLogin: new Date().toISOString() });
+    await DatabaseService.updateUser(user.id, { lastLogin: new Date().toISOString() });
 
     const token = generateJWT(user.id);
     const userResponse = { ...user };
@@ -159,14 +155,14 @@ const githubCallback = async (req, res) => {
     const githubId = githubUser.id.toString();
 
     // 1. Try to find by GitHub ID
-    let user = await FirestoreService.getUserByGithubId(githubId);
+    let user = await DatabaseService.getUserByGithubId(githubId);
 
     // 2. If not found, try to find by Email (Account Linking)
     if (!user && githubUser.email) {
-      const existingUser = await FirestoreService.getUserByEmail(githubUser.email);
+      const existingUser = await DatabaseService.getUserByEmail(githubUser.email);
       if (existingUser) {
         console.log(`Linking GitHub account ${githubId} to existing user ${existingUser.email}`);
-        await FirestoreService.updateUser(existingUser.id, {
+        await DatabaseService.updateUser(existingUser.id, {
           githubId: githubId,
           githubAccessToken: accessToken,
           // meaningful updates
@@ -198,14 +194,14 @@ const githubCallback = async (req, res) => {
         updatedAt: new Date().toISOString()
       };
 
-      await FirestoreService.saveUser(userId, userData);
+      await DatabaseService.saveUser(userId, userData);
       user = { id: userId, ...userData }; // Properly assign user
     } else {
       // Exists (either found by ID or Linked), just update token/login time
       // If user was just linked above, user object is set. If found by ID, it's set.
       // We should update the token if it changed.
       if (user.githubAccessToken !== accessToken) {
-        await FirestoreService.updateUser(user.id, {
+        await DatabaseService.updateUser(user.id, {
           githubAccessToken: accessToken,
           lastLogin: new Date().toISOString()
         });
@@ -274,14 +270,14 @@ const googleCallback = async (req, res) => {
     const picture = payload.picture;
 
     // 1. Try to find by Email (Primary)
-    let user = await FirestoreService.getUserByEmail(email);
+    let user = await DatabaseService.getUserByEmail(email);
 
     // 2. If existing user, verify/link Google ID
     if (user) {
       // If Google ID isn't linked, link it now? Or just log them in?
       // Let's link it to be consistent with GitHub flow
       if (!user.googleId) {
-        await FirestoreService.updateUser(user.id, {
+        await DatabaseService.updateUser(user.id, {
           googleId: googleId,
           avatar: user.avatar || picture, // Keep existing if present
           lastLogin: new Date().toISOString(),
@@ -290,7 +286,7 @@ const googleCallback = async (req, res) => {
         user.googleId = googleId;
       } else {
         // Just update login time
-        await FirestoreService.updateUser(user.id, {
+        await DatabaseService.updateUser(user.id, {
           lastLogin: new Date().toISOString()
         });
       }
@@ -314,7 +310,7 @@ const googleCallback = async (req, res) => {
         updatedAt: new Date().toISOString()
       };
 
-      await FirestoreService.saveUser(userId, userData);
+      await DatabaseService.saveUser(userId, userData);
       user = { id: userId, ...userData };
     }
 

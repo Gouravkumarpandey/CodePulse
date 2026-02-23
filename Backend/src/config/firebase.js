@@ -12,11 +12,24 @@ let serviceAccount;
 
 // Production: credentials stored as env vars on Render dashboard
 if (process.env.FIREBASE_PRIVATE_KEY) {
+  console.log('🔥 Initializing Firebase Admin using environment variables.');
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  // Clean up if the key is wrapped in quotes
+  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    privateKey = privateKey.substring(1, privateKey.length - 1);
+  } else if (privateKey.startsWith("'") && privateKey.endsWith("'")) {
+    privateKey = privateKey.substring(1, privateKey.length - 1);
+  }
+
+  // Handle both literal newlines and escaped \n
+  privateKey = privateKey.replace(/\\n/g, '\n');
+
   serviceAccount = {
     type: 'service_account',
     project_id: process.env.FIREBASE_PROJECT_ID,
     private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-    private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    private_key: privateKey,
     client_email: process.env.FIREBASE_CLIENT_EMAIL,
     client_id: process.env.FIREBASE_CLIENT_ID,
     auth_uri: 'https://accounts.google.com/o/oauth2/auth',
@@ -29,6 +42,7 @@ if (process.env.FIREBASE_PRIVATE_KEY) {
   // Local development: load from JSON file (gitignored)
   try {
     serviceAccount = require('./firebase-credentials.json');
+    console.log('🔥 Initializing Firebase Admin using firebase-credentials.json');
   } catch (e) {
     console.warn('⚠️ Firebase credentials not found. Falling back to local JSON storage for all operations.');
     // Don't exit, let the app run with local fallbacks
