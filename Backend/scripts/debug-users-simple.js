@@ -1,19 +1,30 @@
-const { db } = require('../src/config/firebase');
+/**
+ * Debug Users Simple Script (MongoDB)
+ * Usage: node scripts/debug-users-simple.js
+ */
+
+require('dotenv').config();
+const mongoose = require('mongoose');
+const User = require('../src/models/User');
 
 async function listUsers() {
     try {
-        const snapshot = await db.collection('users').get();
-        if (snapshot.empty) {
+        await mongoose.connect(process.env.MONGODB_URI);
+
+        const users = await User.find({});
+        if (users.length === 0) {
             console.log('No users.');
-            return;
+            process.exit(0);
         }
 
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            console.log(`User: ${d.email}, Pass: ${d.password}, Role: ${d.role}`);
+        users.forEach(u => {
+            console.log(`User: ${u.email}, Role: ${u.role}, ID: ${u._id}`);
         });
+        process.exit(0);
     } catch (error) {
         console.error(error);
+        process.exit(1);
     }
 }
+
 listUsers();

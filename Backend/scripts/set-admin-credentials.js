@@ -1,4 +1,12 @@
-const { db } = require('../src/config/firebase');
+/**
+ * Set Admin Credentials Script (MongoDB)
+ * Usage: node scripts/set-admin-credentials.js <email> <password>
+ */
+
+require('dotenv').config();
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const User = require('../src/models/User');
 
 async function setAdminCredentials(email, password) {
     if (!email || !password) {
@@ -7,41 +15,35 @@ async function setAdminCredentials(email, password) {
     }
 
     try {
+        await mongoose.connect(process.env.MONGODB_URI);
         console.log(`Searching for user with email: ${email}...`);
-        const usersSnapshot = await db.collection('users').where('email', '==', email).limit(1).get();
 
-        if (usersSnapshot.empty) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        let user = await User.findOne({ email });
+
+        if (!user) {
             console.log(`User not found. Creating new ADMIN user...`);
-            // Create new admin user
-            const userData = {
+            user = new User({
                 email,
-                password,
+                password: hashedPassword,
                 username: email.split('@')[0],
                 role: 'ADMIN',
                 coins: 9999,
-                avatarId: 1, // Default Minecraft
                 isActive: true,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-
-            await db.collection('users').add(userData);
-            console.log(`✅ Created new ADMIN user: ${email} with password: ${password}`);
+            });
+            await user.save();
+            console.log(`✅ Created new ADMIN user: ${email}`);
         } else {
-            const userDoc = usersSnapshot.docs[0];
-            console.log(`Found user: ${userDoc.data().email}. Updating credentials...`);
-
-            await userDoc.ref.update({
-                password: password,
+            console.log(`Found user: ${user.email}. Updating credentials...`);
+            await User.findByIdAndUpdate(user._id, {
+                password: hashedPassword,
                 role: 'ADMIN',
                 isActive: true,
-                updatedAt: new Date().toISOString()
             });
             console.log(`✅ Updated existing user to ADMIN with new password.`);
         }
 
         process.exit(0);
-
     } catch (error) {
         console.error('Error setting admin credentials:', error);
         process.exit(1);

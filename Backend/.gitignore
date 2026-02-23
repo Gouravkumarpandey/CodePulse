@@ -8,9 +8,6 @@ yarn-error.log
 .env.local
 .env.*.local
 
-# Firebase Credentials (IMPORTANT: Keep this secure!)
-src/config/firebase-credentials.json
-
 # Logs
 logs/
 *.log

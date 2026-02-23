@@ -1,30 +1,36 @@
-const { db } = require('../src/config/firebase');
+/**
+ * Debug Users Script (MongoDB)
+ * Usage: node scripts/debug-users.js
+ */
+
+require('dotenv').config();
+const mongoose = require('mongoose');
+const User = require('../src/models/User');
 
 async function listUsers() {
     try {
+        await mongoose.connect(process.env.MONGODB_URI);
         console.log('Fetching all users...');
-        const snapshot = await db.collection('users').get();
 
-        if (snapshot.empty) {
+        const users = await User.find({}).sort({ createdAt: -1 });
+
+        if (users.length === 0) {
             console.log('No users found.');
-            return;
+            process.exit(0);
         }
 
-        const users = [];
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            users.push({
-                id: doc.id,
-                email: data.email,
-                password: data.password || '[NO PASSWORD]',
-                role: data.role,
-                isActive: data.isActive
-            });
-        });
+        const output = users.map(u => ({
+            id: u._id,
+            email: u.email,
+            role: u.role,
+            isActive: u.isActive
+        }));
 
-        console.log(JSON.stringify(users, null, 2));
+        console.log(JSON.stringify(output, null, 2));
+        process.exit(0);
     } catch (error) {
         console.error('Error:', error);
+        process.exit(1);
     }
 }
 

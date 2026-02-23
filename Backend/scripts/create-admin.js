@@ -1,4 +1,11 @@
-const FirestoreService = require('../src/services/firestore.service');
+/**
+ * Create/Promote Admin Script (MongoDB)
+ * Usage: node scripts/create-admin.js <user@example.com>
+ */
+
+require('dotenv').config();
+const mongoose = require('mongoose');
+const User = require('../src/models/User');
 
 async function createAdmin(email) {
     if (!email) {
@@ -8,8 +15,10 @@ async function createAdmin(email) {
     }
 
     try {
-        console.log(`Searching for user with email: ${email}...`);
-        const user = await FirestoreService.getUserByEmail(email);
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log('Connected to MongoDB.');
+
+        const user = await User.findOne({ email });
 
         if (!user) {
             console.error(`User with email ${email} not found.`);
@@ -17,10 +26,10 @@ async function createAdmin(email) {
             process.exit(1);
         }
 
-        console.log(`Found user: ${user.username} (${user.id})`);
+        console.log(`Found user: ${user.username} (${user._id})`);
         console.log(`Current Role: ${user.role}`);
 
-        await FirestoreService.updateUser(user.id, {
+        await User.findByIdAndUpdate(user._id, {
             role: 'ADMIN',
             updatedAt: new Date().toISOString()
         });
@@ -28,7 +37,6 @@ async function createAdmin(email) {
         console.log('✅ Successfully promoted user to ADMIN.');
         console.log('You can now log in to the admin dashboard.');
         process.exit(0);
-
     } catch (error) {
         console.error('Error promoting user:', error);
         process.exit(1);

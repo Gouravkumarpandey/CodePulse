@@ -1,14 +1,20 @@
-const { db } = require('../src/config/firebase');
+/**
+ * Debug Users Clean Script (MongoDB)
+ * Usage: node scripts/debug-users-clean.js
+ */
+
+require('dotenv').config();
+const mongoose = require('mongoose');
+const User = require('../src/models/User');
 
 async function listUsers() {
-    const snapshot = await db.collection('users').get();
-    snapshot.forEach(doc => {
-        const d = doc.data();
+    const users = await User.find({});
+    users.forEach(u => {
         console.log('--------------------------------------------------');
-        console.log(`Email: ${d.email}`);
-        console.log(`Password: ${d.password}`);
-        console.log(`Role: ${d.role}`);
+        console.log(`Email: ${u.email}`);
+        console.log(`Role:  ${u.role}`);
         console.log('--------------------------------------------------');
     });
 }
-listUsers();
+
+mongoose.connect(process.env.MONGODB_URI).then(listUsers);

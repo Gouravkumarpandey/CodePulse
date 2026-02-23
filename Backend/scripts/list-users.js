@@ -1,19 +1,27 @@
-const { db } = require('../src/config/firebase');
+/**
+ * List Users Script (MongoDB)
+ * Usage: node scripts/list-users.js
+ */
+
+require('dotenv').config();
+const mongoose = require('mongoose');
+const User = require('../src/models/User');
 
 async function listUsers() {
     try {
-        console.log('Fetching all users...');
-        const snapshot = await db.collection('users').get();
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log('Connected to MongoDB.');
 
-        if (snapshot.empty) {
+        const users = await User.find({}).sort({ createdAt: -1 });
+
+        if (users.length === 0) {
             console.log('No users found in the database.');
-            return;
+            process.exit(0);
         }
 
         console.log('\n--- User List ---');
-        snapshot.forEach(doc => {
-            const user = doc.data();
-            console.log(`Email: ${user.email} | Password: ${user.password} | Role: ${user.role} | ID: ${doc.id}`);
+        users.forEach(user => {
+            console.log(`Email: ${user.email} | Role: ${user.role} | ID: ${user._id}`);
         });
         console.log('-----------------\n');
         process.exit(0);

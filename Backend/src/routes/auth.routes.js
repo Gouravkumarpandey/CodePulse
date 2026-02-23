@@ -19,7 +19,6 @@ router.post('/github/callback', authController.githubCallback);
 
 // Google OAuth
 router.post('/google/callback', authController.googleCallback);
-// router.post('/google/firebase', authController.googleFirebaseAuth); // Removed: Only standard Google OAuth 2.0 supported
 
 // Logout
 router.post('/logout', authMiddleware.verifyToken, authController.logout);

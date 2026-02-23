@@ -1,34 +1,38 @@
-const { db } = require('../src/config/firebase');
+/**
+ * Set Admin Password Script (MongoDB)
+ * Usage: node scripts/set-admin-password.js
+ */
+
+require('dotenv').config();
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const User = require('../src/models/User');
 
 async function setAdminPassword() {
     try {
+        await mongoose.connect(process.env.MONGODB_URI);
         console.log('Setting password for admin@codepulse.com...');
 
-        let userRef;
-        const snapshot = await db.collection('users').where('email', '==', 'admin@codepulse.com').get();
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const email = 'admin@codepulse.com';
 
-        if (snapshot.empty) {
+        let user = await User.findOne({ email });
+
+        if (!user) {
             console.log('User admin@codepulse.com not found. Creating it...');
-            const crypto = require('crypto');
-            const userId = crypto.randomUUID();
-            userRef = db.collection('users').doc(userId);
-            await userRef.set({
-                id: userId,
-                email: 'admin@codepulse.com',
-                password: 'admin123',
+            user = new User({
+                email,
+                password: hashedPassword,
                 role: 'ADMIN',
                 username: 'Admin',
                 isActive: true,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
             });
+            await user.save();
         } else {
             console.log('User found. Updating password...');
-            const doc = snapshot.docs[0];
-            userRef = doc.ref;
-            await userRef.update({
-                password: 'admin123',
-                role: 'ADMIN' // Ensure role is ADMIN
+            await User.findByIdAndUpdate(user._id, {
+                password: hashedPassword,
+                role: 'ADMIN',
             });
         }
 
