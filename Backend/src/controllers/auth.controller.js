@@ -144,7 +144,8 @@ const githubCallback = async (req, res) => {
 
     const accessToken = tokenResponse.data.access_token;
     if (!accessToken) {
-      return response.error(res, 'Failed to obtain access token', 400);
+      logger.error('GitHub token exchange failed:', tokenResponse.data);
+      return response.error(res, `Failed to obtain access token: ${tokenResponse.data.error_description || tokenResponse.data.error || 'Unknown error'}`, 400);
     }
 
     // Fetch user data from GitHub
