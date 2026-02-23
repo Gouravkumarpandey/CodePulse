@@ -118,8 +118,8 @@ export default function LoginPage() {
 
   /* ---------------- UI ---------------- */
   return (
-    <div className="min-h-screen overflow-y-auto bg-white dark:bg-black flex custom-scrollbar-hidden" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
-      {/* LEFT SIDE */}
+    <div className="min-h-screen w-full bg-white dark:bg-black flex flex-col lg:flex-row overflow-x-hidden custom-scrollbar-hidden" style={{ fontFamily: '"Minecraftia", sans-serif' }}>
+      {/* LEFT SIDE - Hidden on mobile, half width on desktop */}
       <div
         className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-cover bg-center bg-no-repeat"
         style={{
@@ -150,27 +150,27 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex-1 flex items-start justify-center p-8 lg:p-12 pt-2 lg:pt-4">
+      {/* RIGHT SIDE - Full width / Half width */}
+      <div className="flex-1 flex flex-col items-center justify-start py-8 sm:py-12 px-4 sm:px-6 overflow-y-auto custom-scrollbar-hidden">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md mt-4 sm:mt-8"
         >
           {/* MOBILE BACK TO HOME */}
           <button
             onClick={() => navigate('/')}
-            className="lg:hidden flex items-center justify-center text-black dark:text-white mb-2 hover:opacity-70 transition-opacity w-full text-[10px]"
+            className="lg:hidden flex items-center text-black dark:text-white mb-2 hover:opacity-70 transition-opacity self-start text-[10px] px-4"
             style={{ fontFamily: '"Minecraftia", sans-serif' }}
           >
             <ArrowLeft className="w-3 h-3 mr-2" />
             Back to Home
           </button>
 
-          <div className="mb-4 mt-0 text-center">
-            <div className="flex flex-col items-center mb-1">
-              <img src="/logo.jpg" alt="Codepulse Logo" className="w-96 h-72 object-contain mb-0" />
+          <div className="mb-2 mt-0 text-center">
+            <div className="flex flex-col items-center -mt-4 lg:mt-0 mb-0">
+              <img src="/logo.jpg" alt="Codepulse Logo" className="w-full max-w-lg h-64 lg:h-80 object-contain mb-0" />
               {/* <h2 className="text-3xl font-bold text-black dark:text-white mb-1">Sign in</h2> */}
               <p className="text-black dark:text-white text-lg">Welcome back! Please sign in to continue</p>
             </div>
