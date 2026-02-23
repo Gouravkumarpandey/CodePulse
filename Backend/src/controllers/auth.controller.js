@@ -280,26 +280,21 @@ const googleCallback = async (req, res) => {
 
     // 2. If existing user, verify/link Google ID
     if (user) {
+      const updateData = {
+        lastLogin: new Date().toISOString(),
+        isActive: true
+      };
+
       if (!user.googleId) {
-        await DatabaseService.updateUser(user.id, {
-          googleId: googleId,
-          avatar: user.avatar || picture,
-          lastLogin: new Date().toISOString(),
-          isActive: true
-        });
-        user.googleId = googleId;
-      } else {
-        await DatabaseService.updateUser(user.id, {
-          lastLogin: new Date().toISOString()
-        });
+        updateData.googleId = googleId;
+        if (!user.avatar && picture) updateData.avatar = picture;
       }
+
+      user = await DatabaseService.updateUser(user._id || user.id, updateData);
     }
 
     // 3. Create New User if not exists
     if (!user) {
-      const crypto = require('crypto');
-      const userId = crypto.randomUUID();
-
       const userData = {
         email,
         username: name || email.split('@')[0],
@@ -313,23 +308,21 @@ const googleCallback = async (req, res) => {
         updatedAt: new Date().toISOString()
       };
 
-      await DatabaseService.saveUser(userId, userData);
-      user = { id: userId, ...userData };
+      user = await DatabaseService.saveUser(null, userData);
+      logger.info(`Created new user via Google: ${user.email}`);
     }
 
-    const userIdForJWT = user._id || user.id;
-    const token = generateJWT(userIdForJWT);
-
-    const userResponse = user.toObject ? user.toObject() : { ...user };
-    if (userResponse.password) delete userResponse.password;
+    // Generate JWT
+    const token = generateJWT(user._id || user.id);
 
     // Standardize user object for frontend
+    const userObj = user.toObject ? user.toObject() : user;
     const standardizedUser = {
-      id: userResponse._id || userResponse.id,
-      username: userResponse.username,
-      email: userResponse.email,
-      role: userResponse.role,
-      avatar: userResponse.avatar || userResponse.avatarId,
+      id: userObj._id || userObj.id,
+      username: userObj.username,
+      email: userObj.email,
+      role: userObj.role,
+      avatar: userObj.avatar || userObj.avatarId,
     };
 
     const responseData = {
@@ -344,8 +337,12 @@ const googleCallback = async (req, res) => {
     return response.success(res, responseData, 'Google authentication successful');
 
   } catch (error) {
-    console.error('Google OAuth callback error:', error.message);
-    response.error(res, 'Google authentication failed: ' + error.message, 500);
+    logger.error('Google OAuth callback error:', {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data
+    });
+    response.error(res, 'Google authentication failed: ' + (error.response?.data?.message || error.message), 500);
   }
 };
 

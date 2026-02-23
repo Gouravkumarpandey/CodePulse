@@ -11,7 +11,10 @@ const morgan = require('morgan');
 const app = express();
 
 // Security & logging middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  crossOriginResourcePolicy: false,
+}));
 app.use(morgan('combined'));
 
 // CORS configuration with credentials support
