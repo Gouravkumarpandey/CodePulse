@@ -1,7 +1,6 @@
 import { useState, useContext, useEffect, FormEvent } from 'react';
-import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, User, AlertCircle, Eye, EyeOff, Github } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { AuthContext } from '../context/AuthContext';
@@ -61,42 +60,6 @@ export default function SignupPage() {
   }
 
   /* ---------------- HANDLERS ---------------- */
-  const handleGoogleSignupSuccess = async (credentialResponse: CredentialResponse) => {
-    const credential = credentialResponse?.credential;
-    if (!credential) {
-      setError('Google signup failed. Please try again.');
-      return;
-    }
-    setError('');
-    setLoading(true);
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/google/callback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.data) {
-        login(data.data.user, data.data.token);
-        if (data.data.user.role === 'ADMIN') {
-          navigate('/admin');
-        } else {
-          navigate('/connect-github');
-        }
-      } else {
-        setError(data.message || 'Google signup failed');
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Google signup failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignupError = () => {
-    setError('Google signup failed. Please try again.');
-  };
 
   /* ---------------- HANDLERS ---------------- */
   const handleEmailSignup = async (e: FormEvent) => {
@@ -190,21 +153,6 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <div className="w-full mb-6 flex justify-center">
-            <button
-              type="button"
-              onClick={() => {
-                const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-                const redirectUri = encodeURIComponent('http://localhost:5173/github/callback');
-                const scope = encodeURIComponent('repo user');
-                window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
-              }}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white dark:bg-zinc-900 border-2 border-black dark:border-white rounded-md text-black dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] active:translate-y-1 active:translate-x-1 active:shadow-none"
-            >
-              <Github className="w-5 h-5" />
-              Sign up with GitHub
-            </button>
-          </div>
 
           {/* Error */}
           {error && (

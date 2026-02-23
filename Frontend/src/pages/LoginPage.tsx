@@ -1,8 +1,7 @@
 import { useState, useContext, useEffect, FormEvent } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, AlertCircle, Eye, EyeOff, Github } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { authService } from '../services/auth.service';
 import { AuthContext } from '../context/AuthContext';
 
@@ -51,55 +50,6 @@ export default function LoginPage() {
     );
   }
 
-  /* ---------------- HANDLERS ---------------- */
-  const handleGoogleLoginSuccess = async (credentialResponse: CredentialResponse) => {
-    const credential = credentialResponse?.credential;
-    if (!credential) {
-      setError('Google login failed. Please try again.');
-      return;
-    }
-    setError('');
-    setLoading(true);
-    try {
-      // Send the credential token to backend for verification
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/google/callback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.data) {
-        login(data.data.user, data.data.token);
-
-        // Store GitHub token if user has it connected
-        if (data.data.githubAccessToken) {
-          sessionStorage.setItem('github_token', data.data.githubAccessToken);
-          console.log('GitHub token restored from Google login');
-        }
-
-        // Check if user has GitHub connected
-        const githubToken = data.data.githubAccessToken || sessionStorage.getItem('github_token');
-        if (data.data.user.role === 'ADMIN') {
-          navigate('/admin');
-        } else if (!githubToken) {
-          navigate('/connect-github');
-        } else {
-          navigate('/user');
-        }
-      } else {
-        setError(data.message || 'Google login failed');
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Google login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLoginError = () => {
-    setError('Google login failed. Please try again.');
-  };
 
   const handleEmailLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -186,21 +136,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="w-full mb-6 flex justify-center">
-            <button
-              type="button"
-              onClick={() => {
-                const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-                const redirectUri = encodeURIComponent('http://localhost:5173/github/callback');
-                const scope = encodeURIComponent('repo user');
-                window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
-              }}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white dark:bg-zinc-900 border-2 border-black dark:border-white rounded-md text-black dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] active:translate-y-1 active:translate-x-1 active:shadow-none"
-            >
-              <Github className="w-5 h-5" />
-              Sign in with GitHub
-            </button>
-          </div>
 
           {/* ERROR */}
           {error && (

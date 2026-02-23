@@ -88,7 +88,7 @@ export default function GitHubCallbackPage() {
 
           setStatus('success');
           setMessage('Logged in successfully! Redirecting...');
-          setTimeout(() => navigate('/dashboard'), 1500);
+          setTimeout(() => navigate('/user'), 1500);
           return;
         }
 
