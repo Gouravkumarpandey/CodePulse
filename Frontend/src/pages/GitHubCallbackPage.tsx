@@ -53,7 +53,7 @@ export default function GitHubCallbackPage() {
         sessionStorage.setItem('github_code_processed', code);
 
         // Exchange code for GitHub token via backend
-        const callbackResponse = await fetch(`${import.meta.env.VITE_API_URL}/github/callback?code=${code}`, {
+        const callbackResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/github/callback?code=${code}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

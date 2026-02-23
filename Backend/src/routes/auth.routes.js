@@ -15,7 +15,7 @@ router.post('/login', authController.login);
 
 // GitHub OAuth
 router.post('/github', authController.githubAuth);
-router.post('/github/callback', authController.githubCallback);
+router.get('/github/callback', authController.githubCallback);
 
 // Google OAuth
 router.post('/google/callback', authController.googleCallback);

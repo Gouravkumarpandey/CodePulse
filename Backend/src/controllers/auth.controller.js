@@ -161,25 +161,19 @@ const githubCallback = async (req, res) => {
     if (!user && githubUser.email) {
       const existingUser = await DatabaseService.getUserByEmail(githubUser.email);
       if (existingUser) {
-        console.log(`Linking GitHub account ${githubId} to existing user ${existingUser.email}`);
-        await DatabaseService.updateUser(existingUser.id, {
+        logger.info(`Linking GitHub account ${githubId} to existing user ${existingUser.email}`);
+        user = await DatabaseService.updateUser(existingUser._id || existingUser.id, {
           githubId: githubId,
           githubAccessToken: accessToken,
-          // meaningful updates
           lastLogin: new Date().toISOString(),
           isActive: true
         });
-        // Update local object
-        user = { ...existingUser, githubId, githubAccessToken: accessToken };
       }
     }
 
     // 3. If still not found, Create New User
     if (!user) {
-      const crypto = require('crypto');
-      const userId = crypto.randomUUID();
       const email = githubUser.email || `${githubId}@github.temp`;
-
       const userData = {
         email,
         username: githubUser.login,
@@ -194,36 +188,37 @@ const githubCallback = async (req, res) => {
         updatedAt: new Date().toISOString()
       };
 
-      await DatabaseService.saveUser(userId, userData);
-      user = { id: userId, ...userData }; // Properly assign user
+      user = await DatabaseService.saveUser(null, userData);
+      logger.info(`Created new user via GitHub: ${user.email}`);
     } else {
-      // Exists (either found by ID or Linked), just update token/login time
-      // If user was just linked above, user object is set. If found by ID, it's set.
-      // We should update the token if it changed.
+      // Exists, update token if changed
       if (user.githubAccessToken !== accessToken) {
-        await DatabaseService.updateUser(user.id, {
+        user = await DatabaseService.updateUser(user._id || user.id, {
           githubAccessToken: accessToken,
           lastLogin: new Date().toISOString()
         });
-        user.githubAccessToken = accessToken;
       }
     }
 
-    const token = generateJWT(user.id);
-    const userResponseData = { ...user };
-    if (userResponseData.password) delete userResponseData.password;
+    const userIdForJWT = user._id || user.id;
+    const token = generateJWT(userIdForJWT);
 
-    // Return JSON response as expected by frontend fetch
-    // Note: The structure must match what frontend expects
+    const userResponse = user.toObject ? user.toObject() : { ...user };
+    if (userResponse.password) delete userResponse.password;
+
+    // Standardize user object for frontend
+    const standardizedUser = {
+      id: userResponse._id || userResponse.id,
+      username: userResponse.username,
+      email: userResponse.email,
+      role: userResponse.role,
+      avatar: userResponse.avatar || userResponse.avatarId,
+      githubUsername: userResponse.username, // Using GitHub login as username
+    };
+
     return response.success(res, {
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar || user.avatarId,
-      },
+      user: standardizedUser,
       githubAccessToken: accessToken
     }, 'GitHub authentication successful');
 
