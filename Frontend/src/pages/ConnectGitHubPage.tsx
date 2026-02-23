@@ -34,9 +34,16 @@ export default function ConnectGitHubPage() {
         setShowError(false);
         setConnecting(true);
 
-        const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'Ov23li4CIJ8ocjZkYyFd';
-        // Ensure redirect URI matches exactly what is in GitHub Developer Settings
-        const redirectUri = encodeURIComponent(import.meta.env.VITE_GITHUB_REDIRECT_URI || `${window.location.origin}/github/callback`);
+        const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'Ov23lii0wSY15cFo5np6';
+
+        // SMT LOGIC: If we are on localhost, use localhost as redirect. 
+        // Otherwise use the env variable or the current origin.
+        let baseUrl = window.location.origin;
+        if (import.meta.env.VITE_GITHUB_REDIRECT_URI && !window.location.hostname.includes('localhost')) {
+            baseUrl = import.meta.env.VITE_GITHUB_REDIRECT_URI.replace('/github/callback', '');
+        }
+
+        const redirectUri = encodeURIComponent(`${baseUrl}/github/callback`);
         const scope = encodeURIComponent('repo user');
 
         console.log('Connecting to GitHub with Client ID:', clientId);

@@ -1,3 +1,4 @@
+const User = require('../models/User');
 const DatabaseService = require('../services/mongo.service');
 const { generateJWT } = require('../utils/jwt.util');
 const response = require('../utils/response.util');
@@ -295,9 +296,18 @@ const googleCallback = async (req, res) => {
 
     // 3. Create New User if not exists
     if (!user) {
+      let baseUsername = (name || email.split('@')[0]).replace(/\s+/g, '').toLowerCase();
+      let username = baseUsername;
+
+      // Check for username collision and append random digits if necessary
+      let collision = await User.findOne({ username });
+      if (collision) {
+        username = `${baseUsername}_${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
       const userData = {
         email,
-        username: name || email.split('@')[0],
+        username,
         googleId: googleId,
         avatar: picture,
         role: 'USER',
@@ -309,7 +319,7 @@ const googleCallback = async (req, res) => {
       };
 
       user = await DatabaseService.saveUser(null, userData);
-      logger.info(`Created new user via Google: ${user.email}`);
+      logger.info(`Created new user via Google: ${user.email} with username: ${username}`);
     }
 
     // Generate JWT
