@@ -2,7 +2,6 @@ import { useState, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { authService } from '../../services/auth.service';
 import { useAuth } from '../../hooks/useAuth';
 

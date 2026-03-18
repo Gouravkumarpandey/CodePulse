@@ -46,10 +46,10 @@ class MongoDBService {
             // Otherwise we might be creating a new user or updating by string ID
             let user;
             if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-                user = await User.findByIdAndUpdate(userId, userData, { new: true, upsert: true });
+                user = await User.findByIdAndUpdate(userId, userData, { returnDocument: 'after', upsert: true });
             } else {
                 // If it's a legacy hex ID from Firestore script, we might need to handle it
-                user = await User.findOneAndUpdate({ email: userData.email }, userData, { new: true, upsert: true });
+                user = await User.findOneAndUpdate({ email: userData.email }, userData, { returnDocument: 'after', upsert: true });
             }
             return user;
         } catch (error) {
@@ -60,7 +60,7 @@ class MongoDBService {
 
     static async updateUser(userId, updateData) {
         try {
-            return await User.findByIdAndUpdate(userId, updateData, { new: true });
+            return await User.findByIdAndUpdate(userId, updateData, { returnDocument: 'after' });
         } catch (error) {
             logger.error('Error updating user:', error.message);
             throw error;
@@ -143,6 +143,10 @@ class MongoDBService {
 
     static async deleteRepository(repoId) {
         try {
+            // Delete related items
+            await Commit.deleteMany({ repoId });
+            await RepoAnalysis.deleteOne({ repoId });
+            
             return await Repo.findByIdAndDelete(repoId);
         } catch (error) {
             logger.error('Error deleting repository:', error.message);

@@ -1,11 +1,12 @@
 const express = require('express');
 const githubController = require('../controllers/github.controller');
+const authController = require('../controllers/auth.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
-// Public callback (no auth required)
-router.get('/callback', githubController.githubCallback);
+// Public callback (no auth required) - redirected to auth controller for central handling
+router.get('/callback', authController.githubCallback);
 
 // Repositories - uses GitHub token from Authorization header (not JWT)
 router.get('/repositories', githubController.fetchRepositories);

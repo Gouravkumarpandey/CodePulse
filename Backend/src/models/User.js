@@ -37,6 +37,15 @@ const userSchema = new mongoose.Schema(
         githubId: String,
         githubAccessToken: String,
         googleId: String,
+        
+        fullName: {
+            type: String,
+            trim: true,
+        },
+        teamName: {
+            type: String,
+            trim: true,
+        },
 
         // Coin System
         coins: {

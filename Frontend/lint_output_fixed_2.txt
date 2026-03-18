@@ -1,0 +1,81 @@
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\MainNavbar.tsx[24m[0m
+[0m  [2m13:50[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\admin\AdminLoginForm.tsx[24m[0m
+[0m  [2m32:23[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\admin\UsersTable.tsx[24m[0m
+[0m  [2m8:10[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\layout\Sidebar.tsx[24m[0m
+[0m   [2m26:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'setIsMobileMenuOpen'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m   [2m47:29[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m100:31[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m109:50[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m130:48[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\context\AuthContext.tsx[24m[0m
+[0m  [2m13:14[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Move your React context(s) to a separate file  [2mreact-refresh/only-export-components[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\context\SidebarContext.tsx[24m[0m
+[0m  [2m30:14[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  [2mreact-refresh/only-export-components[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\context\ThemeContext.tsx[24m[0m
+[0m  [2m41:14[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  [2mreact-refresh/only-export-components[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\AdminDashboardPage.tsx[24m[0m
+[0m   [2m27:38[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m28:38[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m35:44[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m36:46[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m38:58[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m42:18[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m64:54[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m203:55[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\AdminUserDetailPage.tsx[24m[0m
+[0m  [2m18:44[22m  [31merror[39m    Unexpected any. Specify a different type                                                                         [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m35:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'loadUserData'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\AdminUsersPage.tsx[24m[0m
+[0m  [2m52:42[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m90:32[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\GitHubCallbackPage.tsx[24m[0m
+[0m  [2m178:21[22m  [31merror[39m    Unexpected any. Specify a different type                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m189:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'status'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\LoginPage.tsx[24m[0m
+[0m   [2m61:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m110:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\RepositorySelectionPage.tsx[24m[0m
+[0m  [2m100:53[22m   [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m101:48[22m   [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m296:74[22m   [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m297:179[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m307:42[22m   [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\SignupPage.tsx[24m[0m
+[0m  [2m71:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\UserActivityPage.tsx[24m[0m
+[0m   [2m55:50[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m101:45[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\UserDashboardPage.tsx[24m[0m
+[0m   [2m27:52[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m28:52[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m37:48[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m92:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'loadRepositoryAnalysis'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m  [2m142:56[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m143:56[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\UserSettingsPage.tsx[24m[0m
+[0m  [2m110:35[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m189:21[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m395:80[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[31m[1m✖ 44 problems (37 errors, 7 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

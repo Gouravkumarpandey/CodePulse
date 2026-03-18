@@ -39,7 +39,7 @@ const verifyToken = async (req, res, next) => {
     }
 
     req.user = {
-      ...user,
+      ...(user.toObject ? user.toObject() : user),
       _id: decoded.userId, // Maintain _id for backward compatibility if code uses it
       id: decoded.userId,
       accessToken: user.githubAccessToken || user.accessToken,

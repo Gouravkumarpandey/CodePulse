@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Menu } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import CommitTimeline from '@/components/user/CommitTimeline';
 import { api } from '@/services/api';

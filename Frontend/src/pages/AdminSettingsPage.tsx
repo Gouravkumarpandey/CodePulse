@@ -5,7 +5,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import RulesForm from '@/components/admin/RulesForm';
 import { api } from '@/services/api';
 import { AdminRule } from '@/types/rule';
-import { Shield, Save, RefreshCw, ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
+import { Shield, RefreshCw, ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
 
 import { useSidebar } from '@/context/SidebarContext';
 

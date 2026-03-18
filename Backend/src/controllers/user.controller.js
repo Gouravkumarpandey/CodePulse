@@ -190,6 +190,8 @@ const updateUserProfile = async (req, res) => {
     // Filter allowed fields
     if (updateData.username) allowedUpdates.username = updateData.username;
     if (updateData.avatarId !== undefined) allowedUpdates.avatarId = updateData.avatarId;
+    if (updateData.fullName) allowedUpdates.fullName = updateData.fullName;
+    if (updateData.teamName) allowedUpdates.teamName = updateData.teamName;
 
     // Handle settings
     let currentSettings = {};

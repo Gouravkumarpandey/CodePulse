@@ -195,7 +195,11 @@ export default function UserDashboardPage() {
   if (loading || !isAuthenticated) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading...</div>;
 
   return (
-    <div className="min-h-screen user-dashboard-bg flex font-sans text-white overflow-x-hidden">
+    <div 
+      className="min-h-screen relative flex font-sans text-gray-900 overflow-x-hidden bg-white bg-fixed bg-no-repeat bg-bottom bg-cover md:bg-[length:100%_auto]" 
+      style={{ backgroundImage: "url('/background1.webp')" }}
+    >
+
       <Sidebar role="user" />
       <div className={`flex-1 w-full transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
         <div className="p-4 md:p-8 lg:p-12 overflow-y-auto min-h-screen">
@@ -456,12 +460,12 @@ export default function UserDashboardPage() {
                         </div>
                         <div>
                           <h2 className="text-2xl font-bold text-white tracking-wide">HACKATHON MODE ACTIVE</h2>
-                          <p className="text-red-300/80 text-sm font-mono">Session started: {new Date(hackathonStatus.startTime).toLocaleTimeString()}</p>
+                           <p className="text-red-300/80 text-sm font-mono">Session started: {hackathonStatus.startTime ? new Date(hackathonStatus.startTime).toLocaleTimeString() : 'N/A'}</p>
                         </div>
                       </div>
                       <div className="hidden md:block text-right">
                         <div className="text-lg font-bold text-red-500 uppercase tracking-widest mb-1">Live Commits</div>
-                        <div className="text-4xl font-black text-white">{recentCommits.filter(c => hackathonStatus.startTime && new Date(c.commitDate) > new Date(hackathonStatus.startTime)).length}</div>
+                         <div className="text-4xl font-black text-white">{recentCommits.filter(c => hackathonStatus.startTime && new Date(c.commitDate) > new Date(hackathonStatus.startTime!)).length}</div>
                       </div>
                     </div>
                     {/* Hackathon Rules/Stats grid */}

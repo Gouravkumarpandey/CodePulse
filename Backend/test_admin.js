@@ -32,7 +32,7 @@ async function testAdmin() {
         // 2. Promote to ADMIN via script
         log('2. Promoting to ADMIN via script...');
         try {
-            const output = execSync('node scripts/create-admin.js admin@example.com').toString();
+            const output = execSync('node createAdmin.js admin@example.com').toString();
             log('Promotion Output: ' + output);
         } catch (e) {
             log('Promotion Error: ' + e.stderr.toString());

@@ -122,12 +122,9 @@ export default function SignupPage() {
 
       login(response.user, response.token);
       navigate('/connect-github');
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Signup failed. Please try again.');
-      }
+    } catch (err: any) {
+      const message = err.response?.data?.message || err.message || 'Signup failed. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }

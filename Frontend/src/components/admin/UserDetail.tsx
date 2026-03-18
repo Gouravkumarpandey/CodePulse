@@ -1,16 +1,13 @@
 import { User } from '@/types/user';
 import {
-  Activity, GitCommit, Clock, AlertTriangle,
-  TrendingUp, GitBranch, Database, ShieldAlert,
-  History, Calendar, Info, ArrowUpRight,
-  User as UserIcon, Zap
+  Activity, Clock, AlertTriangle,
+  TrendingUp, GitBranch, ShieldAlert,
+  History, Calendar, Zap
 } from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip,
+import { XAxis, YAxis, Tooltip,
   ResponsiveContainer, Area, AreaChart,
   PieChart, Pie, Cell, CartesianGrid
 } from 'recharts';
-import { motion } from 'framer-motion';
 
 interface UserDetailProps {
   user: User;

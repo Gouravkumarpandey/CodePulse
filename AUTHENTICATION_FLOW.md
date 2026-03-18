@@ -122,7 +122,7 @@ Redirect to /login
 
 ### Test Regular User Flow
 1. Go to `/signup`
-2. Create account with any email (not kumarpandeygourav@gmail.com)
+2. Create account with any email (not pandeygourav2002@gmail.com)
 3. Should redirect to `/connect-github`
 4. Connect GitHub account
 5. Select repository
@@ -132,7 +132,7 @@ Redirect to /login
 
 ### Test Admin Flow
 1. Go to `/signup` or `/login`
-2. Use email: `kumarpandeygourav@gmail.com`
+2. Use email: `pandeygourav2002@gmail.com`
 3. Should redirect to `/admin` dashboard
 4. Admin dashboard should show:
    - Statistics cards

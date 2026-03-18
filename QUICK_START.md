@@ -45,7 +45,7 @@ npm run dev
 1. **Sign Up**
    ```
    - Go to http://localhost:5173/signup
-   - Enter any email (NOT kumarpandeygourav@gmail.com)
+   - Enter any email (NOT pandeygourav2002@gmail.com)
    - Create account
    - Should redirect to /connect-github
    ```
@@ -87,8 +87,8 @@ npm run dev
 1. **Admin Login**
    ```
    - Go to http://localhost:5173/login
-   - Email: kumarpandeygourav@gmail.com
-   - Password: (your admin password)
+   - Email: pandeygourav2002@gmail.com
+   - Password: admin123
    - Should redirect to /admin
    ```
 

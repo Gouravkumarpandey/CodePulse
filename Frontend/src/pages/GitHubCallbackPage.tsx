@@ -2,7 +2,6 @@ import { useEffect, useState, useContext, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Github, Loader2, CheckCircle2, XCircle } from 'lucide-react';
-import { authService } from '../services/auth.service';
 import { AuthContext } from '../context/AuthContext';
 
 export default function GitHubCallbackPage() {
@@ -46,6 +45,8 @@ export default function GitHubCallbackPage() {
     }
 
     const authenticate = async () => {
+      if (calledRef.current && status !== 'loading') return;
+
       try {
         setMessage('Exchanging code for access token...');
 
@@ -53,11 +54,9 @@ export default function GitHubCallbackPage() {
         sessionStorage.setItem('github_code_processed', code);
 
         // Exchange code for GitHub token via backend
+        // Use the /api/auth path as configured in the new structure
         const callbackResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/github/callback?code=${code}`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
         });
 
         if (!callbackResponse.ok) {
@@ -67,33 +66,39 @@ export default function GitHubCallbackPage() {
 
         const callbackData = await callbackResponse.json();
 
-        if (callbackData.status !== 'SUCCESS') {
+        // LOGGING FOR DEBUGGING
+        console.log('GitHub Auth Data Received:', callbackData);
+
+        if (callbackData.status === 'ERROR') {
           throw new Error(callbackData.message || 'Authentication failed');
         }
 
         console.log('GitHub authentication successful');
 
-        // Save GitHub access token to sessionStorage
-        // Check if backend returned it at root of data or inside user
-        const ghToken = callbackData.data.githubAccessToken || callbackData.data.user?.githubAccessToken;
-        sessionStorage.setItem('github_token', ghToken);
-        console.log('GitHub authentication successful - Token saved to sessionStorage');
+        // Extract tokens
+        const ghToken = callbackData.data.githubAccessToken;
+        const jwtToken = callbackData.data.token;
+        const userData = callbackData.data.user;
+
+        if (ghToken) {
+          sessionStorage.setItem('github_token', ghToken);
+          console.log('GitHub token saved to session storage');
+        }
 
         // CHECK IF LOGIN WAS SUCCESSFUL (Backend returned JWT)
-        if (callbackData.data.token) {
+        if (jwtToken && userData) {
           console.log('Login successful via GitHub Callback');
-          sessionStorage.setItem('token', callbackData.data.token);
-          const userData = callbackData.data.user;
+          sessionStorage.setItem('token', jwtToken);
           sessionStorage.setItem('user', JSON.stringify(userData));
 
           if (login) {
-            login(userData, callbackData.data.token);
+            login(userData, jwtToken);
           }
-
-          // Initializing coins check or other setup if needed
 
           setStatus('success');
           setMessage('Logged in successfully! Redirecting...');
+
+          // Use common redirect path
           setTimeout(() => navigate('/user'), 1500);
           return;
         }

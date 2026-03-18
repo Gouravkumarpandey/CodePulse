@@ -1,24 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
   User as UserIcon,
   Settings,
   Bell,
   Shield,
   Save,
-  X,
   GitBranch,
   Plus,
   Trash2,
   LogOut,
-  Key,
   Github,
   CheckCircle2,
   AlertCircle,
   Share2
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/layout/Sidebar';
 import AvatarSelector from '@/components/user/AvatarSelector';
@@ -67,9 +63,14 @@ const UserSettingsPage = () => {
   useEffect(() => {
     if (isAuthenticated) {
       loadRepositories();
-      // Initialize notification state if user has it
-      if (user?.notifications) {
-        setNotifications(prev => ({ ...prev, ...user.notifications }));
+      if (user) {
+        setFullName(user.fullName || '');
+        setEmail(user.email || '');
+        setTeamName(user.teamName || '');
+        setAvatarId(user.avatarId || 1);
+        if (user.notifications) {
+          setNotifications(prev => ({ ...prev, ...user.notifications }));
+        }
       }
     }
   }, [isAuthenticated, user]);

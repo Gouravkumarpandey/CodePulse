@@ -236,36 +236,7 @@ const UserWarningsPage = () => {
               </div>
             </div>
 
-            {/* Best Practices */}
-            <div className="bg-gradient-to-br from-indigo-600/60 to-purple-800/60 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[100px] rounded-full pointer-events-none" />
-              <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
-                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 animate-pulse">
-                  <ShieldAlert className="w-8 h-8 text-yellow-300" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-4" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Improvement Guide</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
-                      <Clock className="w-6 h-6 text-blue-300 flex-shrink-0" />
-                      <p className="text-sm font-medium text-gray-200">Maintain regular commit intervals (at least every 24-48 hours) to maximize your consistency score.</p>
-                    </div>
-                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
-                      <GitCommit className="w-6 h-6 text-purple-300 flex-shrink-0" />
-                      <p className="text-sm font-medium text-gray-200">Break down large features into smaller, atomic commits to avoid "Burst" violation detections.</p>
-                    </div>
-                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
-                      <TrendingDown className="w-6 h-6 text-green-300 flex-shrink-0" />
-                      <p className="text-sm font-medium text-gray-200">Avoid bulk commits. Spreading your effort over time creates a healthier development profile.</p>
-                    </div>
-                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
-                      <AlertCircle className="w-6 h-6 text-orange-300 flex-shrink-0" />
-                      <p className="text-sm font-medium text-gray-200">Watch for warnings early. Resolving patterns early prevents Grade-F violations.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+
           </main>
         </div>
       </div>

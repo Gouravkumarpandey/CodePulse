@@ -4,11 +4,9 @@ import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/layout/Sidebar';
 import UsersTable from '@/components/admin/UsersTable';
 import { api } from '@/services/api';
-import {
-  Users, Search, Filter, Download,
-  ArrowLeft, RefreshCw, Zap
+import { Search, Filter, Download,
+  ArrowLeft, RefreshCw
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 import { useSidebar } from '@/context/SidebarContext';
 

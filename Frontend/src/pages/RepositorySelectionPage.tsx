@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { GitBranch, Zap, CheckCircle, Star, GitFork, Loader2, Info } from 'lucide-react';
+import { GitBranch, CheckCircle, Star, GitFork, Loader2, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
 import { unlinkGithubAccount } from '@/services/github.service';
@@ -171,9 +171,15 @@ function RepositorySelectionPage() {
       return;
     }
 
-    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'your-github-client-id';
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'Ov23li4CIJ8ocjZkYyFd';
     const redirectUri = encodeURIComponent('http://localhost:5173/github/callback');
     const scope = encodeURIComponent('repo user');
+
+    console.log('--- GitHub OAuth Initiation (Repo Selection - Restored) ---');
+    console.log('Client ID:', clientId);
+    console.log('Redirect URI:', 'http://localhost:5173/github/callback');
+    console.log('----------------------------------------------------------');
+
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
   };
 

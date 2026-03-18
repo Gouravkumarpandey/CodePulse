@@ -77,7 +77,6 @@ Using **Google Gemini AI** to:
 > "You were inactive for long periods and pushed most commits near the end. Try committing smaller changes every 2-3 hours for better consistency."
 
 ### 6. **Developer Dashboard**
-
 Visual analytics including:
 - 📅 Commit timeline visualization
 - ⏱️ Time gap highlights
@@ -85,6 +84,13 @@ Visual analytics including:
 - 🎯 Consistency score & grade
 - 🤖 AI-generated insights
 - 📊 Distribution charts
+
+### 7. **AI Chat Assistant (Sidebar Panel)** 🤖
+- Accessible from any dashboard view
+- Backed by Anthropic Claude configurations via OpenRouter
+- Quick reference setup regarding **Admin Rules Guidelines**
+- Guided walkthroughs for resolving Git/Merge Conflict scenarios
+- Analytical breakdowns for problematic design statements responsibly!
 
 ---
 
@@ -118,6 +124,15 @@ Visual analytics including:
 5. **Consistency metrics** are calculated
 6. **Google AI** converts statistics into insights
 7. **Results displayed** on interactive dashboard
+
+---
+
+## 👥 Roles & Governance
+
+| Role | Responsibility & Features |
+|------|---------------------------|
+| **🧑‍💻 Developer (User)** | Connect GitHub repositories, track real-time score parameters, leverage visual chart overviews, access **AI Sidebar Panel** node support frameworks, use personalized avatar sets with background customizations. |
+| **🛡️ Administrator (Admin)** | Define Hackathon global rules (inactivity hours thresholds, scoring equations multipliers), evaluate global streams dashboard, manage rule-based setups node triggers securely. |
 
 ---
 
@@ -268,9 +283,6 @@ Calculated based on:
 
 ## 🔮 Future Enhancements
 
-- [ ] Team-level tracking and collaboration metrics
-- [ ] Hackathon mode with custom time rules
-- [ ] Email/notification alerts for violations
 - [ ] Pull request and merge analysis
 - [ ] Weekly AI-generated progress summaries
 - [ ] Integration with Slack/Discord

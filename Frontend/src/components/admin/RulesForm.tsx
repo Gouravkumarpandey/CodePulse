@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ShieldCheck, Clock, Bell, Info, Save, Timer } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface AdminSettings {
   maxInactivityGapHours: number;

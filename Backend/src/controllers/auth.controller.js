@@ -24,6 +24,12 @@ const signup = async (req, res) => {
       return response.error(res, 'User with this email already exists', 400);
     }
 
+    // Check if username already exists
+    const existingUserName = await User.findOne({ username });
+    if (existingUserName) {
+      return response.error(res, 'Username is already taken', 400);
+    }
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -100,7 +106,7 @@ const login = async (req, res) => {
     await DatabaseService.updateUser(user.id, { lastLogin: new Date().toISOString() });
 
     const token = generateJWT(user.id);
-    const userResponse = { ...user };
+    const userResponse = user.toObject ? user.toObject() : { ...user };
     delete userResponse.password;
 
     // Include githubAccessToken in response if user has GitHub connected
@@ -123,13 +129,15 @@ const login = async (req, res) => {
 // GitHub OAuth Callback
 const githubCallback = async (req, res) => {
   try {
-    const { code } = req.query;
+    const { code, redirect_uri } = req.query;
 
     if (!code) {
       return response.error(res, 'Authorization code is required', 400);
     }
 
-    // Exchange code for access token
+    logger.info(`Exchanging GitHub code. ClientID: ${GITHUB_CONFIG.clientID}`);
+
+    // Exchange code for access token - EXACTLY AS IN afd428c (NO redirect_uri)
     const tokenResponse = await axios.post(
       'https://github.com/login/oauth/access_token',
       {
@@ -142,10 +150,14 @@ const githubCallback = async (req, res) => {
       }
     );
 
+    if (tokenResponse.data.error) {
+      logger.error('GitHub Token Exchange Error:', tokenResponse.data);
+      return response.error(res, `GitHub Token Error: ${tokenResponse.data.error_description || tokenResponse.data.error}`, 400);
+    }
+
     const accessToken = tokenResponse.data.access_token;
     if (!accessToken) {
-      logger.error('GitHub token exchange failed:', tokenResponse.data);
-      return response.error(res, `Failed to obtain access token: ${tokenResponse.data.error_description || tokenResponse.data.error || 'Unknown error'}`, 400);
+      return response.error(res, 'Failed to obtain access token from GitHub', 400);
     }
 
     // Fetch user data from GitHub
@@ -164,7 +176,7 @@ const githubCallback = async (req, res) => {
       const existingUser = await DatabaseService.getUserByEmail(githubUser.email);
       if (existingUser) {
         logger.info(`Linking GitHub account ${githubId} to existing user ${existingUser.email}`);
-        user = await DatabaseService.updateUser(existingUser._id || existingUser.id, {
+        user = await DatabaseService.updateUser(existingUser._id, {
           githubId: githubId,
           githubAccessToken: accessToken,
           lastLogin: new Date().toISOString(),
@@ -176,9 +188,18 @@ const githubCallback = async (req, res) => {
     // 3. If still not found, Create New User
     if (!user) {
       const email = githubUser.email || `${githubId}@github.temp`;
+
+      // Check for username collision
+      let baseUsername = githubUser.login;
+      let username = baseUsername;
+      let collision = await User.findOne({ username });
+      if (collision) {
+        username = `${baseUsername}_${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
       const userData = {
         email,
-        username: githubUser.login,
+        username,
         githubId: githubId,
         githubAccessToken: accessToken,
         avatar: githubUser.avatar_url,
@@ -193,39 +214,35 @@ const githubCallback = async (req, res) => {
       user = await DatabaseService.saveUser(null, userData);
       logger.info(`Created new user via GitHub: ${user.email}`);
     } else {
-      // Exists, update token if changed
-      if (user.githubAccessToken !== accessToken) {
-        user = await DatabaseService.updateUser(user._id || user.id, {
-          githubAccessToken: accessToken,
-          lastLogin: new Date().toISOString()
-        });
-      }
+      // Exists, update token and login time
+      user = await DatabaseService.updateUser(user._id, {
+        githubAccessToken: accessToken,
+        lastLogin: new Date().toISOString()
+      });
     }
 
-    const userIdForJWT = user._id || user.id;
-    const token = generateJWT(userIdForJWT);
-
-    const userResponse = user.toObject ? user.toObject() : { ...user };
-    if (userResponse.password) delete userResponse.password;
+    const token = generateJWT(user._id);
 
     // Standardize user object for frontend
-    const standardizedUser = {
-      id: userResponse._id || userResponse.id,
-      username: userResponse.username,
-      email: userResponse.email,
-      role: userResponse.role,
-      avatar: userResponse.avatar || userResponse.avatarId,
-      githubUsername: userResponse.username, // Using GitHub login as username
+    const userObj = user.toObject ? user.toObject() : user;
+    const userResponse = {
+      id: userObj._id || userObj.id,
+      username: userObj.username,
+      email: userObj.email,
+      role: userObj.role,
+      avatar: userObj.avatar || userObj.avatarId,
+      githubId: userObj.githubId,
+      githubAccessToken: accessToken
     };
 
     return response.success(res, {
       token,
-      user: standardizedUser,
+      user: userResponse,
       githubAccessToken: accessToken
     }, 'GitHub authentication successful');
 
   } catch (error) {
-    console.error('GitHub OAuth callback error:', error);
+    logger.error('GitHub callback error:', error);
     response.error(res, error.message || 'GitHub authentication failed', 500);
   }
 };

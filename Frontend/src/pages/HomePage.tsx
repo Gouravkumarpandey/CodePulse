@@ -25,7 +25,7 @@ const CodePulseHomePage = () => {
           style={{ y: yBg, scale: 1.2 }}
         >
           <img
-            src="/background1.jpg"
+            src="/background1.webp"
             alt="Hero background"
             className="w-full h-full object-cover"
           />
@@ -255,7 +255,10 @@ const CodePulseHomePage = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 bg-white dark:bg-black" id="how-it-works">
+      <section className="pt-0 pb-24 bg-white dark:bg-black" id="how-it-works">
+        {/* Simply Focus.webp Section */}
+        <img src="/Focus.webp" className="w-full object-cover" alt="Focus Mode" />
+
         {/* Minecraft Game Mode Slider (after How CodePulse Works) */}
         <div className="w-full bg-black">
           <MinecraftModeSlider />

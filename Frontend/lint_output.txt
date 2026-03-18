@@ -1,0 +1,151 @@
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\MainNavbar.tsx[24m[0m
+[0m  [2m13:50[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\admin\AdminLoginForm.tsx[24m[0m
+[0m   [2m5:10[22m  [31merror[39m  'GoogleLogin' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m5:28[22m  [31merror[39m  'CredentialResponse' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m33:23[22m  [31merror[39m  Unexpected any. Specify a different type        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\admin\RulesForm.tsx[24m[0m
+[0m  [2m3:10[22m  [31merror[39m  'motion' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\admin\UserDetail.tsx[24m[0m
+[0m   [2m3:13[22m  [31merror[39m  'GitCommit' is defined but never used     [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m4:26[22m  [31merror[39m  'Database' is defined but never used      [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m5:22[22m  [31merror[39m  'Info' is defined but never used          [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m5:28[22m  [31merror[39m  'ArrowUpRight' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m6:11[22m  [31merror[39m  'UserIcon' is defined but never used      [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m9:3[22m   [31merror[39m  'BarChart' is defined but never used      [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m9:13[22m  [31merror[39m  'Bar' is defined but never used           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m13:10[22m  [31merror[39m  'motion' is defined but never used        [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\admin\UsersTable.tsx[24m[0m
+[0m  [2m8:10[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\layout\Sidebar.tsx[24m[0m
+[0m    [2m5:20[22m  [31merror[39m    'Activity' is defined but never used                                                                                    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:14[22m  [31merror[39m    'Zap' is defined but never used                                                                                         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:26[22m  [31merror[39m    'FileText' is defined but never used                                                                                    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m26:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'setIsMobileMenuOpen'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m   [2m47:29[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m100:31[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m109:50[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m130:48[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\components\user\CommitTimeline.tsx[24m[0m
+[0m  [2m33:29[22m  [31merror[39m  'index' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\context\AuthContext.tsx[24m[0m
+[0m  [2m13:14[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Move your React context(s) to a separate file  [2mreact-refresh/only-export-components[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\context\SidebarContext.tsx[24m[0m
+[0m  [2m30:14[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  [2mreact-refresh/only-export-components[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\context\ThemeContext.tsx[24m[0m
+[0m  [2m41:14[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  [2mreact-refresh/only-export-components[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\AdminDashboardPage.tsx[24m[0m
+[0m   [2m27:38[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m28:38[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m35:44[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m36:46[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m38:58[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m42:18[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m64:54[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m203:55[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\AdminSettingsPage.tsx[24m[0m
+[0m  [2m8:18[22m  [31merror[39m  'Save' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\AdminUserDetailPage.tsx[24m[0m
+[0m  [2m18:44[22m  [31merror[39m    Unexpected any. Specify a different type                                                                         [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m35:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'loadUserData'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\AdminUsersPage.tsx[24m[0m
+[0m   [2m8:3[22m   [31merror[39m  'Users' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m9:25[22m  [31merror[39m  'Zap' is defined but never used           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m11:10[22m  [31merror[39m  'motion' is defined but never used        [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m54:42[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m92:32[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\GitHubCallbackPage.tsx[24m[0m
+[0m    [2m5:10[22m  [31merror[39m    'authService' is defined but never used                                                                    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m179:21[22m  [31merror[39m    Unexpected any. Specify a different type                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m190:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'status'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\HomePage.tsx[24m[0m
+[0m  [2m12:10[22m  [31merror[39m  'isMenuOpen' is assigned a value but never used       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m12:22[22m  [31merror[39m  'setIsMenuOpen' is assigned a value but never used    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m13:11[22m  [31merror[39m  'isAuthenticated' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m13:28[22m  [31merror[39m  'user' is assigned a value but never used             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\LoginPage.tsx[24m[0m
+[0m   [2m61:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m110:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\PrivacyPolicyPage.tsx[24m[0m
+[0m  [2m5:11[22m  [31merror[39m  'navigate' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\RepositorySelectionPage.tsx[24m[0m
+[0m    [2m3:21[22m   [31merror[39m  'Zap' is defined but never used           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m100:53[22m   [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m101:48[22m   [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m296:74[22m   [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m297:179[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m307:42[22m   [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\SignupPage.tsx[24m[0m
+[0m  [2m30:10[22m  [31merror[39m  'role' is assigned a value but never used     [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m30:16[22m  [31merror[39m  'setRole' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m71:19[22m  [31merror[39m  Unexpected any. Specify a different type      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\TermsOfServicePage.tsx[24m[0m
+[0m  [2m5:11[22m  [31merror[39m  'navigate' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\UserActivityPage.tsx[24m[0m
+[0m    [2m4:10[22m  [31merror[39m  'Menu' is defined but never used          [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m56:50[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m102:45[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\UserDashboardPage.tsx[24m[0m
+[0m    [2m4:25[22m  [31merror[39m    'TrendingUp' is defined but never used                                                                                     [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m5:26[22m  [31merror[39m    'Settings' is defined but never used                                                                                       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m5:36[22m  [31merror[39m    'Award' is defined but never used                                                                                          [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:18[22m  [31merror[39m    'Star' is defined but never used                                                                                           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:45[22m  [31merror[39m    'Download' is defined but never used                                                                                       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:65[22m  [31merror[39m    'Copy' is defined but never used                                                                                           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:71[22m  [31merror[39m    'Check' is defined but never used                                                                                          [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m13:3[22m   [31merror[39m    'BarChart' is defined but never used                                                                                       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m13:13[22m  [31merror[39m    'Bar' is defined but never used                                                                                            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m13:18[22m  [31merror[39m    'PieChart' is defined but never used                                                                                       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m13:28[22m  [31merror[39m    'Pie' is defined but never used                                                                                            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m13:33[22m  [31merror[39m    'Cell' is defined but never used                                                                                           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m13:39[22m  [31merror[39m    'Legend' is defined but never used                                                                                         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m28:52[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m29:52[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m38:48[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m41:9[22m   [31merror[39m    'COLORS' is assigned a value but never used                                                                                [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m57:16[22m  [31merror[39m    'err' is defined but never used                                                                                            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m74:16[22m  [31merror[39m    'err' is defined but never used                                                                                            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m93:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'loadRepositoryAnalysis'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m  [2m143:56[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m144:56[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Personal Project\CodePulse\Frontend\src\pages\UserSettingsPage.tsx[24m[0m
+[0m    [2m3:10[22m  [31merror[39m  'motion' is defined but never used                [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m10:3[22m   [31merror[39m  'X' is defined but never used                     [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m15:3[22m   [31merror[39m  'Key' is defined but never used                   [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m21:10[22m  [31merror[39m  'AreaChart' is defined but never used             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m21:21[22m  [31merror[39m  'Area' is defined but never used                  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m21:27[22m  [31merror[39m  'XAxis' is defined but never used                 [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m21:34[22m  [31merror[39m  'YAxis' is defined but never used                 [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m21:41[22m  [31merror[39m  'Tooltip' is defined but never used               [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m21:50[22m  [31merror[39m  'ResponsiveContainer' is defined but never used   [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m59:10[22m  [31merror[39m  'saveSuccess' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m114:35[22m  [31merror[39m  Unexpected any. Specify a different type          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m193:21[22m  [31merror[39m  Unexpected any. Specify a different type          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m399:80[22m  [31merror[39m  Unexpected any. Specify a different type          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[31m[1m✖ 100 problems (93 errors, 7 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

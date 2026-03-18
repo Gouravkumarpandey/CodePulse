@@ -38,7 +38,7 @@ api.interceptors.response.use(
 
       if (!isGitHubRepoEndpoint) {
         // Unauthorized - clear auth and redirect to login
-        const isAuthEndpoint = error.config?.url?.includes('/auth/login');
+        const isAuthEndpoint = error.config?.url?.includes('/auth/');
         if (!isAuthEndpoint) {
           sessionStorage.removeItem('token');
           sessionStorage.removeItem('user');

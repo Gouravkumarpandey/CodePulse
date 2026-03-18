@@ -3,7 +3,7 @@
  * Initializes database connection and starts Express server
  */
 
-require('dotenv').config();
+require('dotenv').config(); 
 const app = require('./app');
 
 

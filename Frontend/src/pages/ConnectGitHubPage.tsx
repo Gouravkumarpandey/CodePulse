@@ -34,20 +34,16 @@ export default function ConnectGitHubPage() {
         setShowError(false);
         setConnecting(true);
 
-        const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'Ov23lii0wSY15cFo5np6';
-
-        // SMT LOGIC: If we are on localhost, use localhost as redirect. 
-        // Otherwise use the env variable or the current origin.
-        let baseUrl = window.location.origin;
-        if (import.meta.env.VITE_GITHUB_REDIRECT_URI && !window.location.hostname.includes('localhost')) {
-            baseUrl = import.meta.env.VITE_GITHUB_REDIRECT_URI.replace('/github/callback', '');
-        }
-
-        const redirectUri = encodeURIComponent(`${baseUrl}/github/callback`);
+        const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID || 'Ov23li4CIJ8ocjZkYyFd';
+        const envRedirect = import.meta.env.VITE_GITHUB_REDIRECT_URI;
+        const callbackUrl = envRedirect || `${window.location.origin}/github/callback`;
+        const redirectUri = encodeURIComponent(callbackUrl);
         const scope = encodeURIComponent('repo user');
 
-        console.log('Connecting to GitHub with Client ID:', clientId);
-        console.log('Redirect URI:', decodeURIComponent(redirectUri));
+        console.log('--- GitHub OAuth Initiation ---');
+        console.log('Client ID:', clientId);
+        console.log('Redirect URI:', callbackUrl);
+        console.log('-------------------------------');
 
         window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
     };
@@ -69,10 +65,10 @@ export default function ConnectGitHubPage() {
     return (
         <div
             className="h-screen w-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat overflow-hidden fixed inset-0"
-            style={{ backgroundImage: "url('https://4kwallpapers.com/images/walls/thumbs_3t/16737.jpg')" }}
+            style={{ backgroundImage: "url('/githubauth.png')" }}
         >
             {/* Dark overlay for better text readability */}
-            <div className="absolute inset-0 bg-black/40 z-0" />
+            <div className="absolute inset-0 bg-black/10 z-0" />
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -204,7 +200,11 @@ export default function ConnectGitHubPage() {
                                 className={`w-full py-3 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white rounded-xl font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 ${!agreedToTerms ? 'opacity-60' : ''
                                     }`}
                             >
-                                <Github className="w-5 h-5" />
+                                <img 
+                                    src="/icons8-github.svg" 
+                                    className="w-5 h-5 object-contain" 
+                                    alt="GitHub Icon"
+                                />
                                 {connecting ? 'Connecting...' : 'Connect with GitHub'}
                                 <ArrowRight className="w-4 h-4" />
                             </motion.button>
@@ -252,6 +252,17 @@ export default function ConnectGitHubPage() {
                     </p>
                 </motion.div>
             </motion.div>
+
+            {/* Cow Walking Gif */}
+            <motion.img
+                src="/Cow_Walking.gif"
+                alt="Walking Cow"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 1.2 }}
+                className="absolute -bottom-16 right-44 w-48 h-48 md:w-80 md:h-80 lg:w-96 lg:h-96 object-contain z-10 pointer-events-none"
+                style={{ imageRendering: 'pixelated' }}
+            />
 
             {/* Hide scrollbar CSS */}
             <style>{`
