@@ -198,7 +198,7 @@ function RepositorySelectionPage() {
       if (response.data.success) {
         sessionStorage.removeItem('github_authenticated');
         sessionStorage.setItem('showDashboardToast', '1');
-        setTimeout(() => navigate('/user'), 500);
+        setTimeout(() => navigate('/user/hackathon'), 500);
       } else {
         throw new Error(response.data.message || 'Failed to connect repository');
       }
@@ -218,13 +218,13 @@ function RepositorySelectionPage() {
   );
 
   return (
-    <div className="min-h-screen user-dashboard-bg relative">
+    <div className="min-h-screen bg-zinc-950 text-white relative flex">
       <Sidebar role="user" />
       {/* Logo at the top */}
       <div className="w-full flex justify-center items-center py-2 relative z-10">
         <img src="/logo.jpg" alt="Codepulse Logo" className="h-24 w-auto" style={{ maxHeight: '96px' }} />
       </div>
-      <div className={`min-h-screen relative z-10 transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+      <div className={`min-h-screen relative z-10 transition-all duration-300 ${collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'}`}>
         <main>
 
           <div className="max-w-5xl mx-auto px-6 py-4">

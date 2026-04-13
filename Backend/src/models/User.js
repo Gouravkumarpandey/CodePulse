@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema(
         githubId: String,
         githubAccessToken: String,
         googleId: String,
+        clerkId: String,
         
         fullName: {
             type: String,

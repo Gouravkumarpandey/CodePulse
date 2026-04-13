@@ -27,6 +27,14 @@ interface GitHubAuthData {
   accessToken: string;
 }
 
+interface ClerkAuthData {
+  clerkId: string;
+  email: string;
+  username: string;
+  avatar?: string;
+  clerkToken?: string | null;
+}
+
 
 export const authService = {
   // Email/Password Login
@@ -50,6 +58,12 @@ export const authService = {
   // Google OAuth
   async googleAuth(accessToken: string): Promise<AuthResponse> {
     const response = await api.post<{ data: AuthResponse }>('/auth/google/callback', { accessToken });
+    return response.data.data;
+  },
+
+  // Clerk Auth
+  async clerkAuth(data: ClerkAuthData): Promise<AuthResponse> {
+    const response = await api.post<{ data: AuthResponse }>('/auth/clerk', data);
     return response.data.data;
   },
 

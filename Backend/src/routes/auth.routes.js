@@ -20,6 +20,9 @@ router.get('/github/callback', authController.githubCallback);
 // Google OAuth
 router.post('/google/callback', authController.googleCallback);
 
+// Clerk Auth
+router.post('/clerk', authController.clerkAuth);
+
 // Logout
 router.post('/logout', authMiddleware.verifyToken, authController.logout);
 

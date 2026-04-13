@@ -18,6 +18,9 @@ import { api } from '@/services/api';
 import { ConsistencyAnalysis } from '@/types';
 import { Commit } from '@/types/commit';
 import { useSidebar } from '@/context/SidebarContext';
+import AIInsights from '@/components/user/AIInsights';
+import ConsistencyMetrics from '@/components/user/ConsistencyMetrics';
+import DistributionChart from '@/components/user/DistributionChart';
 
 export default function UserDashboardPage() {
   const navigate = useNavigate();
@@ -195,14 +198,11 @@ export default function UserDashboardPage() {
   if (loading || !isAuthenticated) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading...</div>;
 
   return (
-    <div 
-      className="min-h-screen relative flex font-sans text-gray-900 overflow-x-hidden bg-white bg-fixed bg-no-repeat bg-bottom bg-cover md:bg-[length:100%_auto]" 
-      style={{ backgroundImage: "url('/background1.webp')" }}
-    >
+    <div className="min-h-screen relative flex font-sans text-white overflow-x-hidden bg-zinc-950">
 
       <Sidebar role="user" />
-      <div className={`flex-1 w-full transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
-        <div className="p-4 md:p-8 lg:p-12 overflow-y-auto min-h-screen">
+      <div className={`flex-1 w-full transition-all duration-300 ${collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'}`}>
+        <div className="p-4 md:p-8 lg:p-10 overflow-y-auto min-h-screen">
           <main className="max-w-7xl mx-auto space-y-8">
 
             {/* Header */}
@@ -388,66 +388,14 @@ export default function UserDashboardPage() {
               </div>
             ) : (
               <>
-                {/* 1. Overview Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* Status */}
-                  <div className={`p-6 rounded-2xl border backdrop-blur-xl relative overflow-hidden group ${activityStatus.color === 'green' ? 'bg-green-500/10 border-green-500/30' :
-                    activityStatus.color === 'yellow' ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-red-500/10 border-red-500/30'
-                    }`}>
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-widest opacity-70">Activity Status</p>
-                        <h3 className="text-3xl font-black mt-1" style={{ fontFamily: '"Minecraftia", sans-serif' }}>{activityStatus.status}</h3>
-                      </div>
-                      {activityStatus.color === 'green' ? <CheckCircle className="w-8 h-8 text-green-400" /> : <AlertCircle className="w-8 h-8 text-red-400" />}
-                    </div>
-                    <p className="text-sm font-medium opacity-80">{activityStatus.message}</p>
-                  </div>
-
-                  {/* Consistency Score */}
-                  <div className="p-6 bg-slate-900/40 rounded-2xl border border-white/10 backdrop-blur-xl relative group hover:border-purple-500/50 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-widest opacity-70">Consistency</p>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <h3 className="text-4xl font-black">{consistencyData?.score || 0}</h3>
-                          <span className={`text-xl font-black ${(consistencyData?.score || 0) >= 80 ? 'text-green-400' : (consistencyData?.score || 0) >= 60 ? 'text-yellow-400' : 'text-red-400'
-                            }`}>/100</span>
-                        </div>
-                      </div>
-                      <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 font-black text-xl border border-purple-500/30">
-                        {consistencyData?.grade || '-'}
-                      </div>
-                    </div>
-                    <div className="mt-4 h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-1000" style={{ width: `${consistencyData?.score || 0}%` }} />
-                    </div>
-                  </div>
-
-                  {/* Streak / Stats */}
-                  <div className="p-6 bg-slate-900/40 rounded-2xl border border-white/10 backdrop-blur-xl hover:border-blue-500/50 transition-colors">
-                    <div className="flex justify-between items-start mb-4">
-                      <p className="text-xs font-bold uppercase tracking-widest opacity-70">Total Commits</p>
-                      <GitCommit className="w-6 h-6 text-blue-400" />
-                    </div>
-                    <h3 className="text-4xl font-black">{consistencyData?.totalCommits || 0}</h3>
-                    <div className="flex gap-4 mt-4 text-xs font-bold text-gray-400">
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Avg Gap: {Math.round(consistencyData?.averageGap || 0)}h</span>
-                      <span className="flex items-center gap-1 text-orange-400"><Zap className="w-3 h-3" /> Bursts: {consistencyData?.burstCommits || 0}</span>
-                    </div>
-                  </div>
-
-                  {/* Last Commit */}
-                  <div className="p-6 bg-slate-900/40 rounded-2xl border border-white/10 backdrop-blur-xl hover:border-blue-500/50 transition-colors">
-                    <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-4">Latest Activity</p>
-                    {recentCommits.length > 0 ? (
-                      <div>
-                        <p className="text-sm font-medium line-clamp-2 mb-2 italic">"{recentCommits[0].message}"</p>
-                        <p className="text-xs text-gray-400 font-mono bg-white/5 py-1 px-2 rounded inline-block">{recentCommits[0].commitSha.substring(0, 7)}</p>
-                      </div>
-                    ) : <p className="text-gray-500 text-sm">No recent activity</p>}
-                  </div>
-                </div>
+                {/* 1. Overview Cards & Metrics */}
+                <ConsistencyMetrics 
+                  score={consistencyData?.score || 0}
+                  grade={consistencyData?.grade || '-'}
+                  totalCommits={consistencyData?.totalCommits || 0}
+                  averageGap={consistencyData?.averageGap || 0}
+                  burstCommits={consistencyData?.burstCommits || 0}
+                />
 
                 {/* 2. Hackathon Mode Panel */}
                 {hackathonStatus.isActive && (
@@ -515,26 +463,7 @@ export default function UserDashboardPage() {
                   </div>
 
                   {/* AI Insights - Smart Feedback */}
-                  <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 border border-indigo-500/20 rounded-2xl p-6 backdrop-blur-xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-24 bg-indigo-600/10 blur-[80px] rounded-full pointer-events-none" />
-                    <h3 className="font-bold text-lg flex items-center gap-2 mb-6">
-                      <Zap className="w-5 h-5 text-yellow-400" />
-                      AI Coach Insights
-                    </h3>
-                    <div className="space-y-4 relative z-10">
-                      {(Array.isArray(consistencyData?.aiInsights) ? consistencyData.aiInsights : [consistencyData?.aiInsights]).slice(0, 3).map((insight, idx) => (
-                        <div key={idx} className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
-                          <div className="w-2 h-full bg-indigo-500 rounded-full" />
-                          <p className="text-sm text-gray-200 leading-relaxed font-medium">
-                            {insight}
-                          </p>
-                        </div>
-                      ))}
-                      {!consistencyData?.aiInsights && (
-                        <div className="text-center text-gray-500 py-8 italic">Use your brain, make some commits first.</div>
-                      )}
-                    </div>
-                  </div>
+                  <AIInsights insights={consistencyData?.aiInsights || []} />
                 </div>
 
                 {/* 4. Team Contribution & Repo Health */}
@@ -570,37 +499,8 @@ export default function UserDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Repo Health */}
-                  <div className="bg-slate-900/40 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="font-bold text-lg flex items-center gap-2">
-                        <Shield className="w-5 h-5 text-teal-400" />
-                        Repository Health
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Metric 1 */}
-                      <div className="p-4 bg-slate-800/50 rounded-xl border border-white/5 text-center group hover:border-teal-500/30 transition-all">
-                        <div className="text-3xl font-black text-white mb-1 group-hover:scale-110 transition-transform">{consistencyData?.health?.commitMessageScore || 0}%</div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Msg Quality</div>
-                      </div>
-                      {/* Metric 2 */}
-                      <div className="p-4 bg-slate-800/50 rounded-xl border border-white/5 text-center group hover:border-teal-500/30 transition-all">
-                        <div className="text-3xl font-black text-white mb-1 group-hover:scale-110 transition-transform">{consistencyData?.health?.bugFixRatio || 0}%</div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Bug Fix Ratio</div>
-                      </div>
-                      {/* Metric 3 */}
-                      <div className="p-4 bg-slate-800/50 rounded-xl border border-white/5 text-center group hover:border-teal-500/30 transition-all">
-                        <div className="text-3xl font-black text-white mb-1 group-hover:scale-110 transition-transform">{consistencyData?.health?.featureRatio || 0}%</div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">New Features</div>
-                      </div>
-                      {/* Metric 4 */}
-                      <div className="p-4 bg-slate-800/50 rounded-xl border border-white/5 text-center group hover:border-teal-500/30 transition-all">
-                        <div className="text-3xl font-black text-white mb-1 group-hover:scale-110 transition-transform">{consistencyData?.health?.refactorRatio || 0}%</div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Refactors</div>
-                      </div>
-                    </div>
-                  </div>
+                  {/* Distribution Chart */}
+                  <DistributionChart distribution={consistencyData?.distribution || { quarter1: 0, quarter2: 0, quarter3: 0, quarter4: 0 }} />
                 </div>
 
                 {/* 5. Achievements & Export */}

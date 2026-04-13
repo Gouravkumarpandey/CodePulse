@@ -96,10 +96,10 @@ export default function GitHubCallbackPage() {
           }
 
           setStatus('success');
-          setMessage('Logged in successfully! Redirecting...');
+          setMessage('GitHub connected! Redirecting to repository selection...');
 
-          // Use common redirect path
-          setTimeout(() => navigate('/user'), 1500);
+          // Always go to repo-selection after GitHub auth so user can pick what to track
+          setTimeout(() => navigate('/repo-selection'), 1500);
           return;
         }
 

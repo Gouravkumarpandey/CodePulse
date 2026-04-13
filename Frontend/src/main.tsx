@@ -1,15 +1,24 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { ClerkProvider } from '@clerk/react';
 import App from './App.tsx';
 import './index.css';
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!publishableKey) {
+  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY');
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={googleClientId}>
+    <ClerkProvider 
+      publishableKey={publishableKey} 
+      afterSignOutUrl="/"
+      signUpUrl="/signup"
+      signInUrl="/login"
+    >
       <App />
-    </GoogleOAuthProvider>
+    </ClerkProvider>
   </StrictMode>
 );

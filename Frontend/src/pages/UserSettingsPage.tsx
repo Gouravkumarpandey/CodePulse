@@ -221,7 +221,7 @@ const UserSettingsPage = () => {
       <Sidebar role="user" />
 
       {/* Main Content */}
-      <div className={`flex-1 w-full transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+      <div className={`flex-1 w-full transition-all duration-300 ${collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'}`}>
         <div className="p-4 md:p-8 lg:p-8 overflow-y-auto min-h-screen">
 
           <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">

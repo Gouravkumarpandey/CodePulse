@@ -51,7 +51,7 @@ export default function ConnectGitHubPage() {
     const handleSkip = () => {
         // Store a flag that user skipped GitHub connection
         sessionStorage.setItem('github_skipped', 'true');
-        navigate('/user');
+        navigate('/user/hackathon');
     };
 
     if (loading) {

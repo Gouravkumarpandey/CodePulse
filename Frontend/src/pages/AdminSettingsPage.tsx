@@ -63,7 +63,7 @@ const AdminSettingsPage = () => {
   return (
     <div className="min-h-screen admin-github-bg flex font-sans text-white">
       <Sidebar role="admin" />
-      <main className={`flex-1 p-8 transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+      <main className={`flex-1 p-8 transition-all duration-300 ${collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'}`}>
         <div className="max-w-5xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">

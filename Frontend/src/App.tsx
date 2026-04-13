@@ -2,11 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import HomePage from '@/pages/HomePage';
-import LoginPage from '@/pages/LoginPage';
-import SignupPage from '@/pages/SignupPage';
 import ConnectGitHubPage from '@/pages/ConnectGitHubPage';
 import GitHubCallbackPage from '@/pages/GitHubCallbackPage';
-import GoogleCallbackPage from '@/pages/GoogleCallbackPage';
 import RepositorySelectionPage from '@/pages/RepositorySelectionPage';
 import UserDashboardPage from '@/pages/UserDashboardPage';
 import UserActivityPage from '@/pages/UserActivityPage';
@@ -25,9 +22,9 @@ import { SidebarProvider } from '@/context/SidebarContext';
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <SidebarProvider>
-          <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <SidebarProvider>
             <Routes>
               {/* Public Routes with Persistent Navbar */}
               <Route element={<PublicLayout />}>
@@ -37,18 +34,16 @@ function App() {
               </Route>
 
               {/* Auth Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
               <Route path="/connect-github" element={<ConnectGitHubPage />} />
               <Route path="/auth/callback" element={<GitHubCallbackPage />} />
               <Route path="/github/callback" element={<GitHubCallbackPage />} />
               <Route path="/github-callback" element={<GitHubCallbackPage />} />
-              <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
               <Route path="/repo-selection" element={<RepositorySelectionPage />} />
 
               {/* User Routes */}
-              <Route path="/user" element={<UserDashboardPage />} />
-              <Route path="/user/profilecard" element={<UserDashboardPage />} />
+              <Route path="/user" element={<Navigate to="/user/hackathon" replace />} />
+              <Route path="/user/dashboard" element={<Navigate to="/user/hackathon" replace />} />
+              <Route path="/user/overview" element={<UserDashboardPage />} />
               <Route path="/user/hackathon" element={<UserDashboardPage />} />
               <Route path="/user/team" element={<UserDashboardPage />} />
               <Route path="/user/achievements" element={<UserDashboardPage />} />
@@ -65,9 +60,9 @@ function App() {
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </BrowserRouter>
-        </SidebarProvider>
-      </AuthProvider>
+          </SidebarProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </ThemeProvider>
   );
 }

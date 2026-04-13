@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { SignInButton, SignUpButton, UserButton } from '@clerk/react';
 import { useAuth } from '@/hooks/useAuth';
 
 const MainNavbar: React.FC = () => {
@@ -49,18 +50,27 @@ const MainNavbar: React.FC = () => {
                     </div>
                     <div className="hidden lg:flex items-center space-x-4">
                         {isAuthenticated ? (
-                            <button
-                                onClick={() => navigate(user?.role === 'ADMIN' ? '/admin' : '/user')}
-                                className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-5 py-2.5 rounded-lg font-semibold transition-all"
-                            >
-                                Dashboard
-                            </button>
+                            <>
+                                <button
+                                    onClick={() => navigate(user?.role === 'ADMIN' ? '/admin' : '/user')}
+                                    className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-5 py-2.5 rounded-lg font-semibold transition-all"
+                                >
+                                    Dashboard
+                                </button>
+                                <UserButton />
+                            </>
                         ) : (
                             <>
-                                <button onClick={() => navigate('/login')} className="text-black dark:text-white hover:underline font-medium transition-colors">Log in</button>
-                                <button onClick={() => navigate('/signup')} className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-5 py-2.5 rounded-lg font-semibold transition-all">
-                                    Get Started
-                                </button>
+                                <SignInButton mode="modal">
+                                    <button className="text-black dark:text-white hover:underline font-medium transition-colors cursor-pointer">
+                                        Log in
+                                    </button>
+                                </SignInButton>
+                                <SignUpButton mode="modal">
+                                    <button className="bg-white dark:bg-black border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:dark:bg-white hover:text-white hover:dark:text-black px-5 py-2.5 rounded-lg font-semibold transition-all cursor-pointer">
+                                        Get Started
+                                    </button>
+                                </SignUpButton>
                             </>
                         )}
                     </div>
@@ -92,16 +102,29 @@ const MainNavbar: React.FC = () => {
                         <a href="#open-source" className="block px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900" onClick={(e) => scrollToSection(e, '#open-source')}>Open Source</a>
                         <div className="pt-4 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-2">
                             {isAuthenticated ? (
-                                <button
-                                    onClick={() => { navigate(user?.role === 'ADMIN' ? '/admin' : '/user'); setIsMenuOpen(false); }}
-                                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white"
-                                >
-                                    Dashboard
-                                </button>
+                                <>
+                                    <button
+                                        onClick={() => { navigate(user?.role === 'ADMIN' ? '/admin' : '/user'); setIsMenuOpen(false); }}
+                                        className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white"
+                                    >
+                                        Dashboard
+                                    </button>
+                                    <div className="px-3 py-2">
+                                        <UserButton />
+                                    </div>
+                                </>
                             ) : (
                                 <>
-                                    <button onClick={() => { navigate('/login'); setIsMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900">Log in</button>
-                                    <button onClick={() => { navigate('/signup'); setIsMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white">Get Started</button>
+                                    <SignInButton mode="modal">
+                                        <button className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900 cursor-pointer">
+                                            Log in
+                                        </button>
+                                    </SignInButton>
+                                    <SignUpButton mode="modal">
+                                        <button className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white cursor-pointer">
+                                            Get Started
+                                        </button>
+                                    </SignUpButton>
                                 </>
                             )}
                         </div>

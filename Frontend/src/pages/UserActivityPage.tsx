@@ -84,27 +84,26 @@ const UserActivityPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: `url('https://4kwallpapers.com/images/wallpapers/minecraft-game-3840x2160-16737.jpg')` }}>
-      <div className="absolute inset-0 bg-white/70 dark:bg-[#0d1117]/85 z-0" />
+    <div className="min-h-screen bg-zinc-950 text-white flex">
       <Sidebar role="user" />
-      <main className={`min-h-screen p-8 transition-all duration-500 relative z-10 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+      <main className={`flex-1 p-8 transition-all duration-300 ${collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'}`}>
 
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-7xl mx-auto">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white uppercase tracking-widest" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Commit Activity</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">Track your commit timeline</p>
+              <h1 className="text-3xl font-bold text-white uppercase tracking-widest" style={{ fontFamily: '"Minecraftia", sans-serif' }}>Commit Activity</h1>
+              <p className="text-zinc-400 mt-2">Track your commit timeline</p>
             </div>
 
             {selectedRepo && (
-              <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-700 dark:text-blue-300 font-semibold">
+              <div className="px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 font-semibold text-sm">
                 Repository: {repos.find((r: any) => (r._id === selectedRepo || r.id === selectedRepo))?.name || 'Selected'}
               </div>
             )}
           </div>
 
           {loadingData ? (
-            <div>Loading commits...</div>
+            <div className="text-zinc-400 text-center py-20">Loading commits...</div>
           ) : (
             <CommitTimeline commits={commits} />
           )}

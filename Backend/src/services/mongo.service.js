@@ -85,6 +85,15 @@ class MongoDBService {
         }
     }
 
+    static async getUserByClerkId(clerkId) {
+        try {
+            return await User.findOne({ clerkId });
+        } catch (error) {
+            logger.error('Error fetching user by Clerk ID:', error.message);
+            throw error;
+        }
+    }
+
     static async getAllUsers() {
         try {
             return await User.find({ isDeleted: false }).sort({ createdAt: -1 });

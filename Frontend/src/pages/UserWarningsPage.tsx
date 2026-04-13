@@ -96,7 +96,7 @@ const UserWarningsPage = () => {
       <Sidebar role="user" />
 
       {/* Main Content */}
-      <div className={`flex-1 w-full transition-all duration-500 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+      <div className={`flex-1 w-full transition-all duration-300 ${collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'}`}>
         <div className="p-4 md:p-8 lg:p-12 overflow-y-auto min-h-screen">
           <main className="max-w-7xl mx-auto space-y-8">
             {/* Header Section */}

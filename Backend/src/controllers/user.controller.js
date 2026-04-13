@@ -1,6 +1,7 @@
 const DatabaseService = require('../services/mongo.service');
 const response = require('../utils/response.util');
 const crypto = require('crypto');
+const cache = require('../utils/cache.util');
 
 // Mock email service for now
 const sendEmail = async (to, subject, text) => {
@@ -306,18 +307,26 @@ const getRepositoryActivity = async (req, res) => {
     const { repoId } = req.params;
     const limit = parseInt(req.query.limit) || 50;
 
-    // Verify ownership/access if strictly private
-    // For now we assume repoId knowledge implies access or it's public enough for the user context
+    const cacheKey = `repoActivity_${repoId}_${limit}`;
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      // console.log(`[CACHE HIT] getRepositoryActivity for ${repoId}`);
+      return response.success(res, cachedData);
+    }
 
     const commits = await DatabaseService.getCommitsByRepo(repoId, limit);
 
     // Get analysis from Firestore
     const analysis = await DatabaseService.getRepoAnalysis(repoId);
 
-    response.success(res, {
+    const dataToCache = {
       commits: commits,
       summary: analysis || {}
-    });
+    };
+
+    cache.set(cacheKey, dataToCache, 15); // Cache for 15 seconds (dashboard polling speed up)
+
+    response.success(res, dataToCache);
   } catch (error) {
     console.error('getRepositoryActivity error:', error);
     response.error(res, error.message, 500);
@@ -389,7 +398,12 @@ const getDashboardSummary = async (req, res) => {
 // Get admin rules
 const getAdminRules = async (req, res) => {
   try {
-    // Mock or fetch from Firestore adminSettings
+    const cacheKey = 'adminRules';
+    const cachedRules = cache.get(cacheKey);
+    if (cachedRules) {
+      return response.success(res, { rules: cachedRules });
+    }
+
     const settings = await DatabaseService.getAdminSettings();
     const rules = settings || {
       maxInactivityGapHours: 2,
@@ -397,6 +411,8 @@ const getAdminRules = async (req, res) => {
       warningThresholdHours: 1.5,
       totalHackathonDurationHours: 48,
     };
+
+    cache.set(cacheKey, rules, 300); // 5 minutes cache
 
     response.success(res, { rules });
   } catch (error) {
@@ -407,7 +423,16 @@ const getAdminRules = async (req, res) => {
 
 const getHackathonStatus = async (req, res) => {
   try {
+    const cacheKey = 'hackathonStatus';
+    const cachedStatus = cache.get(cacheKey);
+    if (cachedStatus) {
+      return response.success(res, cachedStatus);
+    }
+
     const status = await DatabaseService.getHackathonStatus();
+    
+    cache.set(cacheKey, status, 120); // 2 minutes cache
+
     response.success(res, status);
   } catch (error) {
     console.error('getHackathonStatus error:', error);

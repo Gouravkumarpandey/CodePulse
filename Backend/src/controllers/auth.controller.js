@@ -374,8 +374,94 @@ const googleCallback = async (req, res) => {
   }
 };
 
+const clerkAuth = async (req, res) => {
+  try {
+    const { clerkId, email, username, avatar, clerkToken } = req.body;
+
+    if (!clerkId || !email) {
+      return response.error(res, 'Clerk ID and email are required', 400);
+    }
+
+    // 1. Try to find by Clerk ID
+    let user = await DatabaseService.getUserByClerkId(clerkId);
+
+    // 2. If not found, try to find by Email
+    if (!user) {
+      user = await DatabaseService.getUserByEmail(email);
+      if (user) {
+        // Link Clerk ID to existing user
+        user = await DatabaseService.updateUser(user._id || user.id, {
+          clerkId,
+          lastLogin: new Date().toISOString()
+        });
+      }
+    }
+
+    // 3. Create new user if still not found
+    if (!user) {
+      let baseUsername = username || email.split('@')[0];
+      let finalUsername = baseUsername;
+
+      // Check for username collision
+      let collision = await User.findOne({ username: finalUsername });
+      if (collision) {
+        finalUsername = `${baseUsername}_${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
+      const userData = {
+        email,
+        username: finalUsername,
+        clerkId,
+        avatar,
+        role: 'USER',
+        coins: 0,
+        avatarId: 1,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      user = await DatabaseService.saveUser(null, userData);
+      logger.info(`Created new user via Clerk: ${user.email}`);
+    } else {
+      // Update last login
+      user = await DatabaseService.updateUser(user._id || user.id, {
+        lastLogin: new Date().toISOString()
+      });
+    }
+
+    const token = generateJWT(user._id || user.id);
+
+    // Standardize user object for frontend
+    const userObj = user.toObject ? user.toObject() : user;
+    const userResponse = {
+      id: userObj._id || userObj.id,
+      username: userObj.username,
+      email: userObj.email,
+      role: userObj.role,
+      avatar: userObj.avatar || userObj.avatarId,
+      githubId: userObj.githubId,
+      clerkId: userObj.clerkId
+    };
+
+    const responseData = {
+      user: userResponse,
+      token
+    };
+
+    if (user.githubAccessToken) {
+      responseData.githubAccessToken = user.githubAccessToken;
+    }
+
+    return response.success(res, responseData, 'Clerk authentication successful');
+  } catch (error) {
+    logger.error('Clerk auth error:', error);
+    response.error(res, error.message || 'Clerk authentication failed', 500);
+  }
+};
+
 const logout = (req, res) => {
   response.success(res, {}, 'Logout successful');
 };
 
-module.exports = { signup, login, githubAuth, githubCallback, logout, googleCallback };
+module.exports = { signup, login, githubAuth, githubCallback, logout, googleCallback, clerkAuth };
